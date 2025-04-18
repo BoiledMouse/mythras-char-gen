@@ -1,0 +1,5 @@
+[
+  { "min": 0,  "max": 6,  "points": 1 },
+  { "min": 7,  "max": 12, "points": 2 },
+  { "min": 13, "max": 18, "points": 3 }
+]
