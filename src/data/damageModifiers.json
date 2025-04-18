@@ -1,0 +1,10 @@
+[
+  { "min": 0,  "max": 5,  "modifier": "-1d8" },
+  { "min": 6,  "max": 10, "modifier": "-1d6" },
+  { "min": 11, "max": 15, "modifier": "-1d4" },
+  { "min": 16, "max": 20, "modifier": "-1d2" },
+  { "min": 21, "max": 25, "modifier": "+0" },
+  { "min": 26, "max": 30, "modifier": "+1d2" },
+  { "min": 31, "max": 35, "modifier": "+1d4" },
+  { "min": 36, "max": 40, "modifier": "+1d6" }
+]
