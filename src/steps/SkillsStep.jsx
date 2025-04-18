@@ -152,29 +152,16 @@ export function SkillsStep() {
         <h3 className="font-semibold">Bonus Skills (max 15 each)</h3>
         <div>Points Left: {bonusLeft}</div>
         <div className="grid grid-cols-2 gap-2 mt-2">
-          {Object.keys(baseStandard).map(s => (
-            <div key={s} className="flex items-center">
-              <span className="w-32">{s} (Base {baseStandard[s]}%)</span>
-              <input type="number" min={0} max={15} value={bonusAlloc[s] || 0} onChange={e => handleBonusAlloc(s, e.target.value)} className="w-20 border" />
-            </div>
-          ))}
-          {Object.keys(baseProfessional).map(s => (
-            <div key={s} className="flex items-center">
-              <span className="w-32">{s} (Base {baseProfessional[s]}%)</span>
-              <input type="number" min={0} max={15} value={bonusAlloc[s] || 0} onChange={e => handleBonusAlloc(s, e.target.value)} className="w-20 border" />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Summary */}
-      <section>
-        <h3 className="font-semibold">Final Skill Totals</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
           {Object.keys(baseStandard).map(s => {
             const total = baseStandard[s] + (cultAlloc[s]||0) + (careerAlloc[s]||0) + (bonusAlloc[s]||0);
-            return <div key={s}><strong>{s}:</strong> {total}%</div>;
-          })}
+            // map total 0-100 to hue 0 (red) to 120 (green)
+            const hue = Math.round((total / 100) * 120);
+            return (
+              <div key={s} style={{ color: `hsl(${hue},65%,40%)` }}>
+                <strong>{s}:</strong> {total}%
+              </div>
+            );
+          })}}
           {Object.keys(baseProfessional).map(s => {
             const total = baseProfessional[s] + (careerAlloc[s]||0) + (bonusAlloc[s]||0);
             return <div key={s}><strong>{s}:</strong> {total}%</div>;
