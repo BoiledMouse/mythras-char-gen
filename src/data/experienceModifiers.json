@@ -1,0 +1,5 @@
+[
+  { "min": 0,  "max": 6,  "modifier": -1 },
+  { "min": 7,  "max": 12, "modifier": 0 },
+  { "min": 13, "max": 18, "modifier": 1 }
+]
