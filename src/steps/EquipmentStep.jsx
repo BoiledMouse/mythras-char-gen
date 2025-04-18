@@ -1,51 +1,90 @@
 // src/steps/EquipmentStep.jsx
 import React, { useState, useEffect } from 'react';
 import { useCharacter } from '../context/characterContext';
+import equipmentList from '../data/equipment.json';
 
 export function EquipmentStep() {
   const { character, updateCharacter } = useCharacter();
-  const [equipment, setEquipment] = useState(character.equipment);
 
-  useEffect(() => updateCharacter({ equipment }), [equipment]);
+  // Starting money in silver pieces
+  const [startingMoney, setStartingMoney] = useState(character.startingMoney ?? 100);
+  // Track quantities by equipment name
+  const [quantities, setQuantities] = useState(character.equipmentAlloc || {});
 
-  const addItem = () =>
-    setEquipment(prev => [...prev, { name: '', qty: 1, notes: '' }]);
-  const updateItem = (idx, key, value) =>
-    setEquipment(prev => prev.map((it, i) => i === idx ? { ...it, [key]: value } : it));
-  const removeItem = idx =>
-    setEquipment(prev => prev.filter((_, i) => i !== idx));
+  // Calculate total spent
+  const totalSpent = Object.entries(quantities).reduce((sum, [name, qty]) => {
+    const item = equipmentList.find(e => e.name === name);
+    return sum + (item?.cost || 0) * qty;
+  }, 0);
+  const moneyLeft = startingMoney - totalSpent;
+
+  // Persist changes to context
+  useEffect(() => {
+    updateCharacter({ startingMoney, equipmentAlloc: quantities });
+  }, [startingMoney, quantities]);
+
+  const handleQtyChange = (name, val) => {
+    let v = parseInt(val, 10);
+    if (isNaN(v) || v < 0) v = 0;
+    setQuantities(prev => ({ ...prev, [name]: v }));
+  };
 
   return (
-    <div className="space-y-4">
-      <button onClick={addItem} className="px-3 py-1 bg-blue-600 text-white rounded">
-        Add Item
-      </button>
-      {equipment.map((it, idx) => (
-        <div key={idx} className="flex space-x-2 items-center">
-          <input
-            type="text"
-            placeholder="Item Name"
-            value={it.name}
-            onChange={e => updateItem(idx, 'name', e.target.value)}
-            className="border-gray-300 rounded flex-1"
-          />
-          <input
-            type="number"
-            min={1}
-            value={it.qty}
-            onChange={e => updateItem(idx, 'qty', +e.target.value || 1)}
-            className="w-16 border-gray-300 rounded"
-          />
-          <input
-            type="text"
-            placeholder="Notes"
-            value={it.notes}
-            onChange={e => updateItem(idx, 'notes', e.target.value)}
-            className="border-gray-300 rounded flex-1"
-          />
-          <button onClick={() => removeItem(idx)} className="px-2 py-1 bg-red-600 text-white rounded">X</button>
+    <div className="space-y-6">
+      <div>
+        <label className="block font-medium">Starting Silver Pieces</label>
+        <input
+          type="number"
+          min={0}
+          value={startingMoney}
+          onChange={e => setStartingMoney(+e.target.value || 0)}
+          className="mt-1 w-32 border-gray-300 rounded"
+        />
+      </div>
+
+      <div>
+        <h3 className="font-semibold mb-2">Select Equipment</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full table-auto">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="px-2 py-1 text-left">Item</th>
+                <th className="px-2 py-1 text-right">Cost (SP)</th>
+                <th className="px-2 py-1 text-center">Quantity</th>
+                <th className="px-2 py-1 text-right">Total Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              {equipmentList.map(item => {
+                const qty = quantities[item.name] || 0;
+                const lineTotal = (item.cost || 0) * qty;
+                return (
+                  <tr key={item.name} className="border-b">
+                    <td className="px-2 py-1">{item.name}</td>
+                    <td className="px-2 py-1 text-right">{item.cost}</td>
+                    <td className="px-2 py-1 text-center">
+                      <input
+                        type="number"
+                        min={0}
+                        value={qty}
+                        onChange={e => handleQtyChange(item.name, e.target.value)}
+                        className="w-16 border-gray-300 rounded text-right"
+                      />
+                    </td>
+                    <td className="px-2 py-1 text-right">{lineTotal}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      ))}
+      </div>
+
+      <div className="pt-4 border-t">
+        <span className="font-medium">Total Spent: </span>{totalSpent} SP
+        <br />
+        <span className="font-medium">Silver Remaining: </span>{moneyLeft} SP
+      </div>
     </div>
   );
 }
