@@ -1,0 +1,22 @@
+{
+  "barbarian": {
+    "name": "Barbarian",
+    "standardSkills": ["Athletics","Brawn","Endurance","First Aid","Locale","Perception"],
+    "chooseOne": ["Boating","Ride"]
+  },
+  "civilised": {
+    "name": "Civilised",
+    "standardSkills": ["Conceal","Deceit","Drive","Influence","Insight","Locale","Willpower"],
+    "chooseOne": []
+  },
+  "nomadic": {
+    "name": "Nomadic",
+    "standardSkills": ["Endurance","First Aid","Locale","Perception","Stealth"],
+    "chooseOne": ["Athletics","Boating","Swim","Drive","Ride"]
+  },
+  "primitive": {
+    "name": "Primitive",
+    "standardSkills": ["Brawn","Endurance","Evade","Locale","Perception","Stealth"],
+    "chooseOne": ["Athletics","Boating","Swim"]
+  }
+}
