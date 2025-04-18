@@ -7,7 +7,7 @@
 @layer base {
   html, body {
     @apply bg-parchment font-body text-gray-800 leading-relaxed;
-    background-image: url('../images/parchment-texture.png');
+    background-image: url('%PUBLIC_URL%/images/parchment-texture.png');
     background-size: cover;
     background-attachment: fixed;
   }
