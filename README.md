@@ -1,1 +1,1 @@
-# cythras-char-gen
+# mythras-char-gen
