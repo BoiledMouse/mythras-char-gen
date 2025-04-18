@@ -1,0 +1,26 @@
+{
+  "name": "mythras-char-gen",
+  "version": "1.0.0",
+  "private": true,
+  "homepage": "https://BoiledMouse.github.io/mythras-char-gen",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "postbuild": "rm -rf docs && mkdir docs && cp -R build/* docs/",
+    "predeploy": "npm run build",
+    "deploy": "echo 'Built to docs/ - push to GitHub to deploy'"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zustand": "^4.3.5",
+    "jspdf": "^2.5.1",
+    "html2canvas": "^1.4.1",
+    "file-saver": "^2.0.5"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.3.2",
+    "postcss": "^8.4.21",
+    "autoprefixer": "^10.4.13"
+  }
+}
