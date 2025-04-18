@@ -1,0 +1,64 @@
+// src/data/equipment.json
+[
+  // — Accommodation Table —
+  { "name": "Camp (per week)",        "category": "Accommodation", "cost": null },
+  { "name": "Inn – Common Room",      "category": "Accommodation", "cost": null },
+  { "name": "Inn – Private Room",     "category": "Accommodation", "cost": null },
+  { "name": "Town House (per month)", "category": "Accommodation", "cost": null },
+
+  // — Clothing Table —
+  { "name": "Common Clothes",         "category": "Clothing",      "cost": null },
+  { "name": "Fine Clothes",           "category": "Clothing",      "cost": null },
+  { "name": "Travellers’ Cloak",      "category": "Clothing",      "cost": null },
+  { "name": "Heavy Coat",             "category": "Clothing",      "cost": null },
+
+  // — Food Table —
+  { "name": "Rations (per day)",      "category": "Food",          "cost": null },
+  { "name": "Ale (tankard)",          "category": "Food",          "cost": null },
+  { "name": "Bread (loaf)",           "category": "Food",          "cost": null },
+  { "name": "Cheese (wedge)",         "category": "Food",          "cost": null },
+
+  // — Livestock Table —
+  { "name": "Horse",                  "category": "Livestock",     "cost": null },
+  { "name": "Oxen (pair)",            "category": "Livestock",     "cost": null },
+  { "name": "Goat",                   "category": "Livestock",     "cost": null },
+  { "name": "Sheep",                  "category": "Livestock",     "cost": null },
+
+  // — Tools —
+  { "name": "Backpack",               "category": "Tools",         "cost": null },
+  { "name": "Climber’s Kit",          "category": "Tools",         "cost": null },
+  { "name": "Locksmith’s Kit",        "category": "Tools",         "cost": null },
+  { "name": "Healer’s Kit",           "category": "Tools",         "cost": null },
+
+  // — Melee Weapons —
+  { "name": "Dagger",                 "category": "Melee",         "cost": null },
+  { "name": "Short Sword",            "category": "Melee",         "cost": null },
+  { "name": "Long Sword",             "category": "Melee",         "cost": null },
+  { "name": "Spear",                  "category": "Melee",         "cost": null },
+  { "name": "Axe (one‑handed)",       "category": "Melee",         "cost": null },
+  { "name": "Two‑handed Sword",       "category": "Melee",         "cost": null },
+
+  // — Shields —
+  { "name": "Buckler",                "category": "Shields",       "cost": null },
+  { "name": "Round Shield",           "category": "Shields",       "cost": null },
+  { "name": "Tower Shield",           "category": "Shields",       "cost": null },
+
+  // — Ranged Weapons —
+  { "name": "Short Bow",              "category": "Ranged",        "cost": null },
+  { "name": "Long Bow",               "category": "Ranged",        "cost": null },
+  { "name": "Sling",                  "category": "Ranged",        "cost": null },
+  { "name": "Javelin",                "category": "Ranged",        "cost": null },
+
+  // — Ammunition —
+  { "name": "Arrows (10)",            "category": "Ammunition",    "cost": null },
+  { "name": "Bolts (10)",             "category": "Ammunition",    "cost": null },
+  { "name": "Sling Bullets (10)",     "category": "Ammunition",    "cost": null },
+
+  // — Siege Weapons —
+  { "name": "Ballista",               "category": "Siege",         "cost": null },
+  { "name": "Catapult",               "category": "Siege",         "cost": null },
+
+  // — Vehicles —
+  { "name": "Cart (two‑wheeled)",     "category": "Vehicles",      "cost": null },
+  { "name": "Wagon (four‑wheeled)",   "category": "Vehicles",      "cost": null }
+]
