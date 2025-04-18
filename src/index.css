@@ -1,17 +1,27 @@
-/* src/index.css */
-
 @tailwind base;
 @tailwind components;
 @tailwind typography;
 @tailwind utilities;
 
+/* Global Styles */
+@layer base {
+  html, body {
+    @apply bg-parchment font-body text-gray-800 leading-relaxed;
+    background-image: url('/images/parchment-texture.png');
+    background-size: cover;
+    background-attachment: fixed;
+  }
+}
+
 /* Print Styles */
 @media print {
-  body { background: white !important; }
-  button, input, select, textarea, .no-print { display: none !important; }
-  .bg-gray-50 { background-color: white !important; }
-  .shadow { box-shadow: none !important; }
-  .rounded { border-radius: 0 !important; }
-  .p-4 { padding: 0 !important; }
+  body {
+    background: white !important;
+  }
+  .no-print, button, input, select, textarea {
+    display: none !important;
+  }
+  .bg-white { background-color: white !important; }
+  .shadow, .ring, .prose { box-shadow: none !important; border: none !important; }
   * { color: black !important; }
 }
