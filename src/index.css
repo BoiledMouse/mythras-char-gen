@@ -1,0 +1,15 @@
+// src/index.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Print Styles */
+@media print {
+  body { background: white !important; }
+  button, input, select, textarea, .no-print { display: none !important; }
+  .bg-gray-50 { background-color: white !important; }
+  .shadow { box-shadow: none !important; }
+  .rounded { border-radius: 0 !important; }
+  .p-4 { padding: 0 !important; }
+  * { color: black !important; }
+}
