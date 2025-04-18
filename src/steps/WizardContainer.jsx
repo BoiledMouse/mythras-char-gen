@@ -24,6 +24,7 @@ export default function WizardContainer() {
 
   return (
     <div>
+      {/* Step Navigation */}
       <div className="flex space-x-2 mb-4">
         {steps.map((s, i) => (
           <button
@@ -35,9 +36,13 @@ export default function WizardContainer() {
           </button>
         ))}
       </div>
-      <div className="p-4 bg-white rounded shadow">
+
+      {/* Step Content */}
+      <div className="p-4 bg-white rounded shadow prose prose-lg prose-indigo">
         <StepComponent />
       </div>
+
+      {/* Prev/Next Controls */}
       <div className="mt-4 flex justify-between">
         <button
           className="px-4 py-2 bg-gray-300 rounded"
