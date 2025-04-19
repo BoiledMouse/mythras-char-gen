@@ -96,7 +96,7 @@ export function SkillsStep() {
           <h3>Step 1: Cultural</h3>
           <p>Distribute {CULT_POINTS} points (5–15 each)</p>
           <h4>Standard Skills</h4>
-          {cultureDef.standardSkills.map(s=>(
+          {(cultureDef.standardSkills || []).map(s=>(
             <div key={s} className="flex items-center">
               <span>{s} ({baseStandard[s]}%)</span>
               <input type="number" min={5} max={15}
@@ -109,7 +109,7 @@ export function SkillsStep() {
             </div>
           ))}
           <h4>Professional Skills (max 3)</h4>
-          {cultureDef.professionalSkills.map(s=>(
+          {(cultureDef.professionalSkills || []).map(s=>(
             <label key={s}>
               <input type="checkbox" checked={cultProfSel.includes(s)}
                 onChange={()=>{
@@ -130,7 +130,7 @@ export function SkillsStep() {
             </div>
           ))}
           <h4>Combat Style (select 1)</h4>
-          {skillsData.combatStyles.map(cs=>(
+          {(skillsData.combatStyles || []).map(cs=>(
             <label key={cs}>
               <input type="radio" name="combat" checked={cultCombatSel===cs}
                 onChange={()=>setCultCombatSel(cs)}/>{cs}
@@ -157,7 +157,7 @@ export function SkillsStep() {
           <h3>Step 2: Career</h3>
           <p>Distribute {CAREER_POINTS} points (5–15 each)</p>
           <h4>Standard Skills</h4>
-          {careerDef.standardSkills.map(s=>(
+          {(careerDef.standardSkills || []).map(s=>(
             <div key={s} className="flex items-center">
               <span>{s} ({baseStandard[s]}%)</span>
               <input type="number" min={5} max={15}
@@ -170,7 +170,7 @@ export function SkillsStep() {
             </div>
           ))}
           <h4>Professional Skills (max 3)</h4>
-          {careerDef.professionalSkills.map(s=>(
+          {(careerDef.professionalSkills || []).map(s=>(
             <label key={s}>
               <input type="checkbox" checked={careerProfSel.includes(s)}
                 onChange={()=>{
