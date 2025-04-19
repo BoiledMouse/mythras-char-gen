@@ -1,22 +1,26 @@
 {
-  "barbarian": {
-    "name": "Barbarian",
-    "standardSkills": ["Athletics","Brawn","Endurance","First Aid","Locale","Perception"],
-    "chooseOne": ["Boating","Ride"]
+  "Barbarian": {
+    "standardSkills": ["Athletics","Brawn","Endurance","First Aid","Locale","Perception","Boating","Ride"],
+    "professionalSkills": ["Craft","Healing","Lore","Musicianship","Navigation","Seamanship","Survival","Track"],
+    "combatStyles": ["Fyrdman","Berserker","Horse Eater","Seaborne Reiver","Weapon Thegn","Wolf Hunter"],
+    "passions": ["Loyalty to Clan Chieftain","Love (friend, sibling or romantic lover)","Hate (creature, rival or clan)"]
   },
-  "civilised": {
-    "name": "Civilised",
+  "Civilised": {
     "standardSkills": ["Conceal","Deceit","Drive","Influence","Insight","Locale","Willpower"],
-    "chooseOne": []
+    "professionalSkills": ["Art","Commerce","Craft","Courtesy","Language","Lore","Musicianship","Streetwise"],
+    "combatStyles": ["Citizen Legionary","City-state Phalangite","Levied Archer","Light Skirmisher","Street Thug","Town Militia"],
+    "passions": ["Loyalty to Town/City","Love (friend, sibling or romantic lover)","Hate (rival, gang, district or city)"]
   },
-  "nomadic": {
-    "name": "Nomadic",
-    "standardSkills": ["Endurance","First Aid","Locale","Perception","Stealth"],
-    "chooseOne": ["Athletics","Boating","Swim","Drive","Ride"]
+  "Nomadic": {
+    "standardSkills": ["Endurance","First Aid","Locale","Perception","Stealth","Athletics","Boating","Swim","Drive","Ride"],
+    "professionalSkills": ["Craft","Culture","Language","Lore","Musicianship","Navigation","Survival","Track"],
+    "combatStyles": ["Camel Cavalry","Feathered Death Flinger","Horse Lord","Whale Hunter","Wheeled Warrior","Wolf Runner"],
+    "passions": ["Loyalty to Tribal Chieftain/Khan","Love (friend, sibling or romantic lover)","Hate (creature, rival or tribe)"]
   },
-  "primitive": {
-    "name": "Primitive",
-    "standardSkills": ["Brawn","Endurance","Evade","Locale","Perception","Stealth"],
-    "chooseOne": ["Athletics","Boating","Swim"]
+  "Primitive": {
+    "standardSkills": ["Brawn","Endurance","Evade","Locale","Perception","Stealth","Athletics","Boating","Swim"],
+    "professionalSkills": ["Craft","Healing","Lore","Musicianship","Navigation","Survival","Track"],
+    "combatStyles": ["Flint Death Dealer","Ghost Warrior","Head Hunter","Jaguar Brother","Jungle Savage","Savannah Hunter"],
+    "passions": ["Loyalty to Chief/Headman","Love (friend, sibling or romantic lover)","Hate (something that scares or intimidates you)"]
   }
 }
