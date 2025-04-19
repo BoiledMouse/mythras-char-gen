@@ -13,7 +13,18 @@ export function SkillsStep() {
 
   const cultureStandardSkills = cultureDef.standardSkills || [];
   const cultureProfSkills = cultureDef.professionalSkills || cultureDef.professional || [];
-  const availableCombatStyles = cultureDef.combatStyles || skillsData.combatStyles || [];
+  <h4 className="mt-4">Current Skills</h4>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.keys(baseStandard).map(s => {
+              const total = baseStandard[s] + (cultStdAlloc[s]||0);
+              return <div key={s} style={skillColor(total)}><strong>{s}:</strong> {total}%</div>;
+            })}
+            {Object.keys(baseProfessional).map(s => {
+              const total = baseProfessional[s] + (cultProfSel.includes(s)?cultProfAlloc[s]||0:0) + (cultCombatSel===s?cultCombatAlloc:0);
+              return <div key={s} style={skillColor(total)}><strong>{s}:</strong> {total}%</div>;
+            })}
+          </div>
+          <button onClick={()=>setPhase(2)} className="mt-4 px-4 py-2 bg-gold">Next</button>
   const careerStandardSkills = careerDef.standardSkills || [];
   const careerProfSkills = careerDef.professionalSkills || [];
 
