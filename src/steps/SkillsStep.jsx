@@ -14,7 +14,7 @@ export function SkillsStep() {
   const cultureStandardSkills = cultureDef.standardSkills || [];
   const cultureProfSkills = cultureDef.professionalSkills || cultureDef.professional || [];
   const availableCombatStyles = cultureDef.combatStyles || skillsData.combatStyles || [];
-  const careerStandardSkills = careerDef.standardSkills || []; = careerDef.standardSkills || [];
+  const careerStandardSkills = careerDef.standardSkills || [];
   const careerProfSkills = careerDef.professionalSkills || [];
 
   // Compute base from attributes
