@@ -5,47 +5,50 @@ import careers from '../data/careers.json';
 import skillsData from '../data/skills.json';
 
 export function SkillsStep() {
-  const { character, updateCharacter } = useCharacter();
-  const attrs = character;
-  const cultureDef = cultures[character.culture] || {};
-  const careerDef = careers[character.career] || {};
+const { character, updateCharacter } = useCharacter();
+const attrs = character;
+const cultureDef = cultures[character.culture] || {};
+const careerDef = careers[character.career] || {};
 
-  // safe arrays
-  const cultureStandardSkills = cultureDef.standardSkills || [];
-  const cultureProfSkills = cultureDef.professionalSkills || [];
-  const availableCombatStyles = cultureDef.combatStyles || [];
+// safe arrays
+const cultureStandardSkills = cultureDef.standardSkills || [];
+const cultureProfSkills = cultureDef.professionalSkills || [];
+const availableCombatStyles = cultureDef.combatStyles || [];
+const careerStandardSkills = careerDef.standardSkills || [];
+const careerProfSkills = careerDef.professionalSkills || [];
 
-  const careerStandardSkills = careerDef.standardSkills || [];
-  const careerProfSkills = careerDef.professionalSkills || [];
+// Compute base skill from attributes, handling numeric multipliers
+const computeBase = expr => {
+const parts = expr.split(/\s*([+x])\s*/).filter(Boolean);
+let val = parseInt(attrs[parts[0]] || 0, 10);
+for (let i = 1; i < parts.length; i += 2) {
+const op = parts[i];
+const token = parts[i+1];
+const v = /^\d+$/.test(token)
+? parseInt(token, 10)
+: parseInt(attrs[token] || 0, 10);
+val = op === 'x' ? val * v : val + v;
+}
+return val;
+};
 
-  // Compute base skill from attributes, handling numeric multipliers
-  const computeBase = expr => {
-    const parts = expr.split(/\s*([+x])\s*/).filter(Boolean);
-    let val = parseInt(attrs[parts[0]] || 0, 10);
-    for (let i = 1; i < parts.length; i += 2) {
-      const op = parts[i];
-      const token = parts[i+1];
-      const v = /^\d+$/.test(token)
-        ? parseInt(token, 10)
-        : parseInt(attrs[token] || 0, 10);
-      val = op === 'x' ? val * v : val + v;
-    }
-    return val;
-  };
+// base skill tables
+const baseStandard = {};
+skillsData.standard.forEach(({ name, base }) => {
+let b = computeBase(base);
+if (["Customs", "Native Tongue"].includes(name)) b += 40;
+baseStandard[name] = b;
+});
 
-  // build base tables
-  const baseStandard = {};
-  skillsData.standard.forEach(({ name, base }) => {
-    let b = computeBase(base);
-    if (['Customs','Native Tongue'].includes(name)) b += 40;
-    baseStandard[name] = b;
-  });
+const baseProfessional = {};
+skillsData.professional.forEach(({ name, base }) => {
+baseProfessional[name] = computeBase(base);
+});
 
-  const baseProfessional = {};
-  skillsData.professional.forEach(({ name, base }) => {
-    baseProfessional[name] = computeBase(base);
-  });
-
+const baseCombatStyles = {};
+availableCombatStyles.forEach(style => {
+baseCombatStyles[style] = (attrs.STR || 0) + (attrs.DEX || 0);
+});
 
   // Phase control
   const [phase, setPhase] = useState(1);
