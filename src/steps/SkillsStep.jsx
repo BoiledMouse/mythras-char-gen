@@ -6,12 +6,7 @@ import careers from '../data/careers.json';
 import skillsData from '../data/skills.json';
 
 export function SkillsStep() {
-  const { character, updateCharacter } = useCharacter();
-  if (!character.culture) return <p>Please select a culture first.</p>;
-  if (!character.career) return <p>Please select a career first.</p>;
-  const attrs = character;
-  const cultureDef = cultures[character.culture] || {};
-  const careerDef = careers[character.career] || {};
+  
 
   // Ensure arrays
   const cultureStandardSkills = cultureDef.standardSkills || [];
