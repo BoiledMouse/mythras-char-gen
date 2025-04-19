@@ -1,4 +1,3 @@
-// src/steps/SkillsStep.jsx
 import React, { useState, useEffect } from 'react';
 import { useCharacter } from '../context/characterContext';
 import cultures from '../data/cultures.json';
@@ -11,28 +10,34 @@ export function SkillsStep() {
   const cultureDef = cultures[character.culture] || {};
   const careerDef = careers[character.career] || {};
 
+  // safe arrays
   const cultureStandardSkills = cultureDef.standardSkills || [];
-  const cultureProfSkills = cultureDef.professionalSkills || cultureDef.professional || [];
-  const availableCombatStyles = cultureDef.combatStyles || skillsData.combatStyles || [];
+  const cultureProfSkills = cultureDef.professionalSkills || [];
+  const availableCombatStyles = cultureDef.combatStyles || [];
+
   const careerStandardSkills = careerDef.standardSkills || [];
   const careerProfSkills = careerDef.professionalSkills || [];
 
-  // Compute base from attributes
-  const computeBase = (expr) => {
+  // Compute base skill from attributes, handling numeric multipliers
+  const computeBase = expr => {
     const parts = expr.split(/\s*([+x])\s*/).filter(Boolean);
     let val = parseInt(attrs[parts[0]] || 0, 10);
     for (let i = 1; i < parts.length; i += 2) {
-      const op = parts[i], attr = parts[i + 1];
-      const v = parseInt(attrs[attr] || 0, 10);
+      const op = parts[i];
+      const token = parts[i+1];
+      const v = /^\d+$/.test(token)
+        ? parseInt(token, 10)
+        : parseInt(attrs[token] || 0, 10);
       val = op === 'x' ? val * v : val + v;
     }
     return val;
   };
 
+  // build base tables
   const baseStandard = {};
   skillsData.standard.forEach(({ name, base }) => {
     let b = computeBase(base);
-    if (name === 'Customs' || name === 'Native Tongue') b += 40;
+    if (['Customs','Native Tongue'].includes(name)) b += 40;
     baseStandard[name] = b;
   });
 
@@ -40,6 +45,7 @@ export function SkillsStep() {
   skillsData.professional.forEach(({ name, base }) => {
     baseProfessional[name] = computeBase(base);
   });
+
 
   // Phase control
   const [phase, setPhase] = useState(1);
