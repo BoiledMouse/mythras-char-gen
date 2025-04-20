@@ -1,44 +1,17 @@
-/** @type {import('tailwindcss').Config} */
+// tailwind.config.js
 module.exports = {
-  content: [
-    './public/index.html',
-    './src/**/*.{js,jsx,ts,tsx}'
-  ],
+  content: ['./src/**/*.{js,jsx,ts,tsx}', './public/index.html'],
   theme: {
     extend: {
-      colors: {
-        gold: {
-          DEFAULT: '#bfa85e',
-          light:   '#e0c46c',
-          dark:    '#a78a3e'
-        },
-        parchment: '#f9f1dc'
+      backgroundImage: {
+        'wood': "url('/assets/wood.jpg')",
+        'parchment': "url('/assets/parchment.jpg')",
       },
       fontFamily: {
-        display: ['Merriweather', 'serif'],
-        body:    ['Merriweather', 'serif']
+        display: ['\"Pirata One\"', 'serif'],
+        body: ['\"EB Garamond\"', 'serif'],
       },
-      backgroundImage: theme => ({
-        'parchment-pattern': "url('/images/parchment-texture.png')"
-      }),
-      typography: (theme) => ({
-        DEFAULT: {
-          css: {
-            color: theme('colors.gray.800'),
-            a: {
-              color: theme('colors.gold.DEFAULT'),
-              '&:hover': { color: theme('colors.gold.dark') }
-            },
-            h1: { color: theme('colors.gold.dark'), fontFamily: theme('fontFamily.display').join(', ') },
-            h2: { color: theme('colors.gold.dark'), fontFamily: theme('fontFamily.display').join(', ') },
-            strong: { color: theme('colors.gray.900') },
-            'blockquote p': { color: theme('colors.gray.700'), fontStyle: 'italic' }
-          }
-        }
-      })
-    }
+    },
   },
-  plugins: [
-    require('@tailwindcss/typography')
-  ]
-};
+  plugins: [],
+}
