@@ -27,6 +27,17 @@ export default function WizardContainer() {
   const StepComponent = steps[current].component;
 
   return (
+    <>
+      {/* Full-screen wood background fixed behind everything */}
+      <div
+        className="fixed inset-0"
+        style={{
+          backgroundImage: `url(${woodBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          zIndex: -10,
+        }}
+      />
     <div
       id="wizard-root"
       className="min-h-screen w-full font-body"
