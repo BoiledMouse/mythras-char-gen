@@ -5,7 +5,10 @@ module.exports = {
   theme: {
     extend: {
       // (removed backgroundImage entry; using manual CSS classes instead)
-      backgroundImage: {},
+      backgroundImage: {
+        wood: "url('/assets/wood.jpg')",
+        parchment: "url('/assets/parchment.jpg')",
+      },
       fontFamily: {
         display: ['"Pirata One"', 'serif'],
         body: ['"EB Garamond"', 'serif'],
