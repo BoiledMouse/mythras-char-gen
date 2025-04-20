@@ -5,8 +5,8 @@ module.exports = {
   theme: {
     extend: {
       backgroundImage: {
-        wood: "url('../assets/wood.jpg')",
-        parchment: "url('../assets/parchment.jpg')",
+        wood: "url('/assets/wood.jpg')",
+        parchment: "url('/assets/parchment.jpg')",
       },
       fontFamily: {
         display: ['"Pirata One"', 'serif'],
