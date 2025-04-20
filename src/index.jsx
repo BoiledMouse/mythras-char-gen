@@ -2,19 +2,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
-import woodBg from './assets/wood.jpg';      // ensure this path is correct
 import './index.css';
+import woodBg from './assets/wood.jpg';
+
+// Apply full-screen wood background to the <body> element
+const bodyStyle = document.body.style;
+bodyStyle.backgroundImage = `url(${woodBg})`;
+bodyStyle.backgroundSize = 'cover';
+bodyStyle.backgroundPosition = 'center';
+bodyStyle.backgroundRepeat = 'no-repeat';
 
 ReactDOM.render(
-  <div
-    style={{
-      minHeight: '100vh',
-      backgroundImage: `url(${woodBg})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    }}
-  >
+  <React.StrictMode>
     <App />
-  </div>,
+  </React.StrictMode>,
   document.getElementById('root')
 );
