@@ -1,7 +1,5 @@
 // src/steps/WizardContainer.jsx
 import React, { useState } from 'react';
-import woodBg from '../assets/wood.jpg';          // you can remove this import entirely
-import parchmentBg from '../assets/parchment.jpg';
 import { ConceptStep } from './ConceptStep';
 import { AttributesStep } from './AttributesStep';
 import { SkillsStep } from './SkillsStep';
@@ -9,6 +7,9 @@ import { EquipmentStep } from './EquipmentStep';
 import { MagicStep } from './MagicStep';
 import { CultStep } from './CultStep';
 import { ReviewStep } from './ReviewStep';
+
+// Import the parchment texture so webpack bundles it
+import parchmentBg from '../assets/parchment.jpg';
 
 const steps = [
   { id: 'Concept',    label: '1. Concept',    component: ConceptStep },
@@ -26,7 +27,7 @@ export default function WizardContainer() {
 
   return (
     <div id="wizard-root" className="min-h-screen w-full font-body">
-      {/* Parchment‑textured stepper */}
+      {/* Parchment‑textured top stepper */}
       <div
         className="shadow-inner border border-yellow-400 rounded-xl p-4 sm:p-6 md:p-8 mb-6"
         style={{
@@ -64,7 +65,7 @@ export default function WizardContainer() {
         <StepComponent />
       </div>
 
-      {/* Navigation */}
+      {/* Prev/Next Navigation */}
       <div className="mt-6 flex justify-between">
         <button
           onClick={() => setCurrent(c => Math.max(c - 1, 0))}
