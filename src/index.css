@@ -7,14 +7,14 @@
 body {
   font-family: 'EB Garamond', serif;
   color: #1f2937; /* gray-900 */
-  background-image: url("%PUBLIC_URL%/assets/wood.jpg");
+  background-image: url("/assets/wood.jpg");
   background-size: cover;
   background-position: center;
 }
 
 /* Content panels use parchment background */
 .bg-parchment {
-  background-image: url("%PUBLIC_URL%/assets/parchment.jpg");
+  background-image: url("/assets/parchment.jpg");
   background-size: cover;
   background-position: center;
 }
