@@ -1,28 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind typography;
-@tailwind utilities;
+/* index.css */
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond&family=Pirata+One&display=swap');
 
-/* Global Styles */
-@layer base {
-  html, body {
-    @apply bg-parchment font-body text-gray-800 leading-relaxed;
-    /* background-image removed for now */
-    /* background-image: url("./images/parchment-texture.png"); */
-    background-size: cover;
-    background-attachment: fixed;
-  }
-}
-
-/* Print Styles */
-@media print {
-  body {
-    background: white !important;
-  }
-  .no-print, button, input, select, textarea {
-    display: none !important;
-  }
-  .bg-white { background-color: white !important; }
-  .shadow, .ring, .prose { box-shadow: none !important; border: none !important; }
-  * { color: black !important; }
+body {
+  @apply bg-wood bg-cover bg-center font-body text-gray-900;
 }
