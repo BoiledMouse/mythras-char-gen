@@ -101,6 +101,7 @@ export default function WizardContainer() {
           Next
         </button>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
