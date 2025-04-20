@@ -1,16 +1,19 @@
-// src/App.jsx
 import React from 'react';
-import WizardContainer from './steps/WizardContainer';
+import ReactDOM from 'react-dom';
+import App from './App';
+import './index.css';
+import woodBg from './assets/wood.jpg';
 
-export default function App() {
-  return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <main className="max-w-3xl mx-auto w-full">
-      <header className="mb-6">
-        <h1 className="text-xl md:text-2xl font-bold text-center">Mythras Character Generator</h1>
-      </header>
-      <WizardContainer />
-      </main>
-    </div>
-  );
-}
+// Apply full-screen wood background to the <body> element
+const bodyStyle = document.body.style;
+bodyStyle.backgroundImage = `url(${woodBg})`;
+bodyStyle.backgroundSize = 'cover';
+bodyStyle.backgroundPosition = 'center';
+bodyStyle.backgroundRepeat = 'no-repeat';
+
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root')
+);
