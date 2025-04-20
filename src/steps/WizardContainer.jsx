@@ -1,4 +1,3 @@
-// src/steps/WizardContainer.jsx
 import React, { useState } from 'react';
 import { ConceptStep } from './ConceptStep';
 import { AttributesStep } from './AttributesStep';
@@ -9,13 +8,13 @@ import { CultStep } from './CultStep';
 import { ReviewStep } from './ReviewStep';
 
 const steps = [
-  { id: 'Concept', component: ConceptStep },
-  { id: 'Attributes', component: AttributesStep },
-  { id: 'Skills', component: SkillsStep },
-  { id: 'Equipment', component: EquipmentStep },
-  { id: 'Magic', component: MagicStep },
-  { id: 'Cult', component: CultStep },
-  { id: 'Review', component: ReviewStep },
+  { id: 'Concept', label: '1. Concept', component: ConceptStep },
+  { id: 'Attributes', label: '2. Attributes', component: AttributesStep },
+  { id: 'Skills', label: '3. Skills', component: SkillsStep },
+  { id: 'Equipment', label: '4. Equipment', component: EquipmentStep },
+  { id: 'Magic', label: '5. Magic', component: MagicStep },
+  { id: 'Cult', label: '6. Cult', component: CultStep },
+  { id: 'Review', label: '7. Review', component: ReviewStep },
 ];
 
 export default function WizardContainer() {
@@ -23,44 +22,41 @@ export default function WizardContainer() {
   const StepComponent = steps[current].component;
 
   return (
-    <div className="max-w-3xl mx-auto">
-      {/* Stepper Navigation */}
-      <nav aria-label="Progress" className="mb-6">
-        <ol className="flex justify-between items-center">
-          {steps.map((s, i) => (
-            <li key={s.id} className="flex-1 flex flex-col items-center">
-              <button
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 ${
-                  i === current ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'
-                }`}
-                onClick={() => setCurrent(i)}
-              >
-                {i + 1}
-              </button>
-              <span className="mt-2 text-xs font-medium">{s.id}</span>
-            </li>
+    <div id="wizard-root" className="max-w-5xl mx-auto pt-6 font-body">
+      {/* Parchment-style top stepper */}
+      <div className="bg-parchment shadow-inner border border-yellow-400 rounded-xl p-4 sm:p-6 md:p-8 mb-6">
+        <div className="flex flex-wrap justify-between items-center gap-2">
+          {steps.map((step, i) => (
+            <button
+              key={step.id}
+              onClick={() => setCurrent(i)}
+              className={`transition px-4 py-2 rounded-xl border font-display text-sm sm:text-base whitespace-nowrap
+                ${i === current
+                  ? 'bg-gold text-white border-yellow-700'
+                  : 'bg-yellow-100 text-gray-700 border-yellow-300 hover:bg-yellow-200'}`}
+            >
+              {step.label}
+            </button>
           ))}
-        </ol>
-      </nav>
-
-      {/* Step Content */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <div className="prose prose-lg prose-indigo">
-          <StepComponent />
         </div>
       </div>
 
-      {/* Prev/Next Controls */}
+      {/* Step Content */}
+      <div className="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow prose prose-lg prose-indigo">
+        <StepComponent />
+      </div>
+
+      {/* Prev/Next Navigation */}
       <div className="mt-6 flex justify-between">
         <button
-          className="px-5 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 disabled:opacity-50"
+          className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
           onClick={() => setCurrent(c => Math.max(c - 1, 0))}
           disabled={current === 0}
         >
           Previous
         </button>
         <button
-          className="px-5 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+          className="px-4 py-2 bg-gold text-white rounded hover:bg-gold-dark disabled:opacity-50"
           onClick={() => setCurrent(c => Math.min(c + 1, steps.length - 1))}
           disabled={current === steps.length - 1}
         >
