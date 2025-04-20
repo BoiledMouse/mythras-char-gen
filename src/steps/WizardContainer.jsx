@@ -1,5 +1,7 @@
 // src/steps/WizardContainer.jsx
 import React, { useState } from 'react';
+import woodBg from '../assets/wood.jpg';          // you can remove this import entirely
+import parchmentBg from '../assets/parchment.jpg';
 import { ConceptStep } from './ConceptStep';
 import { AttributesStep } from './AttributesStep';
 import { SkillsStep } from './SkillsStep';
@@ -7,10 +9,6 @@ import { EquipmentStep } from './EquipmentStep';
 import { MagicStep } from './MagicStep';
 import { CultStep } from './CultStep';
 import { ReviewStep } from './ReviewStep';
-
-// Import textures directly from src/assets so webpack bundles them
-import woodBg from '../assets/wood.jpg';
-import parchmentBg from '../assets/parchment.jpg';
 
 const steps = [
   { id: 'Concept',    label: '1. Concept',    component: ConceptStep },
@@ -27,27 +25,8 @@ export default function WizardContainer() {
   const StepComponent = steps[current].component;
 
   return (
-    <>
-      {/* Full-screen wood background fixed behind everything */}
-      <div
-        className="fixed inset-0"
-        style={{
-          backgroundImage: `url(${woodBg})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          zIndex: -10,
-        }}
-      />
-    <div
-      id="wizard-root"
-      className="min-h-screen w-full font-body"
-      style={{
-        backgroundImage: `url(${woodBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
-      {/* Parchment-style top stepper */}
+    <div id="wizard-root" className="min-h-screen w-full font-body">
+      {/* Parchment‑textured stepper */}
       <div
         className="shadow-inner border border-yellow-400 rounded-xl p-4 sm:p-6 md:p-8 mb-6"
         style={{
@@ -61,10 +40,11 @@ export default function WizardContainer() {
             <button
               key={step.id}
               onClick={() => setCurrent(i)}
-              className={`transition px-4 py-2 rounded-xl border font-display text-sm sm:text-base whitespace-nowrap
-                ${i === current
+              className={`transition px-4 py-2 rounded-xl border font-display text-sm sm:text-base whitespace-nowrap ${
+                i === current
                   ? 'bg-gold text-white border-yellow-700'
-                  : 'bg-yellow-100 text-gray-700 border-yellow-300 hover:bg-yellow-200'}`}
+                  : 'bg-yellow-100 text-gray-700 border-yellow-300 hover:bg-yellow-200'
+              }`}
             >
               {step.label}
             </button>
@@ -72,7 +52,7 @@ export default function WizardContainer() {
         </div>
       </div>
 
-      {/* Parchment-style content panel */}
+      {/* Parchment‑textured content panel */}
       <div
         className="rounded-xl shadow p-4 sm:p-6 md:p-8 prose prose-lg prose-indigo"
         style={{
@@ -84,7 +64,7 @@ export default function WizardContainer() {
         <StepComponent />
       </div>
 
-      {/* Prev/Next Navigation */}
+      {/* Navigation */}
       <div className="mt-6 flex justify-between">
         <button
           onClick={() => setCurrent(c => Math.max(c - 1, 0))}
@@ -101,7 +81,6 @@ export default function WizardContainer() {
           Next
         </button>
       </div>
-      </div>
-    </>
+    </div>
   );
 }
