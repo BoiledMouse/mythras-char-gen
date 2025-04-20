@@ -1,11 +1,11 @@
-// src/index.js
+// src/index.jsx
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 import './index.css';
 import woodBg from './assets/wood.jpg';
 
-// Apply full-screen wood background to the <body> element
+// Paint the body with the wood texture before React mounts
 const bodyStyle = document.body.style;
 bodyStyle.backgroundImage = `url(${woodBg})`;
 bodyStyle.backgroundSize = 'cover';
