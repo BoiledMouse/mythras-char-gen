@@ -6,7 +6,7 @@
 
 body {
   /* Main wood background */
-  background: url('/assets/wood.jpg') center/cover no-repeat;
+  background: url(%PUBLIC_URL%/assets/wood.jpg) center/cover no-repeat;
   font-family: 'EB Garamond', serif;
   color: #1f2937; /* gray-900 */
 }
