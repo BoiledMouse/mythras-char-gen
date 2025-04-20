@@ -8,7 +8,7 @@ import { MagicStep } from './MagicStep';
 import { CultStep } from './CultStep';
 import { ReviewStep } from './ReviewStep';
 
-// Import textures so webpack bundles them
+// Import textures directly from src/assets so webpack bundles them
 import woodBg from '../assets/wood.jpg';
 import parchmentBg from '../assets/parchment.jpg';
 
@@ -36,7 +36,7 @@ export default function WizardContainer() {
         backgroundPosition: 'center',
       }}
     >
-      {/* Parchment‑textured stepper */}
+      {/* Parchment-style top stepper */}
       <div
         className="shadow-inner border border-yellow-400 rounded-xl p-4 sm:p-6 md:p-8 mb-6"
         style={{
@@ -61,7 +61,7 @@ export default function WizardContainer() {
         </div>
       </div>
 
-      {/* Parchment‑textured content panel */}
+      {/* Parchment-style content panel */}
       <div
         className="rounded-xl shadow p-4 sm:p-6 md:p-8 prose prose-lg prose-indigo"
         style={{
@@ -73,7 +73,7 @@ export default function WizardContainer() {
         <StepComponent />
       </div>
 
-      {/* Navigation buttons */}
+      {/* Prev/Next Navigation */}
       <div className="mt-6 flex justify-between">
         <button
           onClick={() => setCurrent(c => Math.max(c - 1, 0))}
