@@ -13,7 +13,7 @@ body {
 
 /* Parchment card background */
 .bg-parchment {
-  background: url('/assets/parchment.jpg') center/cover no-repeat;
+  background: url(%PUBLIC_URL%/assets/parchment.jpg) center/cover no-repeat;
 }
 
 /* Responsive padding for wizard container */
