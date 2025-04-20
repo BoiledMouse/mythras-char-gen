@@ -5,10 +5,13 @@
 @tailwind utilities;
 
 body {
-  /* Main wood background */
-  background: url(%PUBLIC_URL%/assets/wood.jpg) center/cover no-repeat;
-  font-family: 'EB Garamond', serif;
-  color: #1f2937; /* gray-900 */
+  /* Apply the wood texture via Tailwind utility */
+  @apply bg-wood bg-cover bg-center font-body text-gray-900;
+}
+
+/* Parchment card background as Tailwind utility */
+.bg-parchment {
+  @apply bg-parchment bg-cover bg-center;
 }
 
 /* Parchment card background */
