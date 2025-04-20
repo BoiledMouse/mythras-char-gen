@@ -5,10 +5,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* make the page fill the viewport */
 html, body, #root {
   height: 100%;
   margin: 0;
+  background-image: url('./assets/wood.jpg');
+  background-size: cover;
+  background-position: center;
 }
 
 /* Full‑page wood background – CRA will resolve this via webpack */
