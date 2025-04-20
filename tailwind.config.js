@@ -1,17 +1,19 @@
 // tailwind.config.js
+const path = require('path');
+
 module.exports = {
   content: ['./src/**/*.{js,jsx,ts,tsx}', './public/index.html'],
   theme: {
     extend: {
       backgroundImage: {
-        'wood': "url('/assets/wood.jpg')",
-        'parchment': "url('/assets/parchment.jpg')",
+        wood: "url('../assets/wood.jpg')",
+        parchment: "url('../assets/parchment.jpg')",
       },
       fontFamily: {
-        display: ['\"Pirata One\"', 'serif'],
-        body: ['\"EB Garamond\"', 'serif'],
+        display: ['"Pirata One"', 'serif'],
+        body: ['"EB Garamond"', 'serif'],
       },
     },
   },
   plugins: [],
-}
+};
