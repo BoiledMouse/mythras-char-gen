@@ -1,16 +1,17 @@
+/* src/index.css */
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond&family=Pirata+One&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Make the app full‑height so the background covers everything */
+/* make the page fill the viewport */
 html, body, #root {
   height: 100%;
   margin: 0;
 }
 
-/* Global wood background from src/assets */
+/* Full‑page wood background – CRA will resolve this via webpack */
 body {
   font-family: 'EB Garamond', serif;
   color: #1f2937;
@@ -19,7 +20,7 @@ body {
   background-position: center;
 }
 
-/* Parchment panel utility */
+/* Parchment panels */
 .bg-parchment {
   background-image: url('./assets/parchment.jpg');
   background-size: cover;
