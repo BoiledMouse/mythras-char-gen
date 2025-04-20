@@ -22,9 +22,24 @@ export default function WizardContainer() {
   const StepComponent = steps[current].component;
 
   return (
-    <div id="wizard-root" className="max-w-5xl mx-auto pt-6 font-body">
+    <div
+      id="wizard-root"
+      style={{
+        backgroundImage: `url(${process.env.PUBLIC_URL}/assets/wood.jpg)`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+      className="max-w-5xl mx-auto pt-6 font-body"
+    >
       {/* Parchment-style top stepper */}
-      <div className="bg-parchment shadow-inner border border-yellow-400 rounded-xl p-4 sm:p-6 md:p-8 mb-6">
+      <div
+        style={{
+          backgroundImage: `url(${process.env.PUBLIC_URL}/assets/parchment.jpg)`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+        className="shadow-inner border border-yellow-400 rounded-xl p-4 sm:p-6 md:p-8 mb-6"
+      >
         <div className="flex flex-wrap justify-between items-center gap-2">
           {steps.map((step, i) => (
             <button
@@ -42,7 +57,14 @@ export default function WizardContainer() {
       </div>
 
       {/* Step Content */}
-      <div className="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow prose prose-lg prose-indigo">
+      <div
+        style={{
+          backgroundImage: `url(${process.env.PUBLIC_URL}/assets/parchment.jpg)`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+        className="p-4 sm:p-6 md:p-8 rounded-xl shadow prose prose-lg prose-indigo"
+      >
         <StepComponent />
       </div>
 
