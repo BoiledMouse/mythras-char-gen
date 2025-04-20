@@ -1,4 +1,4 @@
-
+// src/steps/WizardContainer.jsx
 import React, { useState } from 'react';
 import { ConceptStep } from './ConceptStep';
 import { AttributesStep } from './AttributesStep';
@@ -8,6 +8,7 @@ import { MagicStep } from './MagicStep';
 import { CultStep } from './CultStep';
 import { ReviewStep } from './ReviewStep';
 
+// Import textures directly from src/assets to ensure webpack bundles them
 import woodBg from '../assets/wood.jpg';
 import parchmentBg from '../assets/parchment.jpg';
 
@@ -26,14 +27,8 @@ export default function WizardContainer() {
   const StepComponent = steps[current].component;
 
   return (
-    <div
-      id="wizard-root"
-      style={{
-        backgroundImage: `url(${woodBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-      className="min-h-screen max-w-5xl mx-auto pt-6 font-body"
+    <div id="wizard-root" className="min-h-screen w-full font-body">
+      {/* Parchment-style top stepper */}
     >
       {/* Parchment-style top stepper */}
       <div
