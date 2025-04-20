@@ -11,14 +11,14 @@ body {
 
 /* Wood background from public/assets */
 .bg-wood {
-  background-image: url('%PUBLIC_URL%/assets/wood.jpg');
+  background-image: url('/assets/wood.jpg');
   background-size: cover;
   background-position: center;
 }
 
 /* Parchment background from public/assets */
 .bg-parchment {
-  background-image: url('%PUBLIC_URL%/assets/parchment.jpg');
+  background-image: url('/assets/parchment.jpg');
   background-size: cover;
   background-position: center;
 }
