@@ -8,8 +8,8 @@ import { MagicStep } from './MagicStep';
 import { CultStep } from './CultStep';
 import { ReviewStep } from './ReviewStep';
 
-import woodBg from './assets/wood.jpg';
-import parchmentBg from './assets/parchment.jpg';
+import woodBg from '../assets/wood.jpg';
+import parchmentBg from '../assets/parchment.jpg';
 
 const steps = [
   { id: 'Concept', label: '1. Concept', component: ConceptStep },
