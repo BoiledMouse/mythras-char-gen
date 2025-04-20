@@ -4,26 +4,31 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Make full‐screen so background covers entire viewport */
+/* Full‐height page so the wrapper’s min‑height:screen fills */
 html, body, #root {
   height: 100%;
   margin: 0;
 }
 
+/* Global font and text color */
 body {
   font-family: 'EB Garamond', serif;
-  color: #1f2937;
-  /* paint the wood on the whole page */
-  background: url("%PUBLIC_URL%/assets/wood.jpg") center/cover no-repeat fixed;
+  color: #1f2937; /* gray‑900 */
+  background-color: #f3f4f6; /* fallback light gray */
 }
 
-/* Parchment cards inside the wizard */
-.bg-parchment {
-  background: url("%PUBLIC_URL%/assets/parchment.jpg") center/cover no-repeat;
-  background-size: cover;
-}
-
-/* wizard container padding */
+/* Override Tailwind’s container spacing if needed */
 #wizard-root {
   @apply px-4 sm:px-6 md:px-8 lg:px-10;
+}
+
+/* Example utility you can use if you ever need a parchment CSS class */
+.px-parchment {
+  /* no background here—use inline style in React */
+  padding: 1rem;
+}
+
+/* Optional: style your buttons */
+button {
+  font-family: 'Pirata One', serif;
 }
