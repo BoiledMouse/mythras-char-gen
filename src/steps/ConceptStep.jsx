@@ -32,11 +32,12 @@ const socialClassTables = {
   ],
 };
 
-// Helpers
+// Helpers to roll dice
 const rollD100 = () => rollDice('1d100');
 const roll4d6 = () => rollDice('4d6');
 
-const ConceptStep = ({ formData = {}, onChange, onNext }) => {
+// Concept Step Component
+export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
   const {
     playerName = '', characterName = '', age = '', sex = '',
     culture = '', socialClass = '', socialRoll = null,
@@ -68,6 +69,8 @@ const ConceptStep = ({ formData = {}, onChange, onNext }) => {
 
   return (
     <div className="w-full p-4 space-y-6">
+
+      {/* Player & Character */}
       <div className="form-group">
         <label>Player Name</label>
         <input
@@ -86,6 +89,8 @@ const ConceptStep = ({ formData = {}, onChange, onNext }) => {
           onChange={onChange}
         />
       </div>
+
+      {/* Age & Sex */}
       <div className="form-group">
         <label>Age</label>
         <input
@@ -111,6 +116,8 @@ const ConceptStep = ({ formData = {}, onChange, onNext }) => {
           <option value="Other">Other</option>
         </select>
       </div>
+
+      {/* Culture & Social Class */}
       <div className="form-group flex space-x-2">
         <div className="flex-1">
           <label>Culture</label>
@@ -129,7 +136,62 @@ const ConceptStep = ({ formData = {}, onChange, onNext }) => {
             {cultureOptions.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
-        
+        <button
+          type="button"
+          className="btn btn-secondary mt-6"
+          onClick={handleRollSocialClass}
+          disabled={!culture}
+        >
+          Roll Class
+        </button>
+      </div>
+      <div className="form-group">
+        <label>Social Class{socialRoll != null && ` (roll: ${socialRoll})`}</label>
+        <select
+          name="socialClass"
+          className="form-control w-full"
+          value={socialClass}
+          onChange={onChange}
+          disabled={!culture}
+        >
+          <option value="">Select Social Class</option>
+          {culture && socialClassTables[culture].map(sc => (
+            <option key={sc.name} value={sc.name}>{sc.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Silver Generation */}
+      <div className="form-group">
+        <button
+          className="btn btn-secondary w-full"
+          onClick={handleGenerateSilver}
+          disabled={!culture || !socialClass}
+        >
+          Generate Starting Silver
+        </button>
+      </div>
+
+      {startingSilver != null && (
+        <>
+          <div className="form-group">
+            <label>Base Roll (4d6)</label>
+            <input
+              readOnly
+              className="form-control w-full"
+              value={baseRoll}
+            />
+          </div>
+          <div className="form-group">
+            <label>Calculation</label>
+            <div className="p-2 bg-gray-100 rounded w-full">
+              (4d6 = {baseRoll}) × {cultureBaseMultiplier[culture]} × {silverMod} = <strong>{startingSilver} sp</strong>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Navigation handled elsewhere */}
     </div>
   );
 };
