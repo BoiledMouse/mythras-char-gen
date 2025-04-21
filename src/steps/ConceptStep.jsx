@@ -47,21 +47,20 @@ export default function ConceptStep({ formData = {}, onChange }) {
     startingSilver = null,
   } = formData;
 
-  // Helper to call parent onChange(fieldName, value)
-    // Field change handler: pass native event to parent
+  // Generic field handler: call onChange(fieldName, value)
   const handleField = e => {
-    onChange(e);
+    const { name, value } = e.target;
+    onChange(name, value);
   };
 
-
-  // Roll to pick a social class
+  // Roll social class
   const handleRollClass = () => {
     if (!culture) return;
     const roll = rollDice('1d100');
     const entry = (socialClassTables[culture] || []).find(e => roll >= e.min && roll <= e.max) || {};
-    change('socialRoll', roll);
-    change('socialClass', entry.name || '');
-    change('startingSilver', null);
+    onChange('socialRoll', roll);
+    onChange('socialClass', entry.name || '');
+    onChange('startingSilver', null);
   };
 
   // Generate starting silver
@@ -72,9 +71,9 @@ export default function ConceptStep({ formData = {}, onChange }) {
     const entry = (socialClassTables[culture] || []).find(e => e.name === socialClass) || {};
     const mod = entry.mod || 1;
     const total = Math.floor(roll * mult * mod);
-    change('baseRoll', roll);
-    change('silverMod', mod);
-    change('startingSilver', total);
+    onChange('baseRoll', roll);
+    onChange('silverMod', mod);
+    onChange('startingSilver', total);
   };
 
   return (
@@ -84,9 +83,9 @@ export default function ConceptStep({ formData = {}, onChange }) {
         <input
           id="playerName"
           name="playerName"
-          className="form-control w-full"
           value={playerName}
           onChange={handleField}
+          className="form-control w-full"
         />
       </label>
 
@@ -95,9 +94,9 @@ export default function ConceptStep({ formData = {}, onChange }) {
         <input
           id="characterName"
           name="characterName"
-          className="form-control w-full"
           value={characterName}
           onChange={handleField}
+          className="form-control w-full"
         />
       </label>
 
@@ -108,9 +107,9 @@ export default function ConceptStep({ formData = {}, onChange }) {
           name="age"
           type="number"
           min="0"
-          className="form-control w-full"
           value={age}
           onChange={handleField}
+          className="form-control w-full"
         />
       </label>
 
@@ -119,9 +118,9 @@ export default function ConceptStep({ formData = {}, onChange }) {
         <select
           id="sex"
           name="sex"
-          className="form-control w-full"
           value={sex}
           onChange={handleField}
+          className="form-control w-full"
         >
           <option value="">Select Sex</option>
           <option value="Male">Male</option>
@@ -136,13 +135,13 @@ export default function ConceptStep({ formData = {}, onChange }) {
           <select
             id="culture"
             name="culture"
-            className="form-control w-full"
             value={culture}
             onChange={e => {
               handleField(e);
-              change('socialClass', '');
-              change('socialRoll', null);
+              onChange('socialClass', '');
+              onChange('socialRoll', null);
             }}
+            className="form-control w-full"
           >
             <option value="">Select a Culture</option>
             {cultureOptions.map(c => <option key={c} value={c}>{c}</option>)}
@@ -163,15 +162,15 @@ export default function ConceptStep({ formData = {}, onChange }) {
         <select
           id="socialClass"
           name="socialClass"
-          className="form-control w-full"
           value={socialClass}
           onChange={handleField}
           disabled={!culture}
+          className="form-control w-full"
         >
           <option value="">Select Social Class</option>
-          {(socialClassTables[culture] || []).map(sc => [
+          {(socialClassTables[culture] || []).map(sc => (
             <option key={sc.name} value={sc.name}>{sc.name}</option>
-          ])}
+          ))}
         </select>
       </label>
 
@@ -192,8 +191,8 @@ export default function ConceptStep({ formData = {}, onChange }) {
               id="baseRoll"
               name="baseRoll"
               readOnly
-              className="form-control w-full"
               value={baseRoll}
+              className="form-control w-full"
             />
           </label>
           <div>
