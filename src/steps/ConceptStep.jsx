@@ -56,8 +56,8 @@ export default function ConceptStep({ formData = {}, onChange }) {
     if (!culture) return;
     const roll = rollDice('1d100');
     const entry = (socialClassTables[culture] || []).find(e => roll >= e.min && roll <= e.max) || {};
-    onChange({ target: { name: 'socialRoll', value: roll } });
-    onChange({ target: { name: 'socialClass', value: entry.name || '' } });
+    onChange({ target: { name: 'socialRoll',   value: roll } });
+    onChange({ target: { name: 'socialClass',  value: entry.name || '' } });
     onChange({ target: { name: 'startingSilver', value: null } });
   };
 
@@ -65,11 +65,11 @@ export default function ConceptStep({ formData = {}, onChange }) {
   const handleGenerateSilver = () => {
     if (!culture || !socialClass) return;
     const roll = rollDice('4d6');
-    const multiplier = (cultures[culture]?.baseSilver || 0);
+    const multiplier = cultures[culture]?.baseSilver || 0;
     const mod = (socialClassTables[culture] || []).find(e => e.name === socialClass)?.mod || 1;
     const total = Math.floor(roll * multiplier * mod);
-    onChange({ target: { name: 'baseRoll', value: roll } });
-    onChange({ target: { name: 'silverMod', value: mod } });
+    onChange({ target: { name: 'baseRoll',    value: roll } });
+    onChange({ target: { name: 'silverMod',   value: mod } });
     onChange({ target: { name: 'startingSilver', value: total } });
   };
 
@@ -77,6 +77,7 @@ export default function ConceptStep({ formData = {}, onChange }) {
     <div>
       <h2 className="text-2xl font-semibold mb-4">Character Concept</h2>
 
+      {/* Character Name */}
       <div className="mb-4">
         <label htmlFor="characterName" className="block mb-1 font-medium">Character Name</label>
         <input
@@ -90,6 +91,7 @@ export default function ConceptStep({ formData = {}, onChange }) {
         />
       </div>
 
+      {/* Player Name */}
       <div className="mb-4">
         <label htmlFor="playerName" className="block mb-1 font-medium">Player Name</label>
         <input
@@ -103,6 +105,7 @@ export default function ConceptStep({ formData = {}, onChange }) {
         />
       </div>
 
+      {/* Age */}
       <div className="mb-4">
         <label htmlFor="age" className="block mb-1 font-medium">Age</label>
         <input
@@ -116,6 +119,7 @@ export default function ConceptStep({ formData = {}, onChange }) {
         />
       </div>
 
+      {/* Sex */}
       <div className="mb-4">
         <label htmlFor="sex" className="block mb-1 font-medium">Sex</label>
         <select
@@ -132,6 +136,7 @@ export default function ConceptStep({ formData = {}, onChange }) {
         </select>
       </div>
 
+      {/* Culture */}
       <div className="mb-4">
         <label htmlFor="culture" className="block mb-1 font-medium">Select Culture/Background</label>
         <select
@@ -148,6 +153,7 @@ export default function ConceptStep({ formData = {}, onChange }) {
         </select>
       </div>
 
+      {/* Career */}
       <div className="mb-4">
         <label htmlFor="career" className="block mb-1 font-medium">Select Career</label>
         <select
@@ -164,8 +170,11 @@ export default function ConceptStep({ formData = {}, onChange }) {
         </select>
       </div>
 
+      {/* Social Class Roll */}
       <div className="mb-4">
-        <label className="block mb-1 font-medium">Social Class{socialRoll != null && ` (roll: ${socialRoll})`}</label>
+        <label className="block mb-1 font-medium">
+          Social Class{socialRoll != null && ` (roll: ${socialRoll})`}
+        </label>
         <div className="flex space-x-2">
           <select
             id="socialClass"
@@ -191,6 +200,7 @@ export default function ConceptStep({ formData = {}, onChange }) {
         </div>
       </div>
 
+      {/* Starting Silver */}
       <div className="mb-4">
         <button
           type="button"
@@ -202,7 +212,8 @@ export default function ConceptStep({ formData = {}, onChange }) {
         </button>
         {startingSilver != null && (
           <div className="mt-2 text-sm">
-            (4d6 = {baseRoll}) × {cultures[culture]?.baseSilver} × {silverMod} = <strong>{startingSilver} sp</strong>
+            (4d6 = {baseRoll}) × {cultures[culture]?.baseSilver} × {silverMod} =&nbsp;
+            <strong>{startingSilver} sp</strong>
           </div>
         )}
       </div>
