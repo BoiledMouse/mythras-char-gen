@@ -38,16 +38,24 @@ const rollD100 = () => rollDice('1d100');
 const roll4d6 = () => rollDice('4d6');
 
 // ConceptStep component
-function ConceptStep({ formData = {}, onChange }) {
+export function ConceptStep({ formData = {}, onChange }) {
   const {
-    playerName = '', characterName = '', age = '', sex = '',
-    culture = '', socialClass = '', socialRoll = null,
-    baseRoll = null, silverMod = null, startingSilver = null,
+    playerName = '',
+    characterName = '',
+    age = '',
+    sex = '',
+    culture = '',
+    socialClass = '',
+    socialRoll = null,
+    baseRoll = null,
+    silverMod = null,
+    startingSilver = null,
   } = formData;
 
-  // Unified change handler
-  const handleFieldChange = (e) => {
-    onChange(e);
+  // Unified change handler: expects onChange(name, value)
+  const handleFieldChange = e => {
+    const { name, value } = e.target;
+    onChange(name, value);
   };
 
   // Roll on social class table
@@ -55,9 +63,6 @@ function ConceptStep({ formData = {}, onChange }) {
     if (!culture) return;
     const roll = rollD100();
     const entry = socialClassTables[culture].find(e => roll >= e.min && roll <= e.max) || {};
-    onChange({ target: { name: 'socialRoll', value: roll } });
-    onChange({ target: { name: 'socialClass', value: entry.name || '' } });
-  };
     onChange('socialRoll', roll);
     onChange('socialClass', entry.name || '');
   };
@@ -70,20 +75,13 @@ function ConceptStep({ formData = {}, onChange }) {
     const entry = socialClassTables[culture].find(e => e.name === socialClass) || {};
     const mod = entry.mod || 1;
     const total = Math.floor(roll * multiplier * mod);
-    onChange({ target: { name: 'baseRoll', value: roll } });
-    onChange({ target: { name: 'silverMod', value: mod } });
-    onChange({ target: { name: 'startingSilver', value: total } });
-  };
-    const mod = entry.mod || 1;
-    const total = Math.floor(roll * multiplier * mod);
     onChange('baseRoll', roll);
     onChange('silverMod', mod);
     onChange('startingSilver', total);
   };
 
   return (
-    <div className="bg-parchment px-4 py-6 space-y-6 max-w-none mx-auto w-full">
-
+    <div className="bg-parchment px-4 py-6 space-y-6 max-w-4xl mx-auto w-full">
       <label htmlFor="playerName">
         Player Name
         <input
@@ -151,7 +149,9 @@ function ConceptStep({ formData = {}, onChange }) {
             }}
           >
             <option value="">Select a Culture</option>
-            {cultureOptions.map(c => <option key={c} value={c}>{c}</option>)}
+            {cultureOptions.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
           </select>
         </label>
         <button
@@ -175,7 +175,9 @@ function ConceptStep({ formData = {}, onChange }) {
           disabled={!culture}
         >
           <option value="">Select Social Class</option>
-          {culture && socialClassTables[culture].map(sc => <option key={sc.name} value={sc.name}>{sc.name}</option>)}
+          {culture && socialClassTables[culture].map(sc => (
+            <option key={sc.name} value={sc.name}>{sc.name}</option>
+          ))}
         </select>
       </label>
 
@@ -213,4 +215,3 @@ function ConceptStep({ formData = {}, onChange }) {
 }
 
 export default ConceptStep;
-export { ConceptStep };
