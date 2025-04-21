@@ -1,13 +1,15 @@
+// src/index.js
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 import './index.css';
+import { CharacterProvider } from './context/characterContext';
 
-// (If you still want the wood bg applied here, you can re‑add it,
-// but for now let’s just focus on the provider wrapping.)
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <CharacterProvider>
+      <App />
+    </CharacterProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );
