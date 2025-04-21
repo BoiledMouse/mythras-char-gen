@@ -8,55 +8,77 @@ export function ConceptStep() {
   const { character, updateCharacter } = useCharacter();
 
   return (
-    <div>
-      <h2 className="text-2xl font-semibold mb-4">Character Concept</h2>
-
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">Character Name</label>
+    <div className="space-y-6">
+      {/* Character Name */}
+      <div>
+        <label htmlFor="characterName" className="block text-lg font-medium text-gray-800">
+          Character Name
+        </label>
         <input
+          id="characterName"
           type="text"
-          className="w-full bg-white text-gray-900 border border-gray-300 rounded p-2"
           value={character.name || ''}
           onChange={e => updateCharacter({ name: e.target.value })}
-          placeholder="Enter character name"
+          placeholder="Enter a name"
+          className="mt-1 block w-full bg-white text-gray-900 border border-gray-300 rounded shadow-sm focus:ring-gold focus:border-gold"
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">Player Name</label>
+      {/* Player Name */}
+      <div>
+        <label htmlFor="playerName" className="block text-lg font-medium text-gray-800">
+          Player Name
+        </label>
         <input
+          id="playerName"
           type="text"
-          className="w-full bg-white text-gray-900 border border-gray-300 rounded p-2"
-          value={character.playerName || ''}
-          onChange={e => updateCharacter({ playerName: e.target.value })}
+          value={character.player || ''}
+          onChange={e => updateCharacter({ player: e.target.value })}
           placeholder="Enter your name"
+          className="mt-1 block w-full bg-white text-gray-900 border border-gray-300 rounded shadow-sm focus:ring-gold focus:border-gold"
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">Select Culture/Background</label>
+      {/* Culture/Background */}
+      <div>
+        <label htmlFor="culture" className="block text-lg font-medium text-gray-800">
+          Select Culture/Background
+        </label>
         <select
-          className="block w-full bg-white text-gray-900 border border-gray-300 rounded p-2"
+          id="culture"
           value={character.culture || ''}
           onChange={e => updateCharacter({ culture: e.target.value })}
+          className="mt-1 block w-full bg-white text-gray-900 border border-gray-300 rounded shadow-sm focus:ring-gold focus:border-gold"
         >
-          <option value="" disabled>Select a culture</option>
-          {Object.entries(cultures).map(([key, def]) => (
-            <option key={key} value={key}>{def.name}</option>
+          <option value="" disabled>
+            — Select a culture —
+          </option>
+          {Object.keys(cultures).map(key => (
+            <option key={key} value={key}>
+              {key}
+            </option>
           ))}
         </select>
       </div>
 
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">Select Career</label>
+      {/* Career */}
+      <div>
+        <label htmlFor="career" className="block text-lg font-medium text-gray-800">
+          Select Career
+        </label>
         <select
-          className="block w-full bg-white text-gray-900 border border-gray-300 rounded p-2"
+          id="career"
           value={character.career || ''}
           onChange={e => updateCharacter({ career: e.target.value })}
+          className="mt-1 block w-full bg-white text-gray-900 border border-gray-300 rounded shadow-sm focus:ring-gold focus:border-gold"
         >
-          <option value="" disabled>Select a career</option>
-          {Object.entries(careers).map(([key, def]) => (
-            <option key={key} value={key}>{def.name}</option>
+          <option value="" disabled>
+            — Select a career —
+          </option>
+          {Object.keys(careers).map(key => (
+            <option key={key} value={key}>
+              {key}
+            </option>
           ))}
         </select>
       </div>
