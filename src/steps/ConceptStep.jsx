@@ -36,7 +36,7 @@ function rollD100() {
   return rollDice(1, 100);
 }
 
-const ConceptStep = ({ onNext }) => {
+export const ConceptStep = ({ onNext }) => {
   const [playerName, setPlayerName] = useState('');
   const [characterName, setCharacterName] = useState('');
   const [age, setAge] = useState('');
