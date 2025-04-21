@@ -2,6 +2,7 @@
 import React from 'react';
 import { rollDice } from '../utils/dice';
 
+// Culture options and tables
 const cultureOptions = ['Barbarian', 'Civilised', 'Nomadic', 'Primitive'];
 const cultureBaseMultiplier = { Barbarian: 50, Civilised: 75, Nomadic: 25, Primitive: 10 };
 const socialClassTables = {
@@ -32,28 +33,34 @@ const socialClassTables = {
   ],
 };
 
+// Dice helpers
 const rollD100 = () => rollDice('1d100');
 const roll4d6 = () => rollDice('4d6');
 
-export function ConceptStep({ formData = {}, onChange }) {
+// ConceptStep component
+function ConceptStep({ formData = {}, onChange }) {
   const {
     playerName = '', characterName = '', age = '', sex = '',
     culture = '', socialClass = '', socialRoll = null,
     baseRoll = null, silverMod = null, startingSilver = null,
   } = formData;
 
+  // Unified change handler
   const handleFieldChange = (e) => {
-    onChange(e);
+    const { name, value } = e.target;
+    onChange(name, value);
   };
 
+  // Roll on social class table
   const handleRollClass = () => {
     if (!culture) return;
     const roll = rollD100();
     const entry = socialClassTables[culture].find(e => roll >= e.min && roll <= e.max) || {};
-    onChange({ target: { name: 'socialRoll', value: roll } });
-    onChange({ target: { name: 'socialClass', value: entry.name || '' } });
+    onChange('socialRoll', roll);
+    onChange('socialClass', entry.name || '');
   };
 
+  // Generate starting silver
   const handleGenerateSilver = () => {
     if (!culture || !socialClass) return;
     const roll = roll4d6();
@@ -61,15 +68,16 @@ export function ConceptStep({ formData = {}, onChange }) {
     const entry = socialClassTables[culture].find(e => e.name === socialClass) || {};
     const mod = entry.mod || 1;
     const total = Math.floor(roll * multiplier * mod);
-    onChange({ target: { name: 'baseRoll', value: roll } });
-    onChange({ target: { name: 'silverMod', value: mod } });
-    onChange({ target: { name: 'startingSilver', value: total } });
+    onChange('baseRoll', roll);
+    onChange('silverMod', mod);
+    onChange('startingSilver', total);
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4 space-y-6 bg-parchment">
+    <div className="bg-parchment px-4 py-6 space-y-6 max-w-4xl mx-auto">
 
-      <label htmlFor="playerName">Player Name
+      <label htmlFor="playerName">
+        Player Name
         <input
           id="playerName"
           name="playerName"
@@ -79,7 +87,8 @@ export function ConceptStep({ formData = {}, onChange }) {
         />
       </label>
 
-      <label htmlFor="characterName">Character Name
+      <label htmlFor="characterName">
+        Character Name
         <input
           id="characterName"
           name="characterName"
@@ -89,7 +98,8 @@ export function ConceptStep({ formData = {}, onChange }) {
         />
       </label>
 
-      <label htmlFor="age">Age
+      <label htmlFor="age">
+        Age
         <input
           id="age"
           name="age"
@@ -101,7 +111,8 @@ export function ConceptStep({ formData = {}, onChange }) {
         />
       </label>
 
-      <label htmlFor="sex">Sex
+      <label htmlFor="sex">
+        Sex
         <select
           id="sex"
           name="sex"
@@ -117,13 +128,19 @@ export function ConceptStep({ formData = {}, onChange }) {
       </label>
 
       <div className="flex space-x-2">
-        <label htmlFor="culture" className="flex-1">Culture
+        <label htmlFor="culture" className="flex-1">
+          Culture
           <select
             id="culture"
             name="culture"
             className="form-control w-full"
             value={culture}
-            onChange={handleFieldChange}
+            onChange={e => {
+              handleFieldChange(e);
+              onChange('socialClass', '');
+              onChange('socialRoll', null);
+              onChange('startingSilver', null);
+            }}
           >
             <option value="">Select a Culture</option>
             {cultureOptions.map(c => <option key={c} value={c}>{c}</option>)}
@@ -134,10 +151,13 @@ export function ConceptStep({ formData = {}, onChange }) {
           className="btn btn-secondary mt-6"
           onClick={handleRollClass}
           disabled={!culture}
-        >Roll Class</button>
+        >
+          Roll Class
+        </button>
       </div>
 
-      <label htmlFor="socialClass">Social Class{socialRoll != null && ` (roll: ${socialRoll})`}
+      <label htmlFor="socialClass">
+        Social Class{socialRoll != null && ` (roll: ${socialRoll})`}
         <select
           id="socialClass"
           name="socialClass"
@@ -152,14 +172,18 @@ export function ConceptStep({ formData = {}, onChange }) {
       </label>
 
       <button
+        type="button"
         className="btn btn-secondary w-full"
         onClick={handleGenerateSilver}
         disabled={!culture || !socialClass}
-      >Generate Starting Silver</button>
+      >
+        Generate Starting Silver
+      </button>
 
       {startingSilver != null && (
         <>
-          <label htmlFor="baseRoll">Base Roll (4d6)
+          <label htmlFor="baseRoll">
+            Base Roll (4d6)
             <input
               id="baseRoll"
               name="baseRoll"
@@ -181,3 +205,4 @@ export function ConceptStep({ formData = {}, onChange }) {
 }
 
 export default ConceptStep;
+export { ConceptStep };
