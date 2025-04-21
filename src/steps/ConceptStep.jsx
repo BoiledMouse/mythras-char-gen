@@ -170,4 +170,5 @@ const ConceptStep = ({ onNext }) => {
   );
 };
 
+export { ConceptStep };
 export default ConceptStep;
