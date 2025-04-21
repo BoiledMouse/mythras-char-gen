@@ -32,8 +32,9 @@ const socialClassTables = {
   ],
 };
 
+// helper: roll 1d100
 function rollD100() {
-  return rollDice(1, 100);
+  return rollDice('1d100');
 }
 
 export const ConceptStep = ({ onNext }) => {
@@ -47,22 +48,27 @@ export const ConceptStep = ({ onNext }) => {
 
   const handleGenerateSilver = () => {
     if (!culture || !socialClass) return;
-    const base = rollDice(4, 6) * cultureBaseMultiplier[culture];
+    // roll 4d6 for base
+    const baseRoll = rollDice('4d6');
+    const baseSilver = baseRoll * cultureBaseMultiplier[culture];
     const clsEntry = socialClassTables[culture].find(e => e.name === socialClass);
-    const total = Math.floor(base * (clsEntry?.mod || 1));
+    const total = Math.floor(baseSilver * (clsEntry?.mod || 1));
     setStartingSilver(total);
   };
 
+  const handleCultureChange = value => {
+    setCulture(value);
+    setSocialClass('');
+    setStartingSilver(null);
+  };
+
+  const handleSocialClassChange = value => {
+    setSocialClass(value);
+    setStartingSilver(null);
+  };
+
   const onSubmit = () => {
-    onNext({
-      playerName,
-      characterName,
-      age,
-      sex,
-      culture,
-      socialClass,
-      startingSilver,
-    });
+    onNext({ playerName, characterName, age, sex, culture, socialClass, startingSilver });
   };
 
   return (
@@ -122,16 +128,10 @@ export const ConceptStep = ({ onNext }) => {
           id="culture"
           className="form-control"
           value={culture}
-          onChange={e => {
-            setCulture(e.target.value);
-            setSocialClass('');
-            setStartingSilver(null);
-          }}
+          onChange={e => handleCultureChange(e.target.value)}
         >
           <option value="">Select a Culture</option>
-          {cultureOptions.map(c => (
-            <option key={c} value={c}>{c}</option>
-          ))}
+          {cultureOptions.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 
@@ -141,7 +141,7 @@ export const ConceptStep = ({ onNext }) => {
           id="socialClass"
           className="form-control"
           value={socialClass}
-          onChange={e => setSocialClass(e.target.value)}
+          onChange={e => handleSocialClassChange(e.target.value)}
           disabled={!culture}
         >
           <option value="">Select Social Class</option>
@@ -176,7 +176,7 @@ export const ConceptStep = ({ onNext }) => {
       <button
         className="btn btn-primary"
         onClick={onSubmit}
-        disabled={!playerName || !characterName || !age || !sex || !culture || startingSilver === null}
+        disabled={!playerName || !characterName || !age || !sex || !culture || !socialClass || startingSilver === null}
       >
         Next
       </button>
