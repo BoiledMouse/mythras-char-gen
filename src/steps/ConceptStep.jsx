@@ -37,7 +37,7 @@ const socialClassTables = {
 const rollD100 = () => rollDice('1d100');
 const roll4d6 = () => rollDice('4d6');
 
-export function ConceptStep({ formData = {}, onChange = () => {} }) {
+export function ConceptStep({ formData = {}, onChange, onNext }) }) {
   const {
     playerName = '', characterName = '', age = '', sex = '',
     culture = '', socialClass = '', socialRoll = null,
@@ -67,7 +67,7 @@ export function ConceptStep({ formData = {}, onChange = () => {} }) {
   };
 
   return (
-    <div className="w-full p-4 space-y-6 bg-parchment">
+    <div className="w-screen p-4 space-y-6 bg-parchment">
       {/* Player Info */}
       <div className="form-group">
         <label>Player Name</label>
