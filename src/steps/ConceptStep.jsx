@@ -2,162 +2,162 @@
 import React, { useState } from 'react';
 import { useCharacter } from '../context/characterContext';
 import cultures from '../data/cultures.json';
-import careers from '../data/careers.json';
-import { rollDice } from '../utils/dice';
 
 export function ConceptStep() {
   const { character, updateCharacter } = useCharacter();
-  const [pctRoll, setPctRoll] = useState(null);
+  const [localAge, setLocalAge] = useState(character.age || '');
+  const cultureDef = cultures[character.culture] || {};
 
-  const cult = cultures[character.culture] || null;
-  const careerList = Object.keys(careers);
+  // Rolls 1–100 and picks socialClass from the culture’s table
+  const rollSocialClass = () => {
+    const roll = Math.floor(Math.random() * 100) + 1;
+    const sc =
+      cultureDef.socialClasses?.find(({ min, max }) => roll >= min && roll <= max)
+        ?.label || 'Unknown';
+    updateCharacter({ socialClass: sc });
+  };
 
-  // 1–100 roll for social class
-  function rollPercentile() {
-    const pct = rollDice('1d100');
-    setPctRoll(pct);
-    if (!cult) return;
-    const found = cult.socialClasses.find(sc => pct >= sc.min && pct <= sc.max);
-    if (found) updateCharacter({ socialClass: found.name });
-  }
-
-  // Starting money
-  function rollStartingMoney() {
-    if (!cult || !character.socialClass) return;
-    const base = rollDice(cult.moneyDice);
-    const scDef = cult.socialClasses.find(sc => sc.name === character.socialClass);
-    const total = scDef
-      ? Math.round(base * scDef.mult)
-      : base;
-    updateCharacter({ startingMoney: total });
-  }
+  // Rolls 4d6 then multiplies by the culture’s money modifier (e.g. x75 for Civilised)
+  const rollStartingMoney = () => {
+    const dice = cultureDef.startingMoneyDice || 4;
+    const modifier = cultureDef.startingMoneyMultiplier || 1;
+    let sum = 0;
+    for (let i = 0; i < dice; i++) {
+      sum += Math.floor(Math.random() * 6) + 1;
+    }
+    const sp = Math.round(sum * modifier);
+    updateCharacter({ startingMoney: sp });
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Character Name / Player Name */}
-      <div>
-        <label className="block font-semibold">Character Name</label>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Character Name */}
+      <div className="col-span-full">
+        <label className="block font-medium">Character Name</label>
         <input
           type="text"
-          className="mt-1 input"
-          value={character.name}
+          value={character.name || ''}
           onChange={e => updateCharacter({ name: e.target.value })}
+          className="mt-1 block w-full rounded border-gray-300 shadow-sm"
         />
       </div>
-      <div>
-        <label className="block font-semibold">Player Name</label>
+
+      {/* Player Name */}
+      <div className="col-span-full">
+        <label className="block font-medium">Player Name</label>
         <input
           type="text"
-          className="mt-1 input"
-          value={character.playerName}
+          value={character.playerName || ''}
           onChange={e => updateCharacter({ playerName: e.target.value })}
+          className="mt-1 block w-full rounded border-gray-300 shadow-sm"
         />
       </div>
 
-      {/* Gender / Age */}
-      <div className="flex space-x-4">
-        <div className="flex-1">
-          <label className="block font-semibold">Gender</label>
-          <select
-            className="mt-1 input"
-            value={character.gender}
-            onChange={e => updateCharacter({ gender: e.target.value })}
-          >
-            <option value="">Select…</option>
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-          </select>
-        </div>
-        <div className="flex-1">
-          <label className="block font-semibold">Age</label>
-          <input
-            type="number"
-            className="mt-1 input"
-            value={character.age}
-            onChange={e => updateCharacter({ age: e.target.value })}
-          />
-        </div>
+      {/* Gender */}
+      <div>
+        <label className="block font-medium">Gender</label>
+        <select
+          value={character.gender || ''}
+          onChange={e => updateCharacter({ gender: e.target.value })}
+          className="form-select"
+        >
+          <option value="" disabled>Select…</option>
+          <option>Male</option>
+          <option>Female</option>
+          <option>Other</option>
+        </select>
       </div>
 
-      {/* Culture & Career */}
+      {/* Age */}
       <div>
-        <label className="block font-semibold">Culture/Background</label>
+        <label className="block font-medium">Age</label>
+        <input
+          type="number"
+          min="1"
+          value={localAge}
+          onChange={e => {
+            setLocalAge(e.target.value);
+            updateCharacter({ age: parseInt(e.target.value, 10) || '' });
+          }}
+          className="mt-1 block w-full rounded border-gray-300 shadow-sm"
+        />
+      </div>
+
+      {/* Culture / Background */}
+      <div className="col-span-full md:col-span-1">
+        <label className="block font-medium">Culture/Background</label>
         <select
-          className="mt-1 input"
-          value={character.culture}
-          onChange={e => updateCharacter({ culture: e.target.value, socialClass: '', startingMoney: 0 })}
+          value={character.culture || ''}
+          onChange={e => updateCharacter({ culture: e.target.value })}
+          className="form-select"
         >
-          <option value="">Select a culture…</option>
-          {Object.entries(cultures).map(([key, c]) => (
-            <option key={key} value={key}>{c.displayName}</option>
+          <option value="" disabled>Select a culture…</option>
+          {Object.entries(cultures).map(([key, def]) => (
+            <option key={key} value={key}>{def.name}</option>
           ))}
         </select>
       </div>
-      <div>
-        <label className="block font-semibold">Career</label>
-<select
-  className="mt-1 input"
-  value={character.career}
-  onChange={e => updateCharacter({ career: e.target.value })}
->
-  <option value="">Select a career…</option>
-  {careerList.map(key => {
-    const entry = careers[key] || {};
-    return (
-      <option key={key} value={key}>
-        {entry.displayName || key}
-      </option>
-    )
-  })}
-</select>
+
+      {/* Career */}
+      <div className="col-span-full md:col-span-1">
+        <label className="block font-medium">Career</label>
+        <select
+          value={character.career || ''}
+          onChange={e => updateCharacter({ career: e.target.value })}
+          className="form-select"
+        >
+          <option value="" disabled>Select a career…</option>
+          { /* assume careers.json uses `.name` for display */ }
+          {require('../data/careers.json').map(c => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
       </div>
 
       {/* Social Class */}
-      {cult && (
-        <div className="space-y-1">
-          <label className="block font-semibold">Social Class</label>
-          <div className="flex items-center space-x-2">
-            <select
-              className="flex-1 input"
-              value={character.socialClass}
-              onChange={e => updateCharacter({ socialClass: e.target.value })}
-            >
-              <option value="">(roll or pick…)</option>
-              {cult.socialClasses.map(sc => (
-                <option key={sc.name} value={sc.name}>
-                  {sc.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={rollPercentile}
-            >
-              Roll 1‑100 {pctRoll != null && `→ ${pctRoll}`}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Starting Money */}
-      {cult && character.socialClass && (
-        <div className="space-y-1">
+      <div className="col-span-full">
+        <label className="block font-medium">Social Class</label>
+        <div className="flex items-center gap-2 mt-1">
+          <select
+            value={character.socialClass || ''}
+            onChange={e => updateCharacter({ socialClass: e.target.value })}
+            className="form-select flex-1"
+          >
+            <option value="" disabled>Select or roll…</option>
+            {cultureDef.socialClasses?.map(sc => (
+              <option key={sc.label} value={sc.label}>
+                {sc.label}
+              </option>
+            ))}
+          </select>
           <button
             type="button"
-            className="btn-primary"
-            onClick={rollStartingMoney}
+            onClick={rollSocialClass}
+            className="px-3 py-1 bg-yellow-200 text-gray-800 rounded hover:bg-yellow-300"
           >
-            Roll Starting Money
+            Roll Class
           </button>
-          {character.startingMoney != null && (
-            <p>
-              You have <strong>{character.startingMoney.toLocaleString()}</strong> sp
-            </p>
-          )}
         </div>
-      )}
+      </div>
+
+      {/* Starting Money */}
+      <div className="col-span-full">
+        <label className="block font-medium">Starting Money (sp)</label>
+        <div className="flex items-center gap-2 mt-1">
+          <div className="font-bold">
+            {character.startingMoney != null
+              ? character.startingMoney
+              : '-'}
+          </div>
+          <button
+            type="button"
+            onClick={rollStartingMoney}
+            className="px-3 py-1 bg-yellow-200 text-gray-800 rounded hover:bg-yellow-300"
+          >
+            Roll Money
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
