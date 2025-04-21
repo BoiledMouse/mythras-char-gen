@@ -38,7 +38,7 @@ const rollD100 = () => rollDice('1d100');
 const roll4d6 = () => rollDice('4d6');
 
 // ConceptStep component
-export function ConceptStep({ formData = {}, onChange }) {
+function ConceptStep({ formData = {}, onChange }) {
   const {
     playerName = '',
     characterName = '',
@@ -52,17 +52,17 @@ export function ConceptStep({ formData = {}, onChange }) {
     startingSilver = null,
   } = formData;
 
-  // Unified change handler: expects onChange(name, value)
-    // Change handler forwards event to parent
-  const handleFieldChange = e => {
-    onChange(e);
+  // Unified change handler: forward field name + value
+  const handleFieldChange = (e) => {
+    const { name, value } = e.target;
+    onChange(name, value);
   };
 
   // Roll on social class table
   const handleRollClass = () => {
     if (!culture) return;
     const roll = rollD100();
-    const entry = socialClassTables[culture].find(e => roll >= e.min && roll <= e.max) || {};
+    const entry = (socialClassTables[culture] || []).find(e => roll >= e.min && roll <= e.max) || {};
     onChange('socialRoll', roll);
     onChange('socialClass', entry.name || '');
   };
@@ -72,7 +72,7 @@ export function ConceptStep({ formData = {}, onChange }) {
     if (!culture || !socialClass) return;
     const roll = roll4d6();
     const multiplier = cultureBaseMultiplier[culture] || 0;
-    const entry = socialClassTables[culture].find(e => e.name === socialClass) || {};
+    const entry = (socialClassTables[culture] || []).find(e => e.name === socialClass) || {};
     const mod = entry.mod || 1;
     const total = Math.floor(roll * multiplier * mod);
     onChange('baseRoll', roll);
@@ -141,17 +141,10 @@ export function ConceptStep({ formData = {}, onChange }) {
             name="culture"
             className="form-control w-full"
             value={culture}
-            onChange={e => {
-              handleFieldChange(e);
-              onChange('socialClass', '');
-              onChange('socialRoll', null);
-              onChange('startingSilver', null);
-            }}
+            onChange={handleFieldChange}
           >
             <option value="">Select a Culture</option>
-            {cultureOptions.map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
+            {cultureOptions.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </label>
         <button
@@ -175,9 +168,7 @@ export function ConceptStep({ formData = {}, onChange }) {
           disabled={!culture}
         >
           <option value="">Select Social Class</option>
-          {culture && socialClassTables[culture].map(sc => (
-            <option key={sc.name} value={sc.name}>{sc.name}</option>
-          ))}
+          {(socialClassTables[culture] || []).map(sc => <option key={sc.name} value={sc.name}>{sc.name}</option>)}
         </select>
       </label>
 
