@@ -1,12 +1,12 @@
 // src/steps/WizardContainer.jsx
 import React, { useState } from 'react';
-import ConceptStep from './ConceptStep';
-import AttributesStep from './AttributesStep';
-import SkillsStep from './SkillsStep';
-import EquipmentStep from './EquipmentStep';
-import MagicStep from './MagicStep';
-import CultStep from './CultStep';
-import ReviewStep from './ReviewStep';
+import { ConceptStep } from './ConceptStep';
+import { AttributesStep } from './AttributesStep';
+import { SkillsStep } from './SkillsStep';
+import { EquipmentStep } from './EquipmentStep';
+import { MagicStep } from './MagicStep';
+import { CultStep } from './CultStep';
+import { ReviewStep } from './ReviewStep';
 
 
 export default function WizardContainer() {
