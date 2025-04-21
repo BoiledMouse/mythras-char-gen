@@ -39,21 +39,56 @@ const roll4d6 = () => rollDice('4d6');
 
 export function ConceptStep({ formData = {}, onChange, onNext }) {
   const {
-    playerName = '', characterName = '', age = '', sex = '',
-    culture = '', socialClass = '', socialRoll = null,
-    baseRoll = null, silverMod = null, startingSilver = null,
+    playerName: initPlayerName = '',
+    characterName: initCharacterName = '',
+    age: initAge = '',
+    sex: initSex = '',
+    culture: initCulture = '',
+    socialClass: initSocialClass = '',
+    socialRoll: initSocialRoll = null,
+    baseRoll: initBaseRoll = null,
+    silverMod: initSilverMod = null,
+    startingSilver: initStartingSilver = null,
   } = formData;
 
-  // Roll for social class
+  const [playerName, setPlayerName] = React.useState(initPlayerName);
+  const [characterName, setCharacterName] = React.useState(initCharacterName);
+  const [age, setAge] = React.useState(initAge);
+  const [sex, setSex] = React.useState(initSex);
+  const [culture, setCulture] = React.useState(initCulture);
+  const [socialClass, setSocialClass] = React.useState(initSocialClass);
+  const [socialRoll, setSocialRoll] = React.useState(initSocialRoll);
+  const [baseRoll, setBaseRoll] = React.useState(initBaseRoll);
+  const [silverMod, setSilverMod] = React.useState(initSilverMod);
+  const [startingSilver, setStartingSilver] = React.useState(initStartingSilver);
+
+  // Sync parent to local state
+  React.useEffect(() => { setPlayerName(initPlayerName); }, [initPlayerName]);
+  React.useEffect(() => { setCharacterName(initCharacterName); }, [initCharacterName]);
+  React.useEffect(() => { setAge(initAge); }, [initAge]);
+  React.useEffect(() => { setSex(initSex); }, [initSex]);
+  React.useEffect(() => { setCulture(initCulture); }, [initCulture]);
+  React.useEffect(() => { setSocialClass(initSocialClass); }, [initSocialClass]);
+  React.useEffect(() => { setSocialRoll(initSocialRoll); }, [initSocialRoll]);
+  React.useEffect(() => { setBaseRoll(initBaseRoll); }, [initBaseRoll]);
+  React.useEffect(() => { setSilverMod(initSilverMod); }, [initSilverMod]);
+  React.useEffect(() => { setStartingSilver(initStartingSilver); }, [initStartingSilver]);
+
+  // handlers
+  const changeField = (name, value) => {
+    onChange({ target: { name, value } });
+  };
+
   const handleRollClass = () => {
     if (!culture) return;
     const roll = rollD100();
     const entry = socialClassTables[culture].find(e => roll >= e.min && roll <= e.max) || {};
-    onChange({ target: { name: 'socialRoll', value: roll } });
-    onChange({ target: { name: 'socialClass', value: entry.name || '' } });
+    setSocialRoll(roll);
+    setSocialClass(entry.name || '');
+    changeField('socialRoll', roll);
+    changeField('socialClass', entry.name || '');
   };
 
-  // Generate starting silver calculation
   const handleGenerateSilver = () => {
     if (!culture || !socialClass) return;
     const roll = roll4d6();
@@ -61,9 +96,9 @@ export function ConceptStep({ formData = {}, onChange, onNext }) {
     const entry = socialClassTables[culture].find(e => e.name === socialClass) || {};
     const mod = entry.mod || 1;
     const total = Math.floor(roll * multiplier * mod);
-    onChange({ target: { name: 'baseRoll', value: roll } });
-    onChange({ target: { name: 'silverMod', value: mod } });
-    onChange({ target: { name: 'startingSilver', value: total } });
+    setBaseRoll(roll); changeField('baseRoll', roll);
+    setSilverMod(mod); changeField('silverMod', mod);
+    setStartingSilver(total); changeField('startingSilver', total);
   };
 
   return (
