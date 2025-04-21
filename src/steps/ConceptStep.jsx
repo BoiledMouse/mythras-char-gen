@@ -32,7 +32,7 @@ const socialClassTables = {
   ],
 };
 
-// Helper to roll 1d100 or 4d6
+// Helpers
 const rollD100 = () => rollDice('1d100');
 const roll4d6 = () => rollDice('4d6');
 
@@ -43,15 +43,28 @@ const ConceptStep = ({ onNext }) => {
   const [sex, setSex] = useState('');
   const [culture, setCulture] = useState('');
   const [socialClass, setSocialClass] = useState('');
+  const [socialRoll, setSocialRoll] = useState(null);
+  const [baseRoll, setBaseRoll] = useState(null);
+  const [silverMod, setSilverMod] = useState(null);
   const [startingSilver, setStartingSilver] = useState(null);
+
+  const handleRollSocialClass = () => {
+    if (!culture) return;
+    const roll = rollD100();
+    setSocialRoll(roll);
+    const entry = socialClassTables[culture].find(e => roll >= e.min && roll <= e.max);
+    setSocialClass(entry ? entry.name : 'Unknown');
+  };
 
   const handleGenerateSilver = () => {
     if (!culture || !socialClass) return;
-    const baseRoll = roll4d6();
-    const baseSilver = baseRoll * (cultureBaseMultiplier[culture] || 0);
+    const roll = roll4d6();
+    const multiplier = cultureBaseMultiplier[culture] || 0;
     const clsEntry = socialClassTables[culture].find(e => e.name === socialClass);
-    const total = Math.floor(baseSilver * (clsEntry?.mod || 1));
-    setStartingSilver(total);
+    const mod = clsEntry ? clsEntry.mod : 1;
+    setBaseRoll(roll);
+    setSilverMod(mod);
+    setStartingSilver(Math.floor(roll * multiplier * mod));
   };
 
   const disabledNext =
@@ -59,111 +72,71 @@ const ConceptStep = ({ onNext }) => {
 
   return (
     <div className="w-full p-4 max-w-none space-y-6">
+      {/* Player & Character */}
       <div className="form-group">
-        <label htmlFor="playerName">Player Name</label>
-        <input
-          id="playerName"
-          type="text"
-          className="form-control w-full"
-          value={playerName}
-          onChange={e => setPlayerName(e.target.value)}
-        />
+        <label>Player Name</label>
+        <input className="form-control w-full" value={playerName} onChange={e => setPlayerName(e.target.value)} />
       </div>
       <div className="form-group">
-        <label htmlFor="characterName">Character Name</label>
-        <input
-          id="characterName"
-          type="text"
-          className="form-control w-full"
-          value={characterName}
-          onChange={e => setCharacterName(e.target.value)}
-        />
+        <label>Character Name</label>
+        <input className="form-control w-full" value={characterName} onChange={e => setCharacterName(e.target.value)} />
+      </div>
+      {/* Age & Sex */}
+      <div className="form-group">
+        <label>Age</label>
+        <input type="number" min="0" className="form-control w-full" value={age} onChange={e => setAge(e.target.value)} />
       </div>
       <div className="form-group">
-        <label htmlFor="age">Age</label>
-        <input
-          id="age"
-          type="number"
-          min="0"
-          className="form-control w-full"
-          value={age}
-          onChange={e => setAge(e.target.value)}
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="sex">Sex</label>
-        <select
-          id="sex"
-          className="form-control w-full"
-          value={sex}
-          onChange={e => setSex(e.target.value)}
-        >
+        <label>Sex</label>
+        <select className="form-control w-full" value={sex} onChange={e => setSex(e.target.value)}>
           <option value="">Select Sex</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
+          <option>Male</option><option>Female</option><option>Other</option>
         </select>
       </div>
-      <div className="form-group">
-        <label htmlFor="culture">Culture</label>
-        <select
-          id="culture"
-          className="form-control w-full"
-          value={culture}
-          onChange={e => {
-            setCulture(e.target.value);
-            setSocialClass('');
-            setStartingSilver(null);
-          }}
-        >
-          <option value="">Select a Culture</option>
-          {cultureOptions.map(c => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
+      {/* Culture & Social Class */}
+      <div className="form-group flex space-x-2">
+        <div className="flex-1">
+          <label>Culture</label>
+          <select className="form-control w-full" value={culture} onChange={e => { setCulture(e.target.value); setSocialClass(''); setSocialRoll(null); }}>
+            <option value="">Select a Culture</option>
+            {cultureOptions.map(c => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <button className="btn btn-secondary mt-6" onClick={handleRollSocialClass} disabled={!culture}>
+            Roll Class
+          </button>
+        </div>
       </div>
       <div className="form-group">
-        <label htmlFor="socialClass">Social Class</label>
-        <select
-          id="socialClass"
-          className="form-control w-full"
-          value={socialClass}
-          onChange={e => setSocialClass(e.target.value)}
-          disabled={!culture}
-        >
+        <label>Social Class {socialRoll != null && `(roll: ${socialRoll})`}</label>
+        <select className="form-control w-full" value={socialClass} onChange={e => setSocialClass(e.target.value)} disabled={!culture}>
           <option value="">Select Social Class</option>
-          {culture && socialClassTables[culture].map(sc => (
-            <option key={sc.name} value={sc.name}>{sc.name}</option>
-          ))}
+          {culture && socialClassTables[culture].map(sc => <option key={sc.name}>{sc.name}</option>)}
         </select>
       </div>
+      {/* Silver Generation */}
       <div className="form-group">
-        <button
-          type="button"
-          className="btn btn-secondary w-full"
-          onClick={handleGenerateSilver}
-          disabled={!culture || !socialClass}
-        >
+        <button className="btn btn-secondary w-full" onClick={handleGenerateSilver} disabled={!culture || !socialClass}>
           Generate Starting Silver
         </button>
       </div>
       {startingSilver != null && (
-        <div className="form-group">
-          <label htmlFor="startingSilver">Starting Silver (sp)</label>
-          <input
-            id="startingSilver"
-            type="number"
-            className="form-control w-full"
-            readOnly
-            value={startingSilver}
-          />
+        <div className="space-y-2">
+          <div className="form-group">
+            <label>Base Roll (4d6)</label>
+            <input readOnly className="form-control w-full" value={baseRoll} />
+          </div>
+          <div className="form-group">
+            <label>Calculation</label>
+            <div className="p-2 bg-gray-100 rounded">
+              (4d6 = {baseRoll}) × Multiplier ({cultureBaseMultiplier[culture]}) × Modifier ({silverMod}) = <strong>{startingSilver} sp</strong>
+            </div>
+          </div>
         </div>
       )}
-      <button
-        className="btn btn-primary w-full"
-        onClick={() => onNext({ playerName, characterName, age, sex, culture, socialClass, startingSilver })}
-        disabled={disabledNext}
-      >
+      {/* Next */}
+      <button className="btn btn-primary w-full" onClick={() => onNext({ playerName, characterName, age, sex, culture, socialClass, startingSilver })} disabled={disabledNext}>
         Next
       </button>
     </div>
