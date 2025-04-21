@@ -53,9 +53,9 @@ export function ConceptStep({ formData = {}, onChange }) {
   } = formData;
 
   // Unified change handler: expects onChange(name, value)
+    // Change handler forwards event to parent
   const handleFieldChange = e => {
-    const { name, value } = e.target;
-    onChange(name, value);
+    onChange(e);
   };
 
   // Roll on social class table
