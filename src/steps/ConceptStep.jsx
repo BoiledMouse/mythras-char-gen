@@ -6,49 +6,57 @@ import careers from '../data/careers.json';
 
 export function ConceptStep() {
   const { character, updateCharacter } = useCharacter();
+
   return (
-    <div className="space-y-4">
-      <div>
-        <label className="block font-medium">Character Name</label>
+    <div>
+      <h2 className="text-2xl font-semibold mb-4">Character Concept</h2>
+
+      <div className="mb-4">
+        <label className="block mb-1 font-medium">Character Name</label>
         <input
           type="text"
-          value={character.name}
+          className="w-full bg-white text-gray-900 border border-gray-300 rounded p-2"
+          value={character.name || ''}
           onChange={e => updateCharacter({ name: e.target.value })}
-          className="mt-1 w-full border-gray-300 rounded"
+          placeholder="Enter character name"
         />
       </div>
-      <div>
-        <label className="block font-medium">Player Name</label>
+
+      <div className="mb-4">
+        <label className="block mb-1 font-medium">Player Name</label>
         <input
           type="text"
-          value={character.player}
-          onChange={e => updateCharacter({ player: e.target.value })}
-          className="mt-1 w-full border-gray-300 rounded"
+          className="w-full bg-white text-gray-900 border border-gray-300 rounded p-2"
+          value={character.playerName || ''}
+          onChange={e => updateCharacter({ playerName: e.target.value })}
+          placeholder="Enter your name"
         />
       </div>
-      <div>
-        <label className="block font-medium">Culture/Background</label>
+
+      <div className="mb-4">
+        <label className="block mb-1 font-medium">Select Culture/Background</label>
         <select
-          value={character.culture}
+          className="block w-full bg-white text-gray-900 border border-gray-300 rounded p-2"
+          value={character.culture || ''}
           onChange={e => updateCharacter({ culture: e.target.value })}
-          className="mt-1 w-full border-gray-300 rounded"
         >
-          <option value="">Select a culture</option>
-          {Object.entries(cultures).map(([key, c]) => (
-            <option key={key} value={key}>{c.name}</option>
+          <option value="" disabled>Select a culture</option>
+          {Object.entries(cultures).map(([key, def]) => (
+            <option key={key} value={key}>{def.name}</option>
           ))}
         </select>
       </div>
-      <div>
-        <label className="block font-medium">Career</label>
+
+      <div className="mb-4">
+        <label className="block mb-1 font-medium">Select Career</label>
         <select
-          value={character.career}
+          className="block w-full bg-white text-gray-900 border border-gray-300 rounded p-2"
+          value={character.career || ''}
           onChange={e => updateCharacter({ career: e.target.value })}
-          className="mt-1 w-full border-gray-300 rounded"
         >
-          <option value="">Select a career</option>
-          {Object.entries(careers).map(([key, c]) => (
-            <option key={key} value={key}>{c.name}</option>
+          <option value="" disabled>Select a career</option>
+          {Object.entries(careers).map(([key, def]) => (
+            <option key={key} value={key}>{def.name}</option>
           ))}
         </select>
       </div>
