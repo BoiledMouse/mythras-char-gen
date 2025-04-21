@@ -1,6 +1,6 @@
 // src/steps/ConceptStep.jsx
 import React, { useState, useEffect } from 'react';
-import { rollDice, rollD100 } from '../utils/dice'; // assumes dice helpers exist
+import { rollDice } from '../utils/dice'; // only rollDice is needed
 
 const cultureOptions = [
   'Barbarian',
@@ -44,6 +44,11 @@ const socialClassTables = {
     { name: 'Chieftain', min: 81,  max: 100, mod: 2    },
   ],
 };
+
+// helper: roll 1–100
+function rollD100() {
+  return rollDice(1, 100);
+}
 
 function generateBaseStartingMoney(culture) {
   const multiplier = cultureBaseMultiplier[culture] || 0;
