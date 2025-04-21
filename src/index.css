@@ -40,3 +40,13 @@ select option {
   color: #1f2937; /* Tailwind’s gray‑900 */
 }
 
+/* Simple form styling */
+.input {
+  @apply block w-full px-3 py-2 border rounded-md;
+}
+.btn-primary {
+  @apply inline-block px-4 py-2 bg-yellow-600 text-white rounded-md;
+}
+.btn-secondary {
+  @apply inline-block px-3 py-1 bg-gray-200 text-gray-800 rounded-md;
+}
