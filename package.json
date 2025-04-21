@@ -2,7 +2,7 @@
   "name": "mythras-char-gen",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://boiledmouse.github.io/mythras-char-gen",
+  "homepage": "https://BoiledMouse.github.io/mythras-char-gen"
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
