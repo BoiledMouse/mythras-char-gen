@@ -1,6 +1,6 @@
 // src/steps/ConceptStep.jsx - I am a change
 // I am another change
-import React from 'react';
+import React from 'react'; fgsdfsdfsdfsf
 import { rollDice } from '../utils/dice';
 
 // Culture options and tables
