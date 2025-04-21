@@ -1,4 +1,4 @@
-// src/steps/ConceptStep.jsx -blablablablablabla
+// src/steps/ConceptStep.jsx
 import React from 'react';
 import { rollDice } from '../utils/dice';
 
@@ -34,6 +34,17 @@ const socialClassTables = {
 };
 
 export default function ConceptStep({ formData = {}, onChange }) {
+  // Adapter to handle both native events and name/value pairs
+  const triggerChange = (...args) => {
+    if (args.length === 1 && args[0] && args[0].target) {
+      // native input event
+      onChange(args[0]);
+    } else if (args.length === 2) {
+      const [name, value] = args;
+      onChange({ target: { name, value } });
+    }
+  };
+
   const {
     playerName = '',
     characterName = '',
@@ -47,20 +58,17 @@ export default function ConceptStep({ formData = {}, onChange }) {
     startingSilver = null,
   } = formData;
 
-  // Generic field handler: call onChange(fieldName, value)
-  const handleField = e => {
-    const { name, value } = e.target;
-    onChange(name, value);
-  };
+  // For standard inputs: forward native event
+  const handleField = e => onChange(e);
 
-  // Roll social class
+  // Roll to pick social class
   const handleRollClass = () => {
     if (!culture) return;
     const roll = rollDice('1d100');
     const entry = (socialClassTables[culture] || []).find(e => roll >= e.min && roll <= e.max) || {};
-    onChange('socialRoll', roll);
-    onChange('socialClass', entry.name || '');
-    onChange('startingSilver', null);
+    onChange({ target: { name: 'socialRoll', value: roll } });
+    onChange({ target: { name: 'socialClass', value: entry.name || '' } });
+    onChange({ target: { name: 'startingSilver', value: null } });
   };
 
   // Generate starting silver
@@ -71,9 +79,9 @@ export default function ConceptStep({ formData = {}, onChange }) {
     const entry = (socialClassTables[culture] || []).find(e => e.name === socialClass) || {};
     const mod = entry.mod || 1;
     const total = Math.floor(roll * mult * mod);
-    onChange('baseRoll', roll);
-    onChange('silverMod', mod);
-    onChange('startingSilver', total);
+    onChange({ target: { name: 'baseRoll', value: roll } });
+    onChange({ target: { name: 'silverMod', value: mod } });
+    onChange({ target: { name: 'startingSilver', value: total } });
   };
 
   return (
@@ -138,8 +146,8 @@ export default function ConceptStep({ formData = {}, onChange }) {
             value={culture}
             onChange={e => {
               handleField(e);
-              onChange('socialClass', '');
-              onChange('socialRoll', null);
+              onChange({ target: { name: 'socialClass', value: '' } });
+              onChange({ target: { name: 'socialRoll', value: null } });
             }}
             className="form-control w-full"
           >
