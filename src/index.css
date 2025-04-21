@@ -1,39 +1,141 @@
 /* src/index.css */
 
-/* 1) Tailwind base layers */
+/* 1) Import Tailwind layers */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* 2) Google fonts */
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond&family=Pirata+One&display=swap');
-
-/* 3) Global body styles */
-body {
-  font-family: 'EB Garamond', serif;
-  color: #1F2937;           /* gray-900 */
-  background-color: #3B2B1F; /* fallback wood color */
-  @apply bg-wood-grain bg-blend-multiply;
+/* 2) Custom CSS variables (theme tokens) */
+:root {
+  --color-wood:         #3B2B1F;
+  --color-parchment:    #F5DEB3;
+  --color-gold:         #D4AF37;
+  --color-text:         #3C2F2E;
+  --font-body:          'EB Garamond', serif;
+  --font-heading:       'Pirata One', cursive;
 }
 
-/* 4) Parchment panels */
+/* 3) Base styles */
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  margin: 0;
+  padding: 0;
+  /* wood-grain effect via css */
+  background-color: var(--color-wood);
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgba(0,0,0,0.02) 0,
+      rgba(0,0,0,0.02) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  background-blend-mode: multiply;
+}
+
+/* 4) Heading styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--color-gold);
+  text-shadow: 1px 1px rgba(0,0,0,0.3);
+  margin-top: 0;
+}
+
+/* 5) Panel wrapper (parchment) */
 @layer components {
   .panel-parchment {
-    @apply bg-parchment bg-blend-overlay;
+    background-color: var(--color-parchment);
+    border: 2px solid var(--color-wood);
+    border-radius: 8px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+  }
+  /* Wizard nav tabs */
+  .wizard-nav {
+    @apply flex space-x-2 mb-6;
+  }
+  .wizard-nav button {
+    font-family: var(--font-heading);
+    background-color: var(--color-parchment);
+    color: var(--color-text);
+    border: 2px solid var(--color-wood);
+    border-bottom: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    transition: background-color 0.2s;
+  }
+  .wizard-nav button.active {
+    background-color: var(--color-gold);
+    color: var(--color-wood);
   }
 }
 
-/* 5) Wizard container padding */
+/* 6) Wizard container padding (already applied to #wizard-root) */
 #wizard-root {
   @apply px-4 sm:px-6 md:px-8 lg:px-10;
 }
 
-/* 6) Form inputs styling (transparent) */
+/* 7) Form controls */
 .form-control,
 select,
 input[type="text"],
 input[type="number"] {
-  background-color: transparent !important;
-  border-color: rgba(0, 0, 0, 0.2);
-  color: #1F2937;
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  font-family: var(--font-body);
+  background-color: var(--color-parchment);
+  border: 1px solid var(--color-wood);
+  border-radius: 4px;
+  color: var(--color-text);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.form-control:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-gold);
+  box-shadow: 0 0 5px rgba(212,175,55,0.5);
+}
+
+/* 8) Buttons */
+.btn {
+  display: inline-block;
+  font-family: var(--font-heading);
+  padding: 0.5rem 1rem;
+  margin-top: 0.5rem;
+  border: 2px solid var(--color-wood);
+  border-radius: 4px;
+  cursor: pointer;
+  text-shadow: 0 1px rgba(0,0,0,0.2);
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+.btn-primary {
+  background-color: var(--color-gold);
+  color: var(--color-wood);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.btn-secondary {
+  background-color: var(--color-parchment);
+  color: var(--color-text);
+}
+.btn:hover {
+  opacity: 0.9;
+}
+
+/* 9) Footer nav */
+footer {
+  @apply mt-6 flex justify-between;
+}
+footer button {
+  @apply btn-secondary;
+}
+
+/* 10) Responsive adjustments */
+@media (min-width: 768px) {
+  .panel-parchment {
+    padding: 2rem;
+  }
 }
