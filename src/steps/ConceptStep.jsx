@@ -1,5 +1,5 @@
 // src/steps/ConceptStep.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { rollDice } from '../utils/dice';
 
 const cultureOptions = ['Barbarian', 'Civilised', 'Nomadic', 'Primitive'];
@@ -32,69 +32,71 @@ const socialClassTables = {
   ],
 };
 
+// Helper to roll 1d100 or 4d6
 const rollD100 = () => rollDice('1d100');
+const roll4d6 = () => rollDice('4d6');
 
-// Named and default export for compatibility
-export const ConceptStep = ({ formData, onChange, onNext }) => {
-  const data = formData || {};
-  const playerName = data.playerName || '';
-  const characterName = data.characterName || '';
-  const age = data.age || '';
-  const sex = data.sex || '';
-  const culture = data.culture || '';
-  const socialClass = data.socialClass || '';
-  const startingSilver = data.startingSilver;
+const ConceptStep = ({ onNext }) => {
+  const [playerName, setPlayerName] = useState('');
+  const [characterName, setCharacterName] = useState('');
+  const [age, setAge] = useState('');
+  const [sex, setSex] = useState('');
+  const [culture, setCulture] = useState('');
+  const [socialClass, setSocialClass] = useState('');
+  const [startingSilver, setStartingSilver] = useState(null);
 
   const handleGenerateSilver = () => {
     if (!culture || !socialClass) return;
-    const baseRoll = rollDice('4d6');
+    const baseRoll = roll4d6();
     const baseSilver = baseRoll * (cultureBaseMultiplier[culture] || 0);
-    const clsEntry = socialClassTables[culture]?.find(e => e.name === socialClass);
+    const clsEntry = socialClassTables[culture].find(e => e.name === socialClass);
     const total = Math.floor(baseSilver * (clsEntry?.mod || 1));
-    onChange({ target: { name: 'startingSilver', value: total } });
+    setStartingSilver(total);
   };
 
-  const disabledNext = 
+  const disabledNext =
     !playerName || !characterName || !age || !sex || !culture || !socialClass || startingSilver == null;
 
   return (
     <div className="w-full p-4 max-w-none space-y-6">
       <div className="form-group">
-        <label>Player Name</label>
+        <label htmlFor="playerName">Player Name</label>
         <input
-          name="playerName"
+          id="playerName"
+          type="text"
+          className="form-control w-full"
           value={playerName}
-          onChange={onChange}
-          className="form-control w-full"
+          onChange={e => setPlayerName(e.target.value)}
         />
       </div>
       <div className="form-group">
-        <label>Character Name</label>
+        <label htmlFor="characterName">Character Name</label>
         <input
-          name="characterName"
+          id="characterName"
+          type="text"
+          className="form-control w-full"
           value={characterName}
-          onChange={onChange}
-          className="form-control w-full"
+          onChange={e => setCharacterName(e.target.value)}
         />
       </div>
       <div className="form-group">
-        <label>Age</label>
+        <label htmlFor="age">Age</label>
         <input
-          name="age"
+          id="age"
           type="number"
           min="0"
-          value={age}
-          onChange={onChange}
           className="form-control w-full"
+          value={age}
+          onChange={e => setAge(e.target.value)}
         />
       </div>
       <div className="form-group">
-        <label>Sex</label>
+        <label htmlFor="sex">Sex</label>
         <select
-          name="sex"
-          value={sex}
-          onChange={onChange}
+          id="sex"
           className="form-control w-full"
+          value={sex}
+          onChange={e => setSex(e.target.value)}
         >
           <option value="">Select Sex</option>
           <option value="Male">Male</option>
@@ -103,16 +105,16 @@ export const ConceptStep = ({ formData, onChange, onNext }) => {
         </select>
       </div>
       <div className="form-group">
-        <label>Culture</label>
+        <label htmlFor="culture">Culture</label>
         <select
-          name="culture"
+          id="culture"
+          className="form-control w-full"
           value={culture}
           onChange={e => {
-            onChange(e);
-            onChange({ target: { name: 'socialClass', value: '' } });
-            onChange({ target: { name: 'startingSilver', value: null } });
+            setCulture(e.target.value);
+            setSocialClass('');
+            setStartingSilver(null);
           }}
-          className="form-control w-full"
         >
           <option value="">Select a Culture</option>
           {cultureOptions.map(c => (
@@ -121,16 +123,16 @@ export const ConceptStep = ({ formData, onChange, onNext }) => {
         </select>
       </div>
       <div className="form-group">
-        <label>Social Class</label>
+        <label htmlFor="socialClass">Social Class</label>
         <select
-          name="socialClass"
-          value={socialClass}
-          onChange={onChange}
-          disabled={!culture}
+          id="socialClass"
           className="form-control w-full"
+          value={socialClass}
+          onChange={e => setSocialClass(e.target.value)}
+          disabled={!culture}
         >
           <option value="">Select Social Class</option>
-          {cultureOptions.includes(culture) && socialClassTables[culture].map(sc => (
+          {culture && socialClassTables[culture].map(sc => (
             <option key={sc.name} value={sc.name}>{sc.name}</option>
           ))}
         </select>
@@ -147,19 +149,19 @@ export const ConceptStep = ({ formData, onChange, onNext }) => {
       </div>
       {startingSilver != null && (
         <div className="form-group">
-          <label>Starting Silver (sp)</label>
+          <label htmlFor="startingSilver">Starting Silver (sp)</label>
           <input
-            name="startingSilver"
+            id="startingSilver"
             type="number"
+            className="form-control w-full"
             readOnly
             value={startingSilver}
-            className="form-control w-full"
           />
         </div>
       )}
       <button
         className="btn btn-primary w-full"
-        onClick={onNext}
+        onClick={() => onNext({ playerName, characterName, age, sex, culture, socialClass, startingSilver })}
         disabled={disabledNext}
       >
         Next
