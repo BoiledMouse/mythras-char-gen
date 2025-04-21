@@ -1,77 +1,178 @@
 // src/steps/ConceptStep.jsx
-import React from 'react';
-import { useCharacter } from '../context/characterContext';
-import cultures from '../data/cultures.json';
-import careers from '../data/careers.json';
+import React, { useState, useEffect } from 'react';
+import { rollDice, rollD100 } from '../utils/dice'; // assumes dice helpers exist
 
-export function ConceptStep() {
-  const { character, updateCharacter } = useCharacter();
+const cultureOptions = [
+  'Barbarian',
+  'Civilised',
+  'Nomadic',
+  'Primitive',
+];
 
-  // Convert your cultures object → array of { id, name }
-  const cultureOptions = Object.entries(cultures).map(
-    ([id, def]) => ({ id, name: def.name })
-  );
+// Base multipliers for 4d6 roll per culture
+const cultureBaseMultiplier = {
+  Barbarian: 50,
+  Civilised: 75,
+  Nomadic: 25,
+  Primitive: 10,
+};
 
-  // Likewise for careers
-  const careerOptions = Object.entries(careers).map(
-    ([id, def]) => ({ id, name: def.name })
-  );
+const socialClassTables = {
+  Barbarian: [
+    { name: 'Outcast',   min: 1,   max: 5,   mod: 0.25 },
+    { name: 'Slave',     min: 6,   max: 15,  mod: 0.5  },
+    { name: 'Freeman',   min: 16,  max: 80,  mod: 1    },
+    { name: 'Gentile',   min: 81,  max: 95,  mod: 3    },
+    { name: 'Chieftain', min: 96,  max: 100, mod: 5    },
+  ],
+  Civilised: [
+    { name: 'Outcast',     min: 1,   max: 2,   mod: 0.25 },
+    { name: 'Slave',       min: 3,   max: 20,  mod: 0.5  },
+    { name: 'Freeman',     min: 21,  max: 70,  mod: 1    },
+    { name: 'Gentile',     min: 71,  max: 95,  mod: 3    },
+    { name: 'Aristocracy', min: 96,  max: 100, mod: 5  },
+  ],
+  Nomadic: [
+    { name: 'Outcast',   min: 1,   max: 5,   mod: 0.25 },
+    { name: 'Slave',     min: 6,   max: 10,  mod: 0.5  },
+    { name: 'Freeman',   min: 11,  max: 90,  mod: 1    },
+    { name: 'Chieftain', min: 91,  max: 100, mod: 3    },
+  ],
+  Primitive: [
+    { name: 'Outcast',   min: 1,   max: 5,   mod: 0.25 },
+    { name: 'Freeman',   min: 6,   max: 80,  mod: 1    },
+    { name: 'Chieftain', min: 81,  max: 100, mod: 2    },
+  ],
+};
+
+function generateBaseStartingMoney(culture) {
+  const multiplier = cultureBaseMultiplier[culture] || 0;
+  const diceTotal = rollDice(4, 6);
+  return diceTotal * multiplier;
+}
+
+function pickSocialClass(culture) {
+  const roll = rollD100();
+  const table = socialClassTables[culture] || [];
+  return table.find(entry => roll >= entry.min && roll <= entry.max) || { name: 'Unknown', mod: 1 };
+}
+
+const ConceptStep = ({ onNext }) => {
+  const [playerName, setPlayerName] = useState('');
+  const [characterName, setCharacterName] = useState('');
+  const [culture, setCulture] = useState('');
+  const [age, setAge] = useState('');
+  const [sex, setSex] = useState('');
+  const [socialClass, setSocialClass] = useState('');
+  const [startingMoney, setStartingMoney] = useState(0);
+
+  useEffect(() => {
+    if (!culture) return;
+    const cls = pickSocialClass(culture);
+    setSocialClass(cls.name);
+    const base = generateBaseStartingMoney(culture);
+    const total = Math.floor(base * cls.mod);
+    setStartingMoney(total);
+  }, [culture]);
 
   return (
-    <div className="space-y-6">
-      {/* Character & Player Name */}
-      <div>
-        <label className="block mb-1">Character Name</label>
+    <div className="p-4 space-y-4">
+      <div className="form-group">
+        <label htmlFor="playerName">Player Name</label>
         <input
           type="text"
-          value={character.name || ''}
-          onChange={e => updateCharacter({ name: e.target.value })}
-          className="form-input w-full"
-        />
-      </div>
-      <div>
-        <label className="block mb-1">Player Name</label>
-        <input
-          type="text"
-          value={character.player || ''}
-          onChange={e => updateCharacter({ player: e.target.value })}
-          className="form-input w-full"
+          id="playerName"
+          className="form-control"
+          value={playerName}
+          onChange={e => setPlayerName(e.target.value)}
         />
       </div>
 
-      {/* Culture Selector */}
-      <div>
-        <label className="block mb-1">Select a Culture</label>
+      <div className="form-group">
+        <label htmlFor="characterName">Character Name</label>
+        <input
+          type="text"
+          id="characterName"
+          className="form-control"
+          value={characterName}
+          onChange={e => setCharacterName(e.target.value)}
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="culture">Culture</label>
         <select
-          value={character.culture || ''}
-          onChange={e => updateCharacter({ culture: e.target.value })}
-          className="form-select w-full"
+          id="culture"
+          className="form-control"
+          value={culture}
+          onChange={e => setCulture(e.target.value)}
         >
-          <option value="">— choose a culture —</option>
+          <option value="">Select a Culture</option>
           {cultureOptions.map(c => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
+            <option key={c} value={c}>{c}</option>
           ))}
         </select>
       </div>
 
-      {/* Career Selector */}
-      <div>
-        <label className="block mb-1">Select a Career</label>
+      <div className="form-group">
+        <label htmlFor="age">Age</label>
+        <input
+          type="number"
+          id="age"
+          className="form-control"
+          min="0"
+          value={age}
+          onChange={e => setAge(e.target.value)}
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="sex">Sex</label>
         <select
-          value={character.career || ''}
-          onChange={e => updateCharacter({ career: e.target.value })}
-          className="form-select w-full"
+          id="sex"
+          className="form-control"
+          value={sex}
+          onChange={e => setSex(e.target.value)}
         >
-          <option value="">— choose a career —</option>
-          {careerOptions.map(c => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
+          <option value="">Select Sex</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
         </select>
       </div>
+
+      {culture && (
+        <div className="form-group">
+          <label>Social Class</label>
+          <input
+            type="text"
+            className="form-control"
+            readOnly
+            value={socialClass}
+          />
+        </div>
+      )}
+
+      {culture && (
+        <div className="form-group">
+          <label>Starting Silver (sp)</label>
+          <input
+            type="number"
+            className="form-control"
+            readOnly
+            value={startingMoney}
+          />
+        </div>
+      )}
+
+      <button
+        className="btn btn-primary"
+        onClick={() => onNext({ playerName, characterName, culture, age, sex, socialClass, startingMoney })}
+      >
+        Next
+      </button>
     </div>
   );
-}
+};
+
+export default ConceptStep;
