@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// src/steps/ConceptStep.jsx
+import React from 'react';
 import { useCharacter } from '../context/characterContext';
 import cultures from '../data/cultures.json';
 import careers from '../data/careers.json';
@@ -6,59 +7,57 @@ import careers from '../data/careers.json';
 export function ConceptStep() {
   const { character, updateCharacter } = useCharacter();
 
-  // 1. Define your arrays here instead of t('…')
+  // Simple arrays instead of t(...).map
   const GENDERS = ['Male', 'Female', 'Non‑binary', 'Other'];
-  
-  // Assuming each culture JSON now has a "socialClasses" array:
   const cultureDef = cultures[character.culture] || {};
-  const SOCIAL_CLASSES = cultureDef.socialClasses || []; 
-  // e.g. ["Low", "Middle", "High", "Noble"]
-
-  // Careers is an object keyed by id, map to display names
+  const SOCIAL_CLASSES = cultureDef.socialClasses || [];
   const CAREER_LIST = Object.values(careers).map(c => c.name);
 
-  // Handlers
   const onChange = field => e =>
     updateCharacter({ [field]: e.target.value });
 
-  // Rolling helpers (you’ll wire up real D6 logic somewhere else)
+  const rollD100 = () => Math.floor(Math.random() * 100) + 1;
+  const roll4d6 = () =>
+    Array.from({ length: 4 })
+      .map(() => Math.floor(Math.random() * 6) + 1)
+      .reduce((a, b) => a + b, 0);
+
   const rollSocialClass = () => {
-    const roll = Math.floor(Math.random() * 100) + 1; // 1–100
+    const roll = rollD100();
     const tbl = cultureDef.socialClassTable || [];
-    const found = tbl.find(row => roll >= row.min && roll <= row.max);
+    const found = tbl.find(r => roll >= r.min && roll <= r.max);
     if (found) updateCharacter({ socialClass: found.name });
   };
 
   const rollStartingMoney = () => {
-    const baseRoll = Array.from({ length: 4 })
-      .map(() => Math.floor(Math.random() * 6) + 1)
-      .reduce((a, b) => a + b, 0);
-    const multiplier = cultureDef.moneyMultiplier || 1;
-    const socMod = (cultureDef.socialClassModifiers || {})[character.socialClass] || 1;
-    const total = Math.round(baseRoll * multiplier * socMod);
-    updateCharacter({ silver: total });
+    const base = roll4d6();
+    const mult = cultureDef.moneyMultiplier || 1;
+    const socMod =
+      (cultureDef.socialClassModifiers || {})[character.socialClass] || 1;
+    updateCharacter({ silver: Math.round(base * mult * socMod) });
   };
 
   return (
     <div className="space-y-6">
+      {/* Name/Player */}
       <div>
         <label>Character Name</label>
         <input
           className="form-input"
-          value={character.name}
+          value={character.name || ''}
           onChange={onChange('name')}
         />
       </div>
-
       <div>
         <label>Player Name</label>
         <input
           className="form-input"
-          value={character.player}
+          value={character.player || ''}
           onChange={onChange('player')}
         />
       </div>
 
+      {/* Gender / Age */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label>Gender</label>
@@ -75,7 +74,6 @@ export function ConceptStep() {
             ))}
           </select>
         </div>
-
         <div>
           <label>Age</label>
           <input
@@ -87,6 +85,7 @@ export function ConceptStep() {
         </div>
       </div>
 
+      {/* Culture & Career */}
       <div>
         <label>Culture/Background</label>
         <select
@@ -94,7 +93,7 @@ export function ConceptStep() {
           value={character.culture || ''}
           onChange={onChange('culture')}
         >
-          <option value="">Select a culture…</option>
+          <option value="">Select…</option>
           {Object.entries(cultures).map(([key, c]) => (
             <option key={key} value={key}>
               {c.name}
@@ -102,7 +101,6 @@ export function ConceptStep() {
           ))}
         </select>
       </div>
-
       <div>
         <label>Career</label>
         <select
@@ -110,7 +108,7 @@ export function ConceptStep() {
           value={character.career || ''}
           onChange={onChange('career')}
         >
-          <option value="">Select a career…</option>
+          <option value="">Select…</option>
           {CAREER_LIST.map(name => (
             <option key={name} value={name}>
               {name}
@@ -119,12 +117,12 @@ export function ConceptStep() {
         </select>
       </div>
 
-      <div className="mt-4 space-y-2">
+      {/* Social Class */}
+      <div>
         <label>Social Class</label>
         <div className="flex items-center space-x-2">
-          {/* Manual pick */}
           <select
-            className="form-select w-auto flex-1"
+            className="form-select flex-1"
             value={character.socialClass || ''}
             onChange={onChange('socialClass')}
           >
@@ -135,11 +133,9 @@ export function ConceptStep() {
               </option>
             ))}
           </select>
-
-          {/* Or roll */}
           <button
             type="button"
-            className="px-3 py-1 bg-gold text-white rounded"
+            className="px-3 py-1 bg-yellow-500 text-white rounded"
             onClick={rollSocialClass}
           >
             Roll
@@ -147,7 +143,8 @@ export function ConceptStep() {
         </div>
       </div>
 
-      <div className="mt-4 space-y-2">
+      {/* Starting Money */}
+      <div>
         <label>Starting Money (silver)</label>
         <div className="flex items-center space-x-2">
           <input
@@ -158,7 +155,7 @@ export function ConceptStep() {
           />
           <button
             type="button"
-            className="px-3 py-1 bg-gold text-white rounded"
+            className="px-3 py-1 bg-yellow-500 text-white rounded"
             onClick={rollStartingMoney}
           >
             Roll
