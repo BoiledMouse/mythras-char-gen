@@ -1,5 +1,5 @@
 // src/steps/ConceptStep.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { rollDice } from '../utils/dice';
 
 const cultureOptions = ['Barbarian', 'Civilised', 'Nomadic', 'Primitive'];
@@ -32,32 +32,38 @@ const socialClassTables = {
   ],
 };
 
-function rollD100() { return rollDice(1, 100); }
-function generateBaseStartingMoney(culture) {
-  const m = cultureBaseMultiplier[culture] || 0;
-  return rollDice(4, 6) * m;
-}
-function pickSocialClass(culture) {
-  const r = rollD100();
-  return (socialClassTables[culture] || [])
-    .find(e => r >= e.min && r <= e.max) || { name: 'Unknown', mod: 1 };
+function rollD100() {
+  return rollDice(1, 100);
 }
 
-export const ConceptStep = ({ onNext }) => {
+const ConceptStep = ({ onNext }) => {
   const [playerName, setPlayerName] = useState('');
   const [characterName, setCharacterName] = useState('');
   const [age, setAge] = useState('');
   const [sex, setSex] = useState('');
   const [culture, setCulture] = useState('');
   const [socialClass, setSocialClass] = useState('');
-  const [startingMoney, setStartingMoney] = useState(0);
+  const [startingSilver, setStartingSilver] = useState(null);
 
-  useEffect(() => {
-    if (!culture) return;
-    const cls = pickSocialClass(culture);
-    setSocialClass(cls.name);
-    setStartingMoney(Math.floor(generateBaseStartingMoney(culture) * cls.mod));
-  }, [culture]);
+  const handleGenerateSilver = () => {
+    if (!culture || !socialClass) return;
+    const base = rollDice(4, 6) * cultureBaseMultiplier[culture];
+    const clsEntry = socialClassTables[culture].find(e => e.name === socialClass);
+    const total = Math.floor(base * (clsEntry?.mod || 1));
+    setStartingSilver(total);
+  };
+
+  const onSubmit = () => {
+    onNext({
+      playerName,
+      characterName,
+      age,
+      sex,
+      culture,
+      socialClass,
+      startingSilver,
+    });
+  };
 
   return (
     <div className="p-4 space-y-4">
@@ -104,9 +110,9 @@ export const ConceptStep = ({ onNext }) => {
           onChange={e => setSex(e.target.value)}
         >
           <option value="">Select Sex</option>
-          <option>Male</option>
-          <option>Female</option>
-          <option>Other</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
         </select>
       </div>
 
@@ -116,7 +122,11 @@ export const ConceptStep = ({ onNext }) => {
           id="culture"
           className="form-control"
           value={culture}
-          onChange={e => setCulture(e.target.value)}
+          onChange={e => {
+            setCulture(e.target.value);
+            setSocialClass('');
+            setStartingSilver(null);
+          }}
         >
           <option value="">Select a Culture</option>
           {cultureOptions.map(c => (
@@ -126,38 +136,47 @@ export const ConceptStep = ({ onNext }) => {
       </div>
 
       <div className="form-group">
-        <label>Social Class</label>
-        <input
-          type="text"
+        <label htmlFor="socialClass">Social Class</label>
+        <select
+          id="socialClass"
           className="form-control"
-          readOnly
           value={socialClass}
-        />
+          onChange={e => setSocialClass(e.target.value)}
+          disabled={!culture}
+        >
+          <option value="">Select Social Class</option>
+          {culture && socialClassTables[culture].map(sc => (
+            <option key={sc.name} value={sc.name}>{sc.name}</option>
+          ))}
+        </select>
       </div>
 
       <div className="form-group">
-        <label>Starting Silver (sp)</label>
-        <input
-          type="number"
-          className="form-control"
-          readOnly
-          value={startingMoney}
-        />
+        <button
+          className="btn btn-secondary"
+          onClick={handleGenerateSilver}
+          disabled={!culture || !socialClass}
+        >
+          Generate Starting Silver
+        </button>
       </div>
+
+      {startingSilver !== null && (
+        <div className="form-group">
+          <label>Starting Silver (sp)</label>
+          <input
+            type="number"
+            className="form-control"
+            readOnly
+            value={startingSilver}
+          />
+        </div>
+      )}
 
       <button
         className="btn btn-primary"
-        onClick={() =>
-          onNext({
-            playerName,
-            characterName,
-            age,
-            sex,
-            culture,
-            socialClass,
-            startingMoney,
-          })
-        }
+        onClick={onSubmit}
+        disabled={!playerName || !characterName || !age || !sex || !culture || startingSilver === null}
       >
         Next
       </button>
