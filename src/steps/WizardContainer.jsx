@@ -49,9 +49,10 @@ export default function ConceptStep({ formData = {}, onChange }) {
   } = formData;
 
   // Forward native field changes as (name, value)
+    // Forward a synthetic event with target.name and target.value
   const handleFieldChange = e => {
     const { name, value } = e.target;
-    onChange(name, value);
+    onChange({ target: { name, value } });
   };
 
   // Roll to pick a social class
@@ -59,8 +60,8 @@ export default function ConceptStep({ formData = {}, onChange }) {
     if (!culture) return;
     const roll = rollDice('1d100');
     const entry = (socialClassTables[culture] || []).find(e => roll >= e.min && roll <= e.max) || {};
-    onChange('socialRoll', roll);
-    onChange('socialClass', entry.name || '');
+    onChange({ target: { name: 'socialRoll', value: roll } });
+    onChange({ target: { name: 'socialClass', value: entry.name || '' } });
   };
 
   // Calculate starting silver
@@ -71,9 +72,9 @@ export default function ConceptStep({ formData = {}, onChange }) {
     const entry = (socialClassTables[culture] || []).find(e => e.name === socialClass) || {};
     const mod = entry.mod || 1;
     const total = Math.floor(roll * multiplier * mod);
-    onChange('baseRoll', roll);
-    onChange('silverMod', mod);
-    onChange('startingSilver', total);
+    onChange({ target: { name: 'baseRoll', value: roll } });
+    onChange({ target: { name: 'silverMod', value: mod } });
+    onChange({ target: { name: 'startingSilver', value: total } });
   };
 
   return (
