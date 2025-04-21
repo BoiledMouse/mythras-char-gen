@@ -1,7 +1,12 @@
 // src/steps/WizardContainer.jsx
 import React, { useState } from 'react';
 import ConceptStep from './ConceptStep';
-import OtherStep from './OtherStep';
+import AttributesStep from './AttributesStep';
+import SkillsStep from './SkillsStep';
+import EquipmentStep from './EquipmentStep';
+import MagicStep from './MagicStep';
+import CultStep from './CultStep';
+import ReviewStep from './ReviewStep';
 
 export default function WizardContainer() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -11,10 +16,8 @@ export default function WizardContainer() {
   const handleChange = (...args) => {
     let name, value;
     if (args[0] && args[0].target) {
-      // called as handleChange(event)
       ({ name, value } = args[0].target);
     } else if (args.length === 2) {
-      // called as handleChange(name, value)
       [name, value] = args;
     } else {
       return;
@@ -23,21 +26,25 @@ export default function WizardContainer() {
   };
 
   const steps = [
-    { title: 'Concept', component: <ConceptStep formData={formData} onChange={handleChange} /> },
-    { title: 'Other',   component: <OtherStep formData={formData} onChange={handleChange} /> },
-    // ...add additional steps here
+    { title: 'Concept',    component: <ConceptStep    formData={formData} onChange={handleChange} /> },
+    { title: 'Attributes', component: <AttributesStep formData={formData} onChange={handleChange} /> },
+    { title: 'Skills',     component: <SkillsStep     formData={formData} onChange={handleChange} /> },
+    { title: 'Equipment',  component: <EquipmentStep  formData={formData} onChange={handleChange} /> },
+    { title: 'Magic',      component: <MagicStep      formData={formData} onChange={handleChange} /> },
+    { title: 'Cult',       component: <CultStep       formData={formData} onChange={handleChange} /> },
+    { title: 'Review',     component: <ReviewStep     formData={formData} onChange={handleChange} /> },
   ];
 
   return (
     <div>
       <nav className="flex space-x-4 mb-6">
-        {steps.map((s, i) => (
+        {steps.map((step, idx) => (
           <button
-            key={s.title}
-            className={`px-3 py-1 border-b-2 ${i === currentStep ? 'border-blue-600' : 'border-transparent'}`}
-            onClick={() => setCurrentStep(i)}
+            key={step.title}
+            className={`px-3 py-1 border-b-2 ${idx === currentStep ? 'border-blue-600' : 'border-transparent'}`}
+            onClick={() => setCurrentStep(idx)}
           >
-            {s.title}
+            {step.title}
           </button>
         ))}
       </nav>
@@ -47,10 +54,10 @@ export default function WizardContainer() {
       </div>
 
       <footer className="mt-6 flex justify-between">
-        <button onClick={() => setCurrentStep(s => Math.max(s - 1, 0))} disabled={currentStep === 0}>
+        <button onClick={() => setCurrentStep(n => Math.max(n - 1, 0))} disabled={currentStep === 0}>
           Previous
         </button>
-        <button onClick={() => setCurrentStep(s => Math.min(s + 1, steps.length - 1))} disabled={currentStep === steps.length - 1}>
+        <button onClick={() => setCurrentStep(n => Math.min(n + 1, steps.length - 1))} disabled={currentStep === steps.length - 1}>
           Next
         </button>
       </footer>
