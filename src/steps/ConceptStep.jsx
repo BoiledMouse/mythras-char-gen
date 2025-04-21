@@ -82,7 +82,7 @@ export default function ConceptStep({ formData = {}, onChange }) {
 
   return (
     <div className="panel-parchment p-6 max-w-4xl mx-auto w-full space-y-6">
-    <h2 className="font-semibold">Character Concept</h3>
+    <h2 className="font-semibold">Character Concept</h2>
       {/* Character Name */}
       <label htmlFor="characterName" className="block">
         <span className="font-medium">Character Name</span>
