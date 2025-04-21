@@ -33,12 +33,8 @@ const socialClassTables = {
   ],
 };
 
-// Dice helpers
-const rollD100 = () => rollDice('1d100');
-const roll4d6 = () => rollDice('4d6');
-
-// ConceptStep component
-function ConceptStep({ formData = {}, onChange }) {
+// Component
+export default function ConceptStep({ formData = {}, onChange }) {
   const {
     playerName = '',
     characterName = '',
@@ -52,25 +48,25 @@ function ConceptStep({ formData = {}, onChange }) {
     startingSilver = null,
   } = formData;
 
-  // Unified change handler: forward field name + value
-  const handleFieldChange = (e) => {
+  // Forward native field changes as (name, value)
+  const handleFieldChange = e => {
     const { name, value } = e.target;
     onChange(name, value);
   };
 
-  // Roll on social class table
+  // Roll to pick a social class
   const handleRollClass = () => {
     if (!culture) return;
-    const roll = rollD100();
+    const roll = rollDice('1d100');
     const entry = (socialClassTables[culture] || []).find(e => roll >= e.min && roll <= e.max) || {};
     onChange('socialRoll', roll);
     onChange('socialClass', entry.name || '');
   };
 
-  // Generate starting silver
+  // Calculate starting silver
   const handleGenerateSilver = () => {
     if (!culture || !socialClass) return;
-    const roll = roll4d6();
+    const roll = rollDice('4d6');
     const multiplier = cultureBaseMultiplier[culture] || 0;
     const entry = (socialClassTables[culture] || []).find(e => e.name === socialClass) || {};
     const mod = entry.mod || 1;
@@ -141,7 +137,12 @@ function ConceptStep({ formData = {}, onChange }) {
             name="culture"
             className="form-control w-full"
             value={culture}
-            onChange={handleFieldChange}
+            onChange={e => {
+              handleFieldChange(e);
+              onChange('socialClass', '');
+              onChange('socialRoll', null);
+              onChange('startingSilver', null);
+            }}
           >
             <option value="">Select a Culture</option>
             {cultureOptions.map(c => <option key={c} value={c}>{c}</option>)}
@@ -168,7 +169,9 @@ function ConceptStep({ formData = {}, onChange }) {
           disabled={!culture}
         >
           <option value="">Select Social Class</option>
-          {(socialClassTables[culture] || []).map(sc => <option key={sc.name} value={sc.name}>{sc.name}</option>)}
+          {(socialClassTables[culture] || []).map(sc => (
+            <option key={sc.name} value={sc.name}>{sc.name}</option>
+          ))}
         </select>
       </label>
 
@@ -204,5 +207,3 @@ function ConceptStep({ formData = {}, onChange }) {
     </div>
   );
 }
-
-export default ConceptStep;
