@@ -7,11 +7,29 @@ import careers from '../data/careers.json';
 export function ConceptStep() {
   const { character, updateCharacter } = useCharacter();
 
-  // Simple arrays instead of t(...).map
+  // Fixed arrays
   const GENDERS = ['Male', 'Female', 'Non‑binary', 'Other'];
-  const cultureDef = cultures[character.culture] || {};
-  const SOCIAL_CLASSES = cultureDef.socialClasses || [];
-  const CAREER_LIST = Object.values(careers).map(c => c.name);
+
+  // Handle cultures as either object or array
+  const cultureEntries = Array.isArray(cultures)
+    ? cultures.map((c, i) => [c.id || String(i), c])
+    : Object.entries(cultures);
+
+  const cultureDef =
+    (character.culture &&
+      cultureEntries.find(([key]) => key === character.culture)?.[1]) ||
+    {};
+
+  // Social classes for selected culture
+  const SOCIAL_CLASSES = Array.isArray(cultureDef.socialClasses)
+    ? cultureDef.socialClasses
+    : [];
+
+  // Careers: support both array or object
+  const careerListItems = Array.isArray(careers)
+    ? careers
+    : Object.values(careers);
+  const CAREER_LIST = careerListItems.map(c => c.name || c.id || '');
 
   const onChange = field => e =>
     updateCharacter({ [field]: e.target.value });
@@ -23,9 +41,11 @@ export function ConceptStep() {
       .reduce((a, b) => a + b, 0);
 
   const rollSocialClass = () => {
+    if (!Array.isArray(cultureDef.socialClassTable)) return;
     const roll = rollD100();
-    const tbl = cultureDef.socialClassTable || [];
-    const found = tbl.find(r => roll >= r.min && roll <= r.max);
+    const found = cultureDef.socialClassTable.find(
+      r => roll >= r.min && roll <= r.max
+    );
     if (found) updateCharacter({ socialClass: found.name });
   };
 
@@ -34,7 +54,9 @@ export function ConceptStep() {
     const mult = cultureDef.moneyMultiplier || 1;
     const socMod =
       (cultureDef.socialClassModifiers || {})[character.socialClass] || 1;
-    updateCharacter({ silver: Math.round(base * mult * socMod) });
+    updateCharacter({
+      silver: Math.round(base * mult * socMod),
+    });
   };
 
   return (
@@ -94,7 +116,7 @@ export function ConceptStep() {
           onChange={onChange('culture')}
         >
           <option value="">Select…</option>
-          {Object.entries(cultures).map(([key, c]) => (
+          {cultureEntries.map(([key, c]) => (
             <option key={key} value={key}>
               {c.name}
             </option>
@@ -145,7 +167,7 @@ export function ConceptStep() {
 
       {/* Starting Money */}
       <div>
-        <label>Starting Money (silver)</label>
+        <label>Starting Silver</label>
         <div className="flex items-center space-x-2">
           <input
             type="number"
