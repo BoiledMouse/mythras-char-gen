@@ -35,3 +35,19 @@ body {
 .form-select {
   @apply mt-1 block w-full rounded border-gray-300 bg-white text-gray-800 shadow-sm focus:ring focus:ring-gold focus:border-gold;
 }
+
+/* reset any “transparent” or “disabled” styles on selects */
+select, 
+select option {
+  appearance: auto !important;      /* restore native dropdown */
+  color: #000 !important;           /* black text */
+  background-color: #fff !important;/* white background */
+  font-size: 1rem !important;       /* readable size */
+  z-index: auto !important;         /* ensure it floats above other elements */
+}
+
+/* optional: style the select wrapper */
+.select-wrapper {
+  position: relative;
+  display: inline-block;
+}
