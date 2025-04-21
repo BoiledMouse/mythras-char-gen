@@ -23,15 +23,15 @@ export default function WizardContainer() {
   const StepComponent = steps[current].component;
 
   return (
-    <div id="wizard-root" className="min-h-screen w-full font-body bg-wood-grain">
-      {/* Parchment‑textured top stepper */}
-      <div className="shadow-inner border border-yellow-400 rounded-xl p-4 sm:p-6 md:p-8 mb-6 bg-parchment">
+    <div id="wizard-root" className="min-h-screen w-full text-gray-800">
+      {/* ——— Top Stepper (parchment panel) ——— */}
+      <div className="max-w-4xl mx-auto mt-8 bg-parchment shadow-inner border border-yellow-400 rounded-xl p-4 sm:p-6 md:p-8 mb-6">
         <div className="flex flex-wrap justify-between items-center gap-2">
           {steps.map((step, i) => (
             <button
               key={step.id}
               onClick={() => setCurrent(i)}
-              className={`transition px-4 py-2 rounded-xl border font-display text-sm sm:text-base whitespace-nowrap ${
+              className={`transition px-4 py-2 rounded-xl border font-medium text-sm sm:text-base whitespace-nowrap ${
                 i === current
                   ? 'bg-gold text-white border-yellow-700'
                   : 'bg-yellow-100 text-gray-700 border-yellow-300 hover:bg-yellow-200'
@@ -43,13 +43,13 @@ export default function WizardContainer() {
         </div>
       </div>
 
-      {/* Parchment‑textured content panel */}
-      <div className="rounded-xl shadow p-4 sm:p-6 md:p-8 prose prose-lg prose-indigo bg-parchment">
+      {/* ——— Main Content (parchment panel) ——— */}
+      <div className="max-w-4xl mx-auto bg-parchment shadow-lg rounded-xl p-6 sm:p-8 md:p-10 mb-6">
         <StepComponent />
       </div>
 
-      {/* Prev/Next Navigation */}
-      <div className="mt-6 flex justify-between">
+      {/* ——— Prev / Next Navigation ——— */}
+      <div className="max-w-4xl mx-auto flex justify-between px-4 sm:px-6 md:px-8 pb-8 mb-8">
         <button
           onClick={() => setCurrent(c => Math.max(c - 1, 0))}
           disabled={current === 0}
@@ -62,7 +62,7 @@ export default function WizardContainer() {
           disabled={current === steps.length - 1}
           className="px-4 py-2 bg-gold text-white rounded hover:bg-gold-dark disabled:opacity-50"
         >
-          Next
+          {current === steps.length - 1 ? 'Finish' : 'Next'}
         </button>
       </div>
     </div>
