@@ -1,13 +1,12 @@
 // src/steps/WizardContainer.jsx
 import React, { useState } from 'react';
-import { ConceptStep } from './ConceptStep';
+import ConceptStep from './ConceptStep';
 import { AttributesStep } from './AttributesStep';
 import { SkillsStep } from './SkillsStep';
 import { EquipmentStep } from './EquipmentStep';
 import { MagicStep } from './MagicStep';
 import { CultStep } from './CultStep';
 import { ReviewStep } from './ReviewStep';
-
 
 export default function WizardContainer() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -17,8 +16,10 @@ export default function WizardContainer() {
   const handleChange = (...args) => {
     let name, value;
     if (args[0] && args[0].target) {
+      // called as handleChange(event)
       ({ name, value } = args[0].target);
     } else if (args.length === 2) {
+      // called as handleChange(name, value)
       [name, value] = args;
     } else {
       return;
