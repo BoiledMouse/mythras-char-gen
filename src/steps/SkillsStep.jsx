@@ -9,8 +9,8 @@ import StepWrapper from '../components/StepWrapper';
 export function SkillsStep() {
   const { character, updateCharacter } = useCharacter();
   const { culture: cultKey, career: careerKey, age = 0 } = character;
-  const cultureDef  = cultures[cultKey]   || {};
-  const careerDef   = careers[careerKey]  || {};
+  const cultureDef = cultures[cultKey] || {};
+  const careerDef  = careers[careerKey] || {};
 
   // 1) Age buckets
   const ageBuckets = [
@@ -20,26 +20,27 @@ export function SkillsStep() {
     { max: 64, bonus: 250, maxInc: 25, rolls: 3 },
     { max: Infinity, bonus: 300, maxInc: 30, rolls: 4 },
   ];
-  const { bonus: initialPool, maxInc } = ageBuckets.find(b => age <= b.max)!;
+  const bucket = ageBuckets.find(b => age <= b.max) || ageBuckets[0];
+  const { bonus: initialPool, maxInc } = bucket;
 
-  // 2) Helpers to compute base skill%
+  // 2) Compute base skill % from attribute formula
   const attrs = character;
   const computeBase = expr => {
     const parts = expr.split(/\s*([+x])\s*/).filter(Boolean);
-    let val = parseInt(attrs[parts[0]]||0,10);
-    for(let i=1;i<parts.length;i+=2){
-      const op=parts[i], tok=parts[i+1];
-      const v = /^\d+$/.test(tok) ? +tok : +attrs[tok]||0;
-      val = op==='x'? val*v : val+v;
+    let val = parseInt(attrs[parts[0]] || 0, 10);
+    for (let i = 1; i < parts.length; i += 2) {
+      const op = parts[i], tok = parts[i + 1];
+      const v = /^\d+$/.test(tok) ? parseInt(tok, 10) : parseInt(attrs[tok] || 0, 10);
+      val = op === 'x' ? val * v : val + v;
     }
     return val;
   };
 
-  // 3) Build base tables
+  // 3) Build base‐value tables
   const baseStandard = {};
   skillsData.standard.forEach(({ name, base }) => {
     let b = computeBase(base);
-    if (["Customs","Native Tongue"].includes(name)) b += 40;
+    if (["Customs", "Native Tongue"].includes(name)) b += 40;
     baseStandard[name] = b;
   });
   const baseProfessional = {};
@@ -48,41 +49,35 @@ export function SkillsStep() {
   });
 
   // 4) Which skills apply?
-  const cultStd   = cultureDef.standardSkills   || [];
-  const cultProf  = cultureDef.professionalSkills|| [];
-  const carStd    = careerDef.standardSkills    || [];
-  const carProf   = careerDef.professionalSkills || [];
+  const cultStd  = cultureDef.standardSkills     || [];
+  const cultProf = cultureDef.professionalSkills || [];
+  const carStd   = careerDef.standardSkills      || [];
+  const carProf  = careerDef.professionalSkills  || [];
 
-  // 5) Allocation state
-  const [poolLeft,    setPoolLeft  ] = useState(initialPool);
-  const [stdAlloc,    setStdAlloc  ] = useState({});
-  const [profAlloc,   setProfAlloc ] = useState({});
-  const [combatAlloc, setCombatAlloc] = useState({});
-  const [bonusSel,    setBonusSel  ] = useState([]);
-  const [bonusAlloc,  setBonusAlloc] = useState({});
+  // 5) Local allocation state
+  const [poolLeft,    setPoolLeft   ] = useState(initialPool);
+  const [bonusSel,    setBonusSel   ] = useState([]);
+  const [bonusAlloc,  setBonusAlloc ] = useState({});
 
-  const sum = o => Object.values(o).reduce((a,b)=>(a+b||0),0);
-
-  // 6) Persist final skills once pool=0
-  useEffect(()=>{
+  // 6) When pool hits zero, commit final skills
+  useEffect(() => {
     if (poolLeft === 0) {
-      const final = { ...baseStandard, ...baseProfessional };
-      [...cultStd].forEach(s=> final[s]+= stdAlloc[s]||0);
-      [...cultProf].forEach(s=> final[s]+= profAlloc[s]||0);
-      Object.entries(combatAlloc).forEach(([s,v])=> final[s]+=v);
-      [...carStd].forEach(s=> final[s]+= stdAlloc[s]||0);
-      [...carProf].forEach(s=> final[s]+= profAlloc[s]||0);
-      bonusSel.forEach(s=> final[s]+= bonusAlloc[s]||0);
-      updateCharacter({ skills: final });
+      const finalSkills = { ...baseStandard, ...baseProfessional };
+      // no cultural/career sliders here—just hobby bonuses
+      bonusSel.forEach(s => {
+        finalSkills[s] = (finalSkills[s] || 0) + (bonusAlloc[s] || 0);
+      });
+      updateCharacter({ skills: finalSkills });
     }
   }, [poolLeft]);
 
-  // 7) Slider handler
+  // 7) Slider handler for any allocation map
   const handleAlloc = (setter, allocObj, key) => e => {
-    let v = parseInt(e.target.value,10)||0;
-    if (v>0 && v<5) v = 0;                // snap 1–4 → 0
-    v = Math.min(maxInc, Math.max(0, v));// clamp [0..maxInc]
-    const prev = allocObj[key]||0, delta = v - prev;
+    let v = parseInt(e.target.value, 10) || 0;
+    if (v > 0 && v < 5) v = 0;                // snap any 1–4 back to 0
+    v = Math.min(maxInc, Math.max(0, v));     // clamp [0..maxInc]
+    const prev = allocObj[key] || 0;
+    const delta = v - prev;
     if (delta <= poolLeft) {
       setter({ ...allocObj, [key]: v });
       setPoolLeft(pl => pl - delta);
@@ -92,16 +87,16 @@ export function SkillsStep() {
   return (
     <StepWrapper title="Skills">
       <p>
-        Age: <strong>{age}</strong> ⇒  
-        Pool: <strong>{initialPool}</strong> pts,  
-        Max per skill: <strong>+{maxInc}</strong>  
+        Age: <strong>{age}</strong> ⇒&nbsp;
+        Starting Pool: <strong>{initialPool}</strong> pts,&nbsp;
+        Max per skill: <strong>+{maxInc}</strong>
       </p>
-      <p>Remaining points: <strong>{poolLeft}</strong></p>
+      <p>Points Remaining: <strong>{poolLeft}</strong></p>
 
-      {/* Bonus Skill Sliders */}
+      {/* 8) Hobby/Bonus skill sliders */}
       <div className="space-y-4">
         {bonusSel.map(skill => {
-          const base = baseStandard[skill] || baseProfessional[skill] || 0;
+          const base = baseStandard[skill] ?? baseProfessional[skill] ?? 0;
           const extra = bonusAlloc[skill] || 0;
           return (
             <div key={skill} className="flex items-center space-x-4">
@@ -125,7 +120,7 @@ export function SkillsStep() {
         })}
       </div>
 
-      {/* Add a new hobby skill */}
+      {/* 9) Add a new hobby skill */}
       <div className="mt-6">
         <label className="block mb-1 font-medium">Add Hobby Skill:</label>
         <select
@@ -137,7 +132,7 @@ export function SkillsStep() {
             }
           }}
         >
-          <option value="">-- pick a skill --</option>
+          <option value="">— pick a skill —</option>
           {[...cultStd, ...cultProf, ...carStd, ...carProf]
             .filter((v,i,a)=>v && a.indexOf(v)===i)
             .map(s => <option key={s} value={s}>{s}</option>)}
