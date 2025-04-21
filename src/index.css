@@ -1,21 +1,35 @@
 /* src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond&family=Pirata+One&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* full‐screen woodgrain background */
+/* Full-screen wood background delegated via JS or global CSS */
 html, body, #root {
-  @apply bg-wood-grain bg-tavernWood;
-  background-size: cover, auto;
+  height: 100%;
+  margin: 0;
 }
 
-/* wizard container gutters */
+body {
+  font-family: 'EB Garamond', serif;
+  color: #1f2937;
+  background-color: #3b2b1f; /* tavern wood base */
+  background-image: theme('backgroundImage.wood-grain');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Responsive padding for wizard container */
 #wizard-root {
   @apply px-4 sm:px-6 md:px-8 lg:px-10;
 }
 
-/* parchment panels */
+/* Parchment panel background: base color + subtle texture */
 .bg-parchment {
-  @apply bg-parchment bg-parchment-texture;
+  background-color: #f5e1c8; /* parchment base */
+  background-image: theme('backgroundImage.parchment-texture');
+  background-size: auto, cover;
+  background-position: center;
   background-blend-mode: overlay;
 }
