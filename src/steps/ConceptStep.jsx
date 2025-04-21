@@ -1,4 +1,5 @@
 // src/steps/ConceptStep.jsx - I am a change
+// I am another change
 import React from 'react';
 import { rollDice } from '../utils/dice';
 
