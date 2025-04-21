@@ -1,5 +1,5 @@
 // src/steps/ConceptStep.jsx
-import React, { useState } from 'react';
+import React from 'react';
 import { rollDice } from '../utils/dice';
 
 const cultureOptions = ['Barbarian', 'Civilised', 'Nomadic', 'Primitive'];
@@ -37,83 +37,62 @@ function rollD100() {
   return rollDice('1d100');
 }
 
-export const ConceptStep = ({ onNext }) => {
-  const [playerName, setPlayerName] = useState('');
-  const [characterName, setCharacterName] = useState('');
-  const [age, setAge] = useState('');
-  const [sex, setSex] = useState('');
-  const [culture, setCulture] = useState('');
-  const [socialClass, setSocialClass] = useState('');
-  const [startingSilver, setStartingSilver] = useState(null);
+export const ConceptStep = ({ formData, onChange, onNext }) => {
+  const {
+    playerName = '', characterName = '', age = '', sex = '',
+    culture = '', socialClass = '', startingSilver = null
+  } = formData;
 
   const handleGenerateSilver = () => {
     if (!culture || !socialClass) return;
-    // roll 4d6 for base
     const baseRoll = rollDice('4d6');
     const baseSilver = baseRoll * cultureBaseMultiplier[culture];
     const clsEntry = socialClassTables[culture].find(e => e.name === socialClass);
     const total = Math.floor(baseSilver * (clsEntry?.mod || 1));
-    setStartingSilver(total);
-  };
-
-  const handleCultureChange = value => {
-    setCulture(value);
-    setSocialClass('');
-    setStartingSilver(null);
-  };
-
-  const handleSocialClassChange = value => {
-    setSocialClass(value);
-    setStartingSilver(null);
-  };
-
-  const onSubmit = () => {
-    onNext({ playerName, characterName, age, sex, culture, socialClass, startingSilver });
+    onChange({ target: { name: 'startingSilver', value: total } });
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="w-full p-4 space-y-6">
       <div className="form-group">
-        <label htmlFor="playerName">Player Name</label>
+        <label>Player Name</label>
         <input
-          type="text"
-          id="playerName"
-          className="form-control"
+          name="playerName"
           value={playerName}
-          onChange={e => setPlayerName(e.target.value)}
+          onChange={onChange}
+          className="form-control w-full"
         />
       </div>
 
       <div className="form-group">
-        <label htmlFor="characterName">Character Name</label>
+        <label>Character Name</label>
         <input
-          type="text"
-          id="characterName"
-          className="form-control"
+          name="characterName"
           value={characterName}
-          onChange={e => setCharacterName(e.target.value)}
+          onChange={onChange}
+          className="form-control w-full"
         />
       </div>
 
       <div className="form-group">
-        <label htmlFor="age">Age</label>
+        <label>Age</label>
         <input
+          name="age"
           type="number"
-          id="age"
           min="0"
-          className="form-control"
           value={age}
-          onChange={e => setAge(e.target.value)}
+          onChange={onChange}
+          className="form-control w-full"
         />
       </div>
 
       <div className="form-group">
-        <label htmlFor="sex">Sex</label>
+        <label>Sex</label>
         <select
-          id="sex"
-          className="form-control"
+          name="sex"
           value={sex}
-          onChange={e => setSex(e.target.value)}
+          onChange={onChange}
+          className="form-control w-full"
         >
           <option value="">Select Sex</option>
           <option value="Male">Male</option>
@@ -123,26 +102,32 @@ export const ConceptStep = ({ onNext }) => {
       </div>
 
       <div className="form-group">
-        <label htmlFor="culture">Culture</label>
+        <label>Culture</label>
         <select
-          id="culture"
-          className="form-control"
+          name="culture"
           value={culture}
-          onChange={e => handleCultureChange(e.target.value)}
+          onChange={e => {
+            onChange(e);
+            onChange({ target: { name: 'socialClass', value: '' } });
+            onChange({ target: { name: 'startingSilver', value: null } });
+          }}
+          className="form-control w-full"
         >
           <option value="">Select a Culture</option>
-          {cultureOptions.map(c => <option key={c} value={c}>{c}</option>)}
+          {cultureOptions.map(c => (
+            <option key={c} value={c}>{c}</option>
+          ))}
         </select>
       </div>
 
       <div className="form-group">
-        <label htmlFor="socialClass">Social Class</label>
+        <label>Social Class</label>
         <select
-          id="socialClass"
-          className="form-control"
+          name="socialClass"
           value={socialClass}
-          onChange={e => handleSocialClassChange(e.target.value)}
+          onChange={onChange}
           disabled={!culture}
+          className="form-control w-full"
         >
           <option value="">Select Social Class</option>
           {culture && socialClassTables[culture].map(sc => (
@@ -153,7 +138,8 @@ export const ConceptStep = ({ onNext }) => {
 
       <div className="form-group">
         <button
-          className="btn btn-secondary"
+          type="button"
+          className="btn btn-secondary w-full"
           onClick={handleGenerateSilver}
           disabled={!culture || !socialClass}
         >
@@ -165,17 +151,18 @@ export const ConceptStep = ({ onNext }) => {
         <div className="form-group">
           <label>Starting Silver (sp)</label>
           <input
+            name="startingSilver"
             type="number"
-            className="form-control"
             readOnly
             value={startingSilver}
+            className="form-control w-full"
           />
         </div>
       )}
 
       <button
-        className="btn btn-primary"
-        onClick={onSubmit}
+        className="btn btn-primary w-full"
+        onClick={onNext}
         disabled={!playerName || !characterName || !age || !sex || !culture || !socialClass || startingSilver === null}
       >
         Next
