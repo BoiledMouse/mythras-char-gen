@@ -1,222 +1,224 @@
 // src/steps/SkillsStep.jsx
 import React, { useState, useEffect } from 'react';
 import StepWrapper from '../components/StepWrapper';
-import cultures from '../data/cultures.json';
-import careers from '../data/careers.json';
+import cultures   from '../data/cultures.json';
+import careers    from '../data/careers.json';
 import skillsData from '../data/skills.json';
 
 export function SkillsStep({ formData = {}, onChange }) {
-  const {
-    culture = '',
-    career  = '',
-    skills  = {},    // { skillKey: allocatedValue, ... }
-  } = formData;
+  const { culture = '', career = '', skills = {} } = formData;
 
-  // Look up which skills to show
   const cultureDef = cultures[culture] || {};
   const careerDef  = careers[career]   || {};
 
-  const cultureStandard = cultureDef.standardSkills    || [];
-  const cultureProfessional = cultureDef.professionalSkills || [];
-  const combatStyles = cultureDef.combatStyles            || [];
+  const cultureStandard    = cultureDef.standardSkills    || [];
+  const cultureProfessional= cultureDef.professionalSkills|| [];
+  const combatStyles       = cultureDef.combatStyles      || [];
 
-  const careerStandard = careerDef.standardSkills    || [];
+  const careerStandard     = careerDef.standardSkills     || [];
   const careerProfessional = careerDef.professionalSkills || [];
 
-  // Compute each skill’s base % from attributes
-  const attrs = formData; // attributes live in formData (STR, DEX, etc)
+  // compute base values
+  const attrs = formData;
   const computeBase = expr => {
     const parts = expr.split(/\s*([+x])\s*/).filter(Boolean);
-    let val = parseInt(attrs[parts[0]]||0,10);
-    for (let i = 1; i < parts.length; i+=2) {
-      const op = parts[i],
-            token = parts[i+1],
-            v = /^\d+$/.test(token)
-              ? parseInt(token,10)
-              : parseInt(attrs[token]||0,10);
+    let val = parseInt(attrs[parts[0]] || 0, 10);
+    for (let i = 1; i < parts.length; i += 2) {
+      const op = parts[i], token = parts[i+1];
+      const v = /^\d+$/.test(token)
+        ? parseInt(token,10)
+        : parseInt(attrs[token] || 0,10);
       val = op === 'x' ? val * v : val + v;
     }
     return val;
   };
 
-  // Precompute base tables
   const baseStandard = {};
   skillsData.standard.forEach(({ key, name, base }) => {
-    baseStandard[key] = computeBase(base) + (name === 'Customs'||name === 'Native Tongue' ? 40 : 0);
+    let b = computeBase(base);
+    if (name === 'Customs' || name === 'Native Tongue') b += 40;
+    baseStandard[key] = b;
   });
+
   const baseProfessional = {};
   skillsData.professional.forEach(({ key, base }) => {
     baseProfessional[key] = computeBase(base);
   });
+
   const baseCombat = {};
   combatStyles.forEach(style => {
     baseCombat[style] = (attrs.STR||0) + (attrs.DEX||0);
   });
 
-  // Local selections (so we can step through phases, if you need multiple)
-  const [phase, setPhase] = useState(1);
+  // local allocations mirror formData.skills
+  const [cultStdAlloc, setCultStdAlloc]       = useState(skills.cultStdAlloc       || {});
+  const [cultProfAlloc,setCultProfAlloc]      = useState(skills.cultProfAlloc      || {});
+  const [cultCombatAlloc, setCultCombatAlloc] = useState(skills.cultCombatAlloc   || {});
+  const [careerStdAlloc,setCareerStdAlloc]    = useState(skills.careerStdAlloc    || {});
+  const [careerProfAlloc,setCareerProfAlloc]  = useState(skills.careerProfAlloc   || {});
 
-  // Allocations in local state mirror formData.skills or initialize to {}
-  const [cultStdAlloc,    setCultStdAlloc]    = useState(skills.cultStdAlloc    || {});
-  const [cultProfAlloc,   setCultProfAlloc]   = useState(skills.cultProfAlloc   || {});
-  const [cultCombatAlloc, setCultCombatAlloc] = useState(skills.cultCombatAlloc || {});
-  const [careerStdAlloc,  setCareerStdAlloc]  = useState(skills.careerStdAlloc  || {});
-  const [careerProfAlloc, setCareerProfAlloc] = useState(skills.careerProfAlloc || {});
-  
-  // When phase is done, merge everything into formData.skills
+  // when allocations change, push back to formData
   useEffect(() => {
-    if (phase > 1) {
-      onChange('skills', {
-        cultStdAlloc, cultProfAlloc, cultCombatAlloc,
-        careerStdAlloc, careerProfAlloc
-      });
-    }
-  }, [phase]);
+    onChange('skills', {
+      cultStdAlloc,
+      cultProfAlloc,
+      cultCombatAlloc,
+      careerStdAlloc,
+      careerProfAlloc
+    });
+  }, [cultStdAlloc, cultProfAlloc, cultCombatAlloc, careerStdAlloc, careerProfAlloc]);
 
-  // Simple helper to clamp a skill add-on between 0 and 100
-  const clamp = v => Math.max(0, Math.min(100, v));
+  // clamp helper: 0–15, but anything non‑zero must be at least 5
+  const adjust = v => {
+    v = Math.max(0, Math.min(15, v));
+    if (v > 0 && v < 5) v = 5;
+    return v;
+  };
 
   return (
     <StepWrapper title="Skills">
-      {phase === 1 && (
-        <div className="space-y-4">
-          <h3 className="font-semibold">Cultural Skills</h3>
-          {/* Standard */}
-          <h4 className="font-medium">Standard Skills</h4>
-          {cultureStandard.map(key => (
-            <div key={key} className="flex items-center space-x-2">
-              <span className="w-32">{skillsData.standard.find(s=>s.key===key)?.name}</span>
+      {/* Cultural Standard */}
+      <h3 className="font-semibold">Cultural: Standard Skills</h3>
+      {cultureStandard.map(key => {
+        const def = skillsData.standard.find(s => s.key === key);
+        const base = baseStandard[key] || 0;
+        const alloc = cultStdAlloc[key] || 0;
+        return (
+          <label key={key} className="block mb-4">
+            <div className="flex justify-between mb-1">
+              <span>{def?.name}</span>
+              <span>Base {base}% → {base + alloc}%</span>
+            </div>
+            <input
+              type="number"
+              className="form-control"
+              min={0}
+              max={15}
+              value={alloc}
+              onChange={e => {
+                const v = adjust(+e.target.value);
+                setCultStdAlloc(prev => ({ ...prev, [key]: v }));
+              }}
+            />
+          </label>
+        );
+      })}
+
+      {/* Cultural Professional */}
+      <h3 className="font-semibold mt-8">Cultural: Professional Skills</h3>
+      {cultureProfessional.map(key => {
+        const def = skillsData.professional.find(s => s.key === key);
+        const base = baseProfessional[key] || 0;
+        const alloc = cultProfAlloc[key] || 0;
+        return (
+          <label key={key} className="block mb-4">
+            <div className="flex justify-between mb-1">
+              <span>{def?.name}</span>
+              <span>Base {base}% → {base + alloc}%</span>
+            </div>
+            <input
+              type="number"
+              className="form-control"
+              min={0}
+              max={15}
+              value={alloc}
+              onChange={e => {
+                const v = adjust(+e.target.value);
+                setCultProfAlloc(prev => ({ ...prev, [key]: v }));
+              }}
+            />
+          </label>
+        );
+      })}
+
+      {/* Combat Styles */}
+      {combatStyles.length > 0 && <>
+        <h3 className="font-semibold mt-8">Cultural: Combat Styles</h3>
+        {combatStyles.map(style => {
+          const base = baseCombat[style] || 0;
+          const alloc = cultCombatAlloc[style] || 0;
+          return (
+            <label key={style} className="block mb-4">
+              <div className="flex justify-between mb-1">
+                <span>{style}</span>
+                <span>Base {base}% → {base + alloc}%</span>
+              </div>
               <input
                 type="number"
-                className="form-control w-20"
+                className="form-control"
                 min={0}
-                max={100}
-                value={cultStdAlloc[key]||0}
+                max={15}
+                value={alloc}
                 onChange={e => {
-                  const v = clamp(+e.target.value);
-                  setCultStdAlloc(prev => ({ ...prev, [key]: v }));
+                  const v = adjust(+e.target.value);
+                  setCultCombatAlloc({ [style]: v });
                 }}
               />
-              <span>
-                Base: {baseStandard[key]||0}% → { (baseStandard[key]||0) + (cultStdAlloc[key]||0) }%
-              </span>
+            </label>
+          );
+        })}
+      </>}
+
+      {/* Career Standard */}
+      <h3 className="font-semibold mt-8">Career: Standard Skills</h3>
+      {careerStandard.map(key => {
+        const def = skillsData.standard.find(s => s.key === key);
+        const base = baseStandard[key] || 0;
+        const alloc = careerStdAlloc[key] || 0;
+        return (
+          <label key={key} className="block mb-4">
+            <div className="flex justify-between mb-1">
+              <span>{def?.name}</span>
+              <span>Base {base}% → {base + alloc}%</span>
             </div>
-          ))}
+            <input
+              type="number"
+              className="form-control"
+              min={0}
+              max={15}
+              value={alloc}
+              onChange={e => {
+                const v = adjust(+e.target.value);
+                setCareerStdAlloc(prev => ({ ...prev, [key]: v }));
+              }}
+            />
+          </label>
+        );
+      })}
 
-          {/* Professional */}
-          <h4 className="font-medium">Professional Skills</h4>
-          {cultureProfessional.map(key => (
-            <div key={key} className="flex items-center space-x-2">
-              <span className="w-32">{skillsData.professional.find(s=>s.key===key)?.name}</span>
-              <input
-                type="number"
-                className="form-control w-20"
-                min={0}
-                max={100}
-                value={cultProfAlloc[key]||0}
-                onChange={e => {
-                  const v = clamp(+e.target.value);
-                  setCultProfAlloc(prev => ({ ...prev, [key]: v }));
-                }}
-              />
-              <span>
-                Base: {baseProfessional[key]||0}% → { (baseProfessional[key]||0) + (cultProfAlloc[key]||0) }%
-              </span>
+      {/* Career Professional */}
+      <h3 className="font-semibold mt-8">Career: Professional Skills</h3>
+      {careerProfessional.map(key => {
+        const def = skillsData.professional.find(s => s.key === key);
+        const base = baseProfessional[key] || 0;
+        const alloc = careerProfAlloc[key] || 0;
+        return (
+          <label key={key} className="block mb-4">
+            <div className="flex justify-between mb-1">
+              <span>{def?.name}</span>
+              <span>Base {base}% → {base + alloc}%</span>
             </div>
-          ))}
+            <input
+              type="number"
+              className="form-control"
+              min={0}
+              max={15}
+              value={alloc}
+              onChange={e => {
+                const v = adjust(+e.target.value);
+                setCareerProfAlloc(prev => ({ ...prev, [key]: v }));
+              }}
+            />
+          </label>
+        );
+      })}
 
-          {/* Combat Styles */}
-          {combatStyles.length > 0 && (
-            <>
-              <h4 className="font-medium">Combat Styles</h4>
-              {combatStyles.map(style => (
-                <div key={style} className="flex items-center space-x-2">
-                  <span className="w-32">{style}</span>
-                  <input
-                    type="number"
-                    className="form-control w-20"
-                    min={0}
-                    max={100}
-                    value={cultCombatAlloc[style]||0}
-                    onChange={e => {
-                      const v = clamp(+e.target.value);
-                      setCultCombatAlloc({ [style]: v });
-                    }}
-                  />
-                  <span>
-                    Base: {baseCombat[style]||0}% → { (baseCombat[style]||0) + (cultCombatAlloc[style]||0) }%
-                  </span>
-                </div>
-              ))}
-            </>
-          )}
-
-          <div className="mt-4">
-            <button
-              onClick={() => setPhase(2)}
-              className="btn btn-primary"
-            >
-              Next: Career Skills
-            </button>
-          </div>
-        </div>
-      )}
-
-      {phase === 2 && (
-        <div className="space-y-4">
-          <h3 className="font-semibold">Career Skills</h3>
-          {/* Similar pattern for careerStandard & careerProfessional */}
-          {careerStandard.map(key => (
-            <div key={key} className="flex items-center space-x-2">
-              <span className="w-32">{skillsData.standard.find(s=>s.key===key)?.name}</span>
-              <input
-                type="number"
-                className="form-control w-20"
-                min={0}
-                max={100}
-                value={careerStdAlloc[key]||0}
-                onChange={e => {
-                  const v = clamp(+e.target.value);
-                  setCareerStdAlloc(prev => ({ ...prev, [key]: v }));
-                }}
-              />
-              <span>
-                Base: {baseStandard[key]||0}% → { (baseStandard[key]||0) + (careerStdAlloc[key]||0) }%
-              </span>
-            </div>
-          ))}
-
-          <h4 className="font-medium">Professional Skills</h4>
-          {careerProfessional.map(key => (
-            <div key={key} className="flex items-center space-x-2">
-              <span className="w-32">{skillsData.professional.find(s=>s.key===key)?.name}</span>
-              <input
-                type="number"
-                className="form-control w-20"
-                min={0}
-                max={100}
-                value={careerProfAlloc[key]||0}
-                onChange={e => {
-                  const v = clamp(+e.target.value);
-                  setCareerProfAlloc(prev => ({ ...prev, [key]: v }));
-                }}
-              />
-              <span>
-                Base: {baseProfessional[key]||0}% → { (baseProfessional[key]||0) + (careerProfAlloc[key]||0) }%
-              </span>
-            </div>
-          ))}
-
-          <div className="mt-4 flex space-x-2">
-            <button onClick={() => setPhase(1)} className="btn btn-secondary">
-              Back
-            </button>
-            <button onClick={() => setPhase(3)} className="btn btn-primary">
-              Done
-            </button>
-          </div>
-        </div>
-      )}
+      <button
+        onClick={() => onChange('step', 'equipment')}
+        className="btn btn-primary mt-6"
+      >
+        Next: Equipment
+      </button>
     </StepWrapper>
   );
 }
