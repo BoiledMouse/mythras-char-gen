@@ -11,17 +11,15 @@
 /* 3) Global body styles */
 body {
   font-family: 'EB Garamond', serif;
-  color: #1F2937;       /* gray-900 */
-  background-color: #3B2B1F; /* fallback wood */
-  @apply bg-wood-grain-texture;
-  background-size: auto 100%;
-  background-blend-mode: multiply;
+  color: #1F2937;           /* gray-900 */
+  background-color: #3B2B1F; /* fallback wood color */
+  @apply bg-wood-grain bg-blend-multiply;
 }
 
-/* 4) Parchment panels (no circular @apply) */
+/* 4) Parchment panels */
 @layer components {
-    .panel-parchment {
-    background-color: theme("colors.parchment");
+  .panel-parchment {
+    @apply bg-parchment bg-blend-overlay;
   }
 }
 
@@ -30,33 +28,12 @@ body {
   @apply px-4 sm:px-6 md:px-8 lg:px-10;
 }
 
-/* 6) Form inputs styling */
-.form-select {
-  @apply mt-1 block w-full rounded border-gray-300 bg-white text-gray-800 shadow-sm focus:ring focus:ring-gold focus:border-gold;
-}
-
-/* reset any “transparent” or “disabled” styles on selects */
-select, 
-select option {
-  appearance: auto !important;      /* restore native dropdown */
-  color: #000 !important;           /* black text */
-  background-color: #fff !important;/* white background */
-  font-size: 1rem !important;       /* readable size */
-  z-index: auto !important;         /* ensure it floats above other elements */
-}
-
-/* optional: style the select wrapper */
-.select-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-/* 7) Allow the parchment to show behind inputs */
+/* 6) Form inputs styling (transparent) */
 .form-control,
 select,
 input[type="text"],
 input[type="number"] {
   background-color: transparent !important;
-  border-color: rgba(0, 0, 0, 0.2) !important;
-  color: #1F2937 !important; /* ensure text is still readable */
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #1F2937;
 }
