@@ -19,7 +19,7 @@ module.exports = {
           "repeating-linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.5) 2px, transparent 2px, transparent 4px)",
         // a faint wood‑grain stripe
         "wood-grain-texture":
-          "repeating-linear-gradient(90deg, rgba(0,0,0,0.1), rgba(0,0,0,0.2) 1px, transparent 1px, transparent 4px)"
+          "repeating-linear-gradient(90deg, rgba(0,0,0,0.1), rgba(0,0,0,0.7) 1px, transparent 1px, transparent 4px)"
       },
     },
   },
