@@ -20,9 +20,8 @@ body {
 
 /* 4) Parchment panels (no circular @apply) */
 @layer components {
-  .panel-parchment {
+    .panel-parchment {
     background-color: theme("colors.parchment");
-    @apply bg-parchment-texture bg-blend-overlay;
   }
 }
 
