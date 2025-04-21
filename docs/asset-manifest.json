@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/mythras-char-gen/static/css/main.e62510df.css",
-    "main.js": "/mythras-char-gen/static/js/main.c7aa7ce9.js",
+    "main.css": "/mythras-char-gen/static/css/main.4a0d48df.css",
+    "main.js": "/mythras-char-gen/static/js/main.b7155c76.js",
     "index.html": "/mythras-char-gen/index.html",
-    "main.e62510df.css.map": "/mythras-char-gen/static/css/main.e62510df.css.map",
-    "main.c7aa7ce9.js.map": "/mythras-char-gen/static/js/main.c7aa7ce9.js.map"
+    "main.4a0d48df.css.map": "/mythras-char-gen/static/css/main.4a0d48df.css.map",
+    "main.b7155c76.js.map": "/mythras-char-gen/static/js/main.b7155c76.js.map"
   },
   "entrypoints": [
-    "static/css/main.e62510df.css",
-    "static/js/main.c7aa7ce9.js"
+    "static/css/main.4a0d48df.css",
+    "static/js/main.b7155c76.js"
   ]
 }
