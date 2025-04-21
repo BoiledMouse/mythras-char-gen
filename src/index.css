@@ -51,3 +51,13 @@ select option {
   position: relative;
   display: inline-block;
 }
+
+/* 7) Allow the parchment to show behind inputs */
+.form-control,
+select,
+input[type="text"],
+input[type="number"] {
+  background-color: transparent !important;
+  border-color: rgba(0, 0, 0, 0.2) !important;
+  color: #1F2937 !important; /* ensure text is still readable */
+}
