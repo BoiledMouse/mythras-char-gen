@@ -12,35 +12,34 @@ export function SkillsStep() {
   const cultureDef = cultures[cultKey] || {};
   const careerDef  = careers[careerKey] || {};
 
-  // 1) Age buckets
+  // 1) Age‐based bucket for bonus phase
   const ageBuckets = [
-    { max: 16, bonus: 100, maxInc: 10, rolls: 0 },
-    { max: 27, bonus: 150, maxInc: 15, rolls: 1 },
-    { max: 43, bonus: 200, maxInc: 20, rolls: 2 },
-    { max: 64, bonus: 250, maxInc: 25, rolls: 3 },
-    { max: Infinity, bonus: 300, maxInc: 30, rolls: 4 },
+    { max: 16, bonus: 100, maxInc: 10 },
+    { max: 27, bonus: 150, maxInc: 15 },
+    { max: 43, bonus: 200, maxInc: 20 },
+    { max: 64, bonus: 250, maxInc: 25 },
+    { max: Infinity, bonus: 300, maxInc: 30 },
   ];
-  const bucket = ageBuckets.find(b => age <= b.max) || ageBuckets[0];
-  const { bonus: initialPool, maxInc } = bucket;
+  const { bonus: BONUS_POINTS, maxInc: BONUS_MAX } =
+    ageBuckets.find(b => age <= b.max) || ageBuckets[0];
 
-  // 2) Compute base skill % from attribute formula
-  const attrs = character;
+  // 2) Compute base % from attribute formulas
   const computeBase = expr => {
     const parts = expr.split(/\s*([+x])\s*/).filter(Boolean);
-    let val = parseInt(attrs[parts[0]] || 0, 10);
+    let val = parseInt(character[parts[0]] || 0, 10);
     for (let i = 1; i < parts.length; i += 2) {
-      const op = parts[i], tok = parts[i + 1];
-      const v = /^\d+$/.test(tok) ? parseInt(tok, 10) : parseInt(attrs[tok] || 0, 10);
+      const op = parts[i], tok = parts[i+1];
+      const v = /^\d+$/.test(tok) ? +tok : +(character[tok] || 0);
       val = op === 'x' ? val * v : val + v;
     }
     return val;
   };
 
-  // 3) Build base‐value tables
+  // 3) Build base tables
   const baseStandard = {};
   skillsData.standard.forEach(({ name, base }) => {
     let b = computeBase(base);
-    if (["Customs", "Native Tongue"].includes(name)) b += 40;
+    if (["Customs","Native Tongue"].includes(name)) b += 40;
     baseStandard[name] = b;
   });
   const baseProfessional = {};
@@ -48,96 +47,310 @@ export function SkillsStep() {
     baseProfessional[name] = computeBase(base);
   });
 
-  // 4) Which skills apply?
+  // 4) Which skills to show?
   const cultStd  = cultureDef.standardSkills     || [];
   const cultProf = cultureDef.professionalSkills || [];
   const carStd   = careerDef.standardSkills      || [];
   const carProf  = careerDef.professionalSkills  || [];
 
-  // 5) Local allocation state
-  const [poolLeft,    setPoolLeft   ] = useState(initialPool);
-  const [bonusSel,    setBonusSel   ] = useState([]);
-  const [bonusAlloc,  setBonusAlloc ] = useState({});
+  // 5) Phase and pools
+  const [phase, setPhase] = useState(1);
+  const CULT_POINTS   = 100;
+  const CAREER_POINTS = 100;
+  const [poolCult,   setPoolCult]   = useState(CULT_POINTS);
+  const [poolCareer, setPoolCareer] = useState(CAREER_POINTS);
+  const [poolBonus,  setPoolBonus]  = useState(BONUS_POINTS);
 
-  // 6) When pool hits zero, commit final skills
-  useEffect(() => {
-    if (poolLeft === 0) {
-      const finalSkills = { ...baseStandard, ...baseProfessional };
-      // no cultural/career sliders here—just hobby bonuses
-      bonusSel.forEach(s => {
-        finalSkills[s] = (finalSkills[s] || 0) + (bonusAlloc[s] || 0);
-      });
-      updateCharacter({ skills: finalSkills });
-    }
-  }, [poolLeft]);
+  // 6) Allocation state
+  const [cultStdAlloc,    setCultStdAlloc]    = useState({});
+  const [cultProfSel,     setCultProfSel]     = useState([]);
+  const [cultProfAlloc,   setCultProfAlloc]   = useState({});
+  const [careerStdAlloc,  setCareerStdAlloc]  = useState({});
+  const [careerProfSel,   setCareerProfSel]   = useState([]);
+  const [careerProfAlloc, setCareerProfAlloc] = useState({});
+  const [bonusSel,        setBonusSel]        = useState([]);
+  const [bonusAlloc,      setBonusAlloc]      = useState({});
 
-  // 7) Slider handler for any allocation map
-  const handleAlloc = (setter, allocObj, key) => e => {
+  // common clamp & snap handler
+  const handleAlloc = (setter, allocObj, key, pool, setPool, maxInc) => e => {
     let v = parseInt(e.target.value, 10) || 0;
-    if (v > 0 && v < 5) v = 0;                // snap any 1–4 back to 0
-    v = Math.min(maxInc, Math.max(0, v));     // clamp [0..maxInc]
+    if (v > 0 && v < 5) v = 0;                // snap tiny values to 0
+    v = Math.min(maxInc, Math.max(0, v));     // clamp
     const prev = allocObj[key] || 0;
     const delta = v - prev;
-    if (delta <= poolLeft) {
+    if (delta <= pool) {
       setter({ ...allocObj, [key]: v });
-      setPoolLeft(pl => pl - delta);
+      setPool(p => p - delta);
     }
   };
 
+  // 7) Once bonus pool zero, commit all skills
+  useEffect(() => {
+    if (phase === 3 && poolBonus === 0) {
+      const final = { ...baseStandard, ...baseProfessional };
+      // cultural
+      cultStd.forEach(s => final[s] += cultStdAlloc[s] || 0);
+      cultProfSel.forEach(s => final[s] += cultProfAlloc[s] || 0);
+      // career
+      carStd.forEach(s => final[s] += careerStdAlloc[s] || 0);
+      careerProfSel.forEach(s => final[s] += careerProfAlloc[s] || 0);
+      // bonus hobbies
+      bonusSel.forEach(s => final[s] += bonusAlloc[s] || 0);
+
+      updateCharacter({ skills: final, step: 'skillsDone' });
+    }
+  }, [poolBonus, phase]);
+
   return (
     <StepWrapper title="Skills">
-      <p>
-        Age: <strong>{age}</strong> ⇒&nbsp;
-        Starting Pool: <strong>{initialPool}</strong> pts,&nbsp;
-        Max per skill: <strong>+{maxInc}</strong>
-      </p>
-      <p>Points Remaining: <strong>{poolLeft}</strong></p>
+      {/* Phase tabs */}
+      <div className="flex space-x-4 mb-4">
+        {['Cultural','Career','Bonus'].map((label, i) => (
+          <button
+            key={label}
+            className={`px-3 py-1 border-b-2 ${
+              phase === i+1 ? 'border-blue-600 font-semibold' : 'border-transparent'
+            }`}
+            onClick={() => setPhase(i+1)}
+            disabled={i+1 > phase}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
-      {/* 8) Hobby/Bonus skill sliders */}
-      <div className="space-y-4">
-        {bonusSel.map(skill => {
-          const base = baseStandard[skill] ?? baseProfessional[skill] ?? 0;
-          const extra = bonusAlloc[skill] || 0;
-          return (
-            <div key={skill} className="flex items-center space-x-4">
-              <div className="flex-1">
-                <label className="block font-medium">
-                  {skill} (Base {base}%)
-                </label>
-                <input
-                  type="range"
-                  min={0}
-                  max={maxInc}
-                  step={1}
-                  value={extra}
-                  onChange={handleAlloc(setBonusAlloc, bonusAlloc, skill)}
-                  className="w-full"
-                />
+      {/* Phase 1: Cultural */}
+      {phase === 1 && (
+        <div className="space-y-6">
+          <p>Pool: <strong>{poolCult}</strong> pts (max +15 each)</p>
+
+          <h4 className="font-medium">Standard Skills</h4>
+          {cultStd.map(s => {
+            const base = baseStandard[s] || 0, extra = cultStdAlloc[s] || 0;
+            return (
+              <div key={s} className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <label className="block font-medium">
+                    {s} (Base {base}%)
+                  </label>
+                  <input
+                    type="range"
+                    min={0} max={15} step={1}
+                    value={extra}
+                    onChange={handleAlloc(
+                      setCultStdAlloc, cultStdAlloc, s,
+                      poolCult, setPoolCult, 15
+                    )}
+                    className="w-full"
+                  />
+                </div>
+                <div className="w-16 text-right">+{extra}%</div>
               </div>
-              <div className="w-16 text-right">+{extra}%</div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
 
-      {/* 9) Add a new hobby skill */}
-      <div className="mt-6">
-        <label className="block mb-1 font-medium">Add Hobby Skill:</label>
-        <select
-          className="w-full border rounded p-2"
-          onChange={e => {
-            const s = e.target.value;
-            if (s && !bonusSel.includes(s)) {
-              setBonusSel(sel => [...sel, s]);
-            }
-          }}
-        >
-          <option value="">— pick a skill —</option>
-          {[...cultStd, ...cultProf, ...carStd, ...carProf]
-            .filter((v,i,a)=>v && a.indexOf(v)===i)
-            .map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-      </div>
+          <h4 className="font-medium">Professional Skills (up to 3)</h4>
+          <div className="flex flex-wrap gap-2">
+            {cultProf.map(s => (
+              <label key={s} className="inline-flex items-center space-x-1">
+                <input
+                  type="checkbox"
+                  checked={cultProfSel.includes(s)}
+                  onChange={() => {
+                    setCultProfSel(sel =>
+                      sel.includes(s)
+                        ? sel.filter(x => x !== s)
+                        : sel.length < 3
+                          ? [...sel, s]
+                          : sel
+                    );
+                  }}
+                />
+                <span>{s}</span>
+              </label>
+            ))}
+          </div>
+
+          {cultProfSel.map(s => {
+            const base = baseProfessional[s] || 0, extra = cultProfAlloc[s] || 0;
+            return (
+              <div key={s} className="flex items-center space-x-4 mt-2">
+                <div className="flex-1">
+                  <label className="block font-medium">
+                    {s} (Base {base}%)
+                  </label>
+                  <input
+                    type="range"
+                    min={0} max={15} step={1}
+                    value={extra}
+                    onChange={handleAlloc(
+                      setCultProfAlloc, cultProfAlloc, s,
+                      poolCult, setPoolCult, 15
+                    )}
+                    className="w-full"
+                  />
+                </div>
+                <div className="w-16 text-right">+{extra}%</div>
+              </div>
+            );
+          })}
+
+          <button
+            className="mt-6 px-4 py-2 bg-blue-600 text-white rounded"
+            disabled={poolCult > 0}
+            onClick={() => setPhase(2)}
+          >
+            Next: Career
+          </button>
+        </div>
+      )}
+
+      {/* Phase 2: Career */}
+      {phase === 2 && (
+        <div className="space-y-6">
+          <p>Pool: <strong>{poolCareer}</strong> pts (max +15 each)</p>
+
+          <h4 className="font-medium">Standard Skills</h4>
+          {carStd.map(s => {
+            const base = baseStandard[s] || 0, extra = careerStdAlloc[s] || 0;
+            return (
+              <div key={s} className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <label className="block font-medium">
+                    {s} (Base {base}%)
+                  </label>
+                  <input
+                    type="range"
+                    min={0} max={15} step={1}
+                    value={extra}
+                    onChange={handleAlloc(
+                      setCareerStdAlloc, careerStdAlloc, s,
+                      poolCareer, setPoolCareer, 15
+                    )}
+                    className="w-full"
+                  />
+                </div>
+                <div className="w-16 text-right">+{extra}%</div>
+              </div>
+            );
+          })}
+
+          <h4 className="font-medium">Professional Skills (up to 3)</h4>
+          <div className="flex flex-wrap gap-2">
+            {carProf.map(s => (
+              <label key={s} className="inline-flex items-center space-x-1">
+                <input
+                  type="checkbox"
+                  checked={careerProfSel.includes(s)}
+                  onChange={() => {
+                    setCareerProfSel(sel =>
+                      sel.includes(s)
+                        ? sel.filter(x => x !== s)
+                        : sel.length < 3
+                          ? [...sel, s]
+                          : sel
+                    );
+                  }}
+                />
+                <span>{s}</span>
+              </label>
+            ))}
+          </div>
+
+          {careerProfSel.map(s => {
+            const base = baseProfessional[s] || 0, extra = careerProfAlloc[s] || 0;
+            return (
+              <div key={s} className="flex items-center space-x-4 mt-2">
+                <div className="flex-1">
+                  <label className="block font-medium">
+                    {s} (Base {base}%)
+                  </label>
+                  <input
+                    type="range"
+                    min={0} max={15} step={1}
+                    value={extra}
+                    onChange={handleAlloc(
+                      setCareerProfAlloc, careerProfAlloc, s,
+                      poolCareer, setPoolCareer, 15
+                    )}
+                    className="w-full"
+                  />
+                </div>
+                <div className="w-16 text-right">+{extra}%</div>
+              </div>
+            );
+          })}
+
+          <div className="flex space-x-4 mt-6">
+            <button
+              className="px-4 py-2 bg-gray-300 rounded"
+              onClick={() => setPhase(1)}
+            >
+              Back
+            </button>
+            <button
+              className="px-4 py-2 bg-blue-600 text-white rounded"
+              disabled={poolCareer > 0}
+              onClick={() => setPhase(3)}
+            >
+              Next: Bonus
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Phase 3: Bonus */}
+      {phase === 3 && (
+        <div className="space-y-6">
+          <p>
+            Age: <strong>{age}</strong> ⇒ Starting Pool: <strong>{BONUS_POINTS}</strong> pts, Max per skill: <strong>+{BONUS_MAX}</strong>
+          </p>
+          <p>Remaining Pool: <strong>{poolBonus}</strong> pts</p>
+
+          {bonusSel.map(s => {
+            const base = baseStandard[s] || baseProfessional[s] || 0;
+            const extra = bonusAlloc[s] || 0;
+            return (
+              <div key={s} className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <label className="block font-medium">
+                    {s} (Base {base}%)
+                  </label>
+                  <input
+                    type="range"
+                    min={0} max={BONUS_MAX} step={1}
+                    value={extra}
+                    onChange={handleAlloc(
+                      setBonusAlloc, bonusAlloc, s,
+                      poolBonus, setPoolBonus, BONUS_MAX
+                    )}
+                    className="w-full"
+                  />
+                </div>
+                <div className="w-16 text-right">+{extra}%</div>
+              </div>
+            );
+          })}
+
+          <div className="mt-6">
+            <label className="block mb-1 font-medium">Add Hobby Skill:</label>
+            <select
+              className="w-full border rounded p-2"
+              onChange={e => {
+                const s = e.target.value;
+                if (s && !bonusSel.includes(s)) {
+                  setBonusSel(sel => [...sel, s]);
+                }
+              }}
+            >
+              <option value="">— pick a skill —</option>
+              {[...cultStd, ...cultProf, ...carStd, ...carProf]
+                .filter((v,i,a) => v && a.indexOf(v) === i)
+                .map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
+      )}
     </StepWrapper>
   );
 }
