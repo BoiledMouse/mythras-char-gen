@@ -33,3 +33,10 @@ body {
   background-position: center;
   background-blend-mode: overlay;
 }
+
+/* Force all <select> and <option> text to be dark gray */
+select,
+select option {
+  color: #1f2937; /* Tailwind’s gray‑900 */
+}
+
