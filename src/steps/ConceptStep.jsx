@@ -53,9 +53,9 @@ export function ConceptStep() {
           <option value="" disabled>
             — Select a culture —
           </option>
-          {Object.keys(cultures).map(key => (
+          {Object.entries(cultures).map(([key, def]) => (
             <option key={key} value={key}>
-              {key}
+              {def.name || key}
             </option>
           ))}
         </select>
@@ -75,9 +75,9 @@ export function ConceptStep() {
           <option value="" disabled>
             — Select a career —
           </option>
-          {Object.keys(careers).map(key => (
+          {Object.entries(careers).map(([key, def]) => (
             <option key={key} value={key}>
-              {key}
+              {def.name || key}
             </option>
           ))}
         </select>
