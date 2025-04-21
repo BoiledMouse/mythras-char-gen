@@ -2,6 +2,7 @@
 import React from 'react';
 import { rollDice } from '../utils/dice';
 
+// Cultural options and tables
 const cultureOptions = ['Barbarian', 'Civilised', 'Nomadic', 'Primitive'];
 const cultureBaseMultiplier = { Barbarian: 50, Civilised: 75, Nomadic: 25, Primitive: 10 };
 const socialClassTables = {
@@ -13,11 +14,11 @@ const socialClassTables = {
     { name: 'Chieftain', min: 96,  max: 100, mod: 5    },
   ],
   Civilised: [
-    { name: 'Outcast',      min: 1,   max: 2,   mod: 0.25 },
-    { name: 'Slave',        min: 3,   max: 20,  mod: 0.5  },
-    { name: 'Freeman',      min: 21,  max: 70,  mod: 1    },
-    { name: 'Gentile',      min: 71,  max: 95,  mod: 3    },
-    { name: 'Aristocracy',  min: 96,  max: 100, mod: 5    },
+    { name: 'Outcast',     min: 1,   max: 2,   mod: 0.25 },
+    { name: 'Slave',       min: 3,   max: 20,  mod: 0.5  },
+    { name: 'Freeman',     min: 21,  max: 70,  mod: 1    },
+    { name: 'Gentile',     min: 71,  max: 95,  mod: 3    },
+    { name: 'Aristocracy', min: 96,  max: 100, mod: 5    },
   ],
   Nomadic: [
     { name: 'Outcast',   min: 1,   max: 5,   mod: 0.25 },
@@ -32,19 +33,19 @@ const socialClassTables = {
   ],
 };
 
-// Helpers to roll dice
+// Dice helpers
 const rollD100 = () => rollDice('1d100');
 const roll4d6 = () => rollDice('4d6');
 
-// Concept Step Component
-export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
+export default function ConceptStep({ formData = {}, onChange = () => {} }) {
   const {
     playerName = '', characterName = '', age = '', sex = '',
     culture = '', socialClass = '', socialRoll = null,
     baseRoll = null, silverMod = null, startingSilver = null,
   } = formData;
 
-  const handleRollSocialClass = () => {
+  // Roll for social class
+  const handleRollClass = () => {
     if (!culture) return;
     const roll = rollD100();
     const entry = socialClassTables[culture].find(e => roll >= e.min && roll <= e.max) || {};
@@ -52,25 +53,22 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
     onChange({ target: { name: 'socialClass', value: entry.name || '' } });
   };
 
+  // Generate starting silver calculation
   const handleGenerateSilver = () => {
     if (!culture || !socialClass) return;
     const roll = roll4d6();
     const multiplier = cultureBaseMultiplier[culture] || 0;
-    const clsEntry = socialClassTables[culture].find(e => e.name === socialClass) || {};
-    const mod = clsEntry.mod || 1;
+    const entry = socialClassTables[culture].find(e => e.name === socialClass) || {};
+    const mod = entry.mod || 1;
     const total = Math.floor(roll * multiplier * mod);
     onChange({ target: { name: 'baseRoll', value: roll } });
     onChange({ target: { name: 'silverMod', value: mod } });
     onChange({ target: { name: 'startingSilver', value: total } });
   };
 
-  const disabledNext =
-    !playerName || !characterName || !age || !sex || !culture || !socialClass || startingSilver == null;
-
   return (
-    <div className="w-full p-4 space-y-6">
-
-      {/* Player & Character */}
+    <div className="w-full p-4 space-y-6 bg-parchment">
+      {/* Player Info */}
       <div className="form-group">
         <label>Player Name</label>
         <input
@@ -117,7 +115,7 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
         </select>
       </div>
 
-      {/* Culture & Social Class */}
+      {/* Culture & Class */}
       <div className="form-group flex space-x-2">
         <div className="flex-1">
           <label>Culture</label>
@@ -133,20 +131,24 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
             }}
           >
             <option value="">Select a Culture</option>
-            {cultureOptions.map(c => <option key={c} value={c}>{c}</option>)}
+            {cultureOptions.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
           </select>
         </div>
         <button
           type="button"
           className="btn btn-secondary mt-6"
-          onClick={handleRollSocialClass}
+          onClick={handleRollClass}
           disabled={!culture}
         >
           Roll Class
         </button>
       </div>
       <div className="form-group">
-        <label>Social Class{socialRoll != null && ` (roll: ${socialRoll})`}</label>
+        <label>
+          Social Class{socialRoll != null && ` (roll: ${socialRoll})`}
+        </label>
         <select
           name="socialClass"
           className="form-control w-full"
@@ -161,7 +163,7 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
         </select>
       </div>
 
-      {/* Silver Generation */}
+      {/* Starting Silver */}
       <div className="form-group">
         <button
           className="btn btn-secondary w-full"
@@ -171,7 +173,6 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
           Generate Starting Silver
         </button>
       </div>
-
       {startingSilver != null && (
         <>
           <div className="form-group">
@@ -184,16 +185,12 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
           </div>
           <div className="form-group">
             <label>Calculation</label>
-            <div className="p-2 bg-gray-100 rounded w-full">
+            <div className="p-2 rounded w-full text-sm">
               (4d6 = {baseRoll}) × {cultureBaseMultiplier[culture]} × {silverMod} = <strong>{startingSilver} sp</strong>
             </div>
           </div>
         </>
       )}
-
-      {/* Navigation handled elsewhere */}
     </div>
   );
-};
-
-export default ConceptStep;
+}
