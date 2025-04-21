@@ -1,10 +1,18 @@
 // src/steps/ConceptStep.jsx
 import React from 'react';
 import { rollDice } from '../utils/dice';
-import cultures from '../data/cultures.json';
 import careers from '../data/careers.json';
 
-// Social class tables per culture
+// 1) Define cultures and their silver multipliers here
+const cultureOptions = ['Barbarian', 'Civilised', 'Nomadic', 'Primitive'];
+const cultureBaseMultiplier = {
+  Barbarian: 50,
+  Civilised: 75,
+  Nomadic: 25,
+  Primitive: 10,
+};
+
+// 2) Social class tables (unchanged)
 const socialClassTables = {
   Barbarian: [
     { name: 'Outcast',   min: 1,  max: 5,  mod: 0.25 },
@@ -36,162 +44,164 @@ const socialClassTables = {
 export default function ConceptStep({ formData = {}, onChange }) {
   const {
     characterName = '',
-    playerName = '',
-    age = '',
-    sex = '',
-    culture = '',
-    career = '',
-    socialClass = '',
-    socialRoll = null,
-    baseRoll = null,
-    silverMod = null,
-    startingSilver = null,
+    playerName    = '',
+    age           = '',
+    sex           = '',
+    culture       = '',
+    career        = '',
+    socialClass   = '',
+    socialRoll    = null,
+    baseRoll      = null,
+    silverMod     = null,
+    startingSilver= null,
   } = formData;
 
-  // Handle native input/select events
   const handleField = e => onChange(e);
 
-  // Roll for social class
   const handleRollClass = () => {
     if (!culture) return;
     const roll = rollDice('1d100');
-    const entry = (socialClassTables[culture] || []).find(e => roll >= e.min && roll <= e.max) || {};
-    onChange({ target: { name: 'socialRoll',   value: roll } });
-    onChange({ target: { name: 'socialClass',  value: entry.name || '' } });
+    const entry = (socialClassTables[culture]||[])
+      .find(e => roll >= e.min && roll <= e.max) || {};
+    onChange({ target: { name: 'socialRoll', value: roll } });
+    onChange({ target: { name: 'socialClass', value: entry.name || '' } });
     onChange({ target: { name: 'startingSilver', value: null } });
   };
 
-  // Generate starting silver
   const handleGenerateSilver = () => {
     if (!culture || !socialClass) return;
     const roll = rollDice('4d6');
-    const multiplier = cultures[culture]?.baseSilver || 0;
-    const mod = (socialClassTables[culture] || []).find(e => e.name === socialClass)?.mod || 1;
-    const total = Math.floor(roll * multiplier * mod);
-    onChange({ target: { name: 'baseRoll',    value: roll } });
-    onChange({ target: { name: 'silverMod',   value: mod } });
+    const mult = cultureBaseMultiplier[culture] || 0;
+    const mod  = (socialClassTables[culture]||[])
+      .find(e => e.name === socialClass)?.mod || 1;
+    const total = Math.floor(roll * mult * mod);
+    onChange({ target: { name: 'baseRoll', value: roll } });
+    onChange({ target: { name: 'silverMod', value: mod } });
     onChange({ target: { name: 'startingSilver', value: total } });
   };
 
   return (
-    <div>
-      <h2 className="text-2xl font-semibold mb-4">Character Concept</h2>
-
+    <div className="panel-parchment p-6 max-w-4xl mx-auto w-full space-y-6">
       {/* Character Name */}
-      <div className="mb-4">
-        <label htmlFor="characterName" className="block mb-1 font-medium">Character Name</label>
+      <label htmlFor="characterName" className="block">
+        <span className="font-medium">Character Name</span>
         <input
           id="characterName"
           name="characterName"
           type="text"
-          className="w-full bg-white text-gray-900 border border-gray-300 rounded p-2"
+          className="form-control mt-1"
           value={characterName}
           onChange={handleField}
           placeholder="Enter character name"
         />
-      </div>
+      </label>
 
       {/* Player Name */}
-      <div className="mb-4">
-        <label htmlFor="playerName" className="block mb-1 font-medium">Player Name</label>
+      <label htmlFor="playerName" className="block">
+        <span className="font-medium">Player Name</span>
         <input
           id="playerName"
           name="playerName"
           type="text"
-          className="w-full bg-white text-gray-900 border border-gray-300 rounded p-2"
+          className="form-control mt-1"
           value={playerName}
           onChange={handleField}
           placeholder="Enter your name"
         />
-      </div>
+      </label>
 
       {/* Age */}
-      <div className="mb-4">
-        <label htmlFor="age" className="block mb-1 font-medium">Age</label>
+      <label htmlFor="age" className="block">
+        <span className="font-medium">Age</span>
         <input
           id="age"
           name="age"
           type="number"
           min="0"
-          className="w-full bg-white text-gray-900 border border-gray-300 rounded p-2"
+          className="form-control mt-1"
           value={age}
           onChange={handleField}
         />
-      </div>
+      </label>
 
       {/* Sex */}
-      <div className="mb-4">
-        <label htmlFor="sex" className="block mb-1 font-medium">Sex</label>
+      <label htmlFor="sex" className="block">
+        <span className="font-medium">Sex</span>
         <select
           id="sex"
           name="sex"
-          className="w-full bg-white text-gray-900 border border-gray-300 rounded p-2"
+          className="form-control mt-1"
           value={sex}
           onChange={handleField}
         >
           <option value="" disabled>Select sex</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
+          <option>Male</option>
+          <option>Female</option>
+          <option>Other</option>
         </select>
-      </div>
+      </label>
 
       {/* Culture */}
-      <div className="mb-4">
-        <label htmlFor="culture" className="block mb-1 font-medium">Select Culture/Background</label>
+      <label htmlFor="culture" className="block">
+        <span className="font-medium">Culture</span>
         <select
           id="culture"
           name="culture"
-          className="w-full bg-white text-gray-900 border border-gray-300 rounded p-2"
+          className="form-control mt-1"
           value={culture}
-          onChange={handleField}
+          onChange={e => {
+            handleField(e);
+            onChange({ target: { name: 'socialClass',   value: '' } });
+            onChange({ target: { name: 'socialRoll',     value: null } });
+            onChange({ target: { name: 'startingSilver', value: null } });
+          }}
         >
           <option value="" disabled>Select a culture</option>
-          {Object.entries(cultures).map(([key, def]) => (
-            <option key={key} value={key}>{def.name}</option>
+          {cultureOptions.map(c => (
+            <option key={c} value={c}>{c}</option>
           ))}
         </select>
-      </div>
+      </label>
 
       {/* Career */}
-      <div className="mb-4">
-        <label htmlFor="career" className="block mb-1 font-medium">Select Career</label>
+      <label htmlFor="career" className="block">
+        <span className="font-medium">Career</span>
         <select
           id="career"
           name="career"
-          className="w-full bg-white text-gray-900 border border-gray-300 rounded p-2"
+          className="form-control mt-1"
           value={career}
           onChange={handleField}
         >
           <option value="" disabled>Select a career</option>
-          {Object.entries(careers).map(([key, def]) => (
+          {Object.entries(careers).map(([key,def]) => (
             <option key={key} value={key}>{def.name}</option>
           ))}
         </select>
-      </div>
+      </label>
 
-      {/* Social Class Roll */}
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">
-          Social Class{socialRoll != null && ` (roll: ${socialRoll})`}
-        </label>
+      {/* Social Class & Roll */}
+      <div className="space-y-1">
+        <span className="font-medium">
+          Social Class{socialRoll!=null && ` (roll: ${socialRoll})`}
+        </span>
         <div className="flex space-x-2">
           <select
             id="socialClass"
             name="socialClass"
-            className="flex-1 bg-white text-gray-900 border border-gray-300 rounded p-2"
+            className="form-control flex-1 mt-1"
             value={socialClass}
             onChange={handleField}
             disabled={!culture}
           >
             <option value="" disabled>Select social class</option>
-            {(socialClassTables[culture] || []).map(sc => (
+            {(socialClassTables[culture]||[]).map(sc => (
               <option key={sc.name} value={sc.name}>{sc.name}</option>
             ))}
           </select>
           <button
             type="button"
-            className="bg-gray-200 text-gray-800 border border-gray-300 rounded px-4 py-2"
+            className="btn btn-secondary mt-1"
             onClick={handleRollClass}
             disabled={!culture}
           >
@@ -201,18 +211,18 @@ export default function ConceptStep({ formData = {}, onChange }) {
       </div>
 
       {/* Starting Silver */}
-      <div className="mb-4">
+      <div className="space-y-1">
         <button
           type="button"
-          className="w-full bg-gray-200 text-gray-800 border border-gray-300 rounded p-2"
+          className="btn btn-secondary w-full"
           onClick={handleGenerateSilver}
           disabled={!culture || !socialClass}
         >
           Generate Starting Silver
         </button>
-        {startingSilver != null && (
-          <div className="mt-2 text-sm">
-            (4d6 = {baseRoll}) × {cultures[culture]?.baseSilver} × {silverMod} =&nbsp;
+        {startingSilver!=null && (
+          <div className="text-sm">
+            (4d6 = {baseRoll}) × {cultureBaseMultiplier[culture]} × {silverMod} =&nbsp;
             <strong>{startingSilver} sp</strong>
           </div>
         )}
