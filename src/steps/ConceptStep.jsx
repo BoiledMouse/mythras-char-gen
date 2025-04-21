@@ -37,58 +37,24 @@ const socialClassTables = {
 const rollD100 = () => rollDice('1d100');
 const roll4d6 = () => rollDice('4d6');
 
-export function ConceptStep({ formData = {}, onChange, onNext }) {
+export default function ConceptStep({ formData = {}, onChange }) {
   const {
-    playerName: initPlayerName = '',
-    characterName: initCharacterName = '',
-    age: initAge = '',
-    sex: initSex = '',
-    culture: initCulture = '',
-    socialClass: initSocialClass = '',
-    socialRoll: initSocialRoll = null,
-    baseRoll: initBaseRoll = null,
-    silverMod: initSilverMod = null,
-    startingSilver: initStartingSilver = null,
+    playerName = '', characterName = '', age = '', sex = '',
+    culture = '', socialClass = '', socialRoll = null,
+    baseRoll = null, silverMod = null, startingSilver = null,
   } = formData;
-
-  const [playerName, setPlayerName] = React.useState(initPlayerName);
-  const [characterName, setCharacterName] = React.useState(initCharacterName);
-  const [age, setAge] = React.useState(initAge);
-  const [sex, setSex] = React.useState(initSex);
-  const [culture, setCulture] = React.useState(initCulture);
-  const [socialClass, setSocialClass] = React.useState(initSocialClass);
-  const [socialRoll, setSocialRoll] = React.useState(initSocialRoll);
-  const [baseRoll, setBaseRoll] = React.useState(initBaseRoll);
-  const [silverMod, setSilverMod] = React.useState(initSilverMod);
-  const [startingSilver, setStartingSilver] = React.useState(initStartingSilver);
-
-  // Sync parent to local state
-  React.useEffect(() => { setPlayerName(initPlayerName); }, [initPlayerName]);
-  React.useEffect(() => { setCharacterName(initCharacterName); }, [initCharacterName]);
-  React.useEffect(() => { setAge(initAge); }, [initAge]);
-  React.useEffect(() => { setSex(initSex); }, [initSex]);
-  React.useEffect(() => { setCulture(initCulture); }, [initCulture]);
-  React.useEffect(() => { setSocialClass(initSocialClass); }, [initSocialClass]);
-  React.useEffect(() => { setSocialRoll(initSocialRoll); }, [initSocialRoll]);
-  React.useEffect(() => { setBaseRoll(initBaseRoll); }, [initBaseRoll]);
-  React.useEffect(() => { setSilverMod(initSilverMod); }, [initSilverMod]);
-  React.useEffect(() => { setStartingSilver(initStartingSilver); }, [initStartingSilver]);
 
   // handlers
   const changeField = (name, value) => {
     onChange({ target: { name, value } });
   };
-
   const handleRollClass = () => {
     if (!culture) return;
     const roll = rollD100();
     const entry = socialClassTables[culture].find(e => roll >= e.min && roll <= e.max) || {};
-    setSocialRoll(roll);
-    setSocialClass(entry.name || '');
     changeField('socialRoll', roll);
     changeField('socialClass', entry.name || '');
   };
-
   const handleGenerateSilver = () => {
     if (!culture || !socialClass) return;
     const roll = roll4d6();
@@ -96,52 +62,56 @@ export function ConceptStep({ formData = {}, onChange, onNext }) {
     const entry = socialClassTables[culture].find(e => e.name === socialClass) || {};
     const mod = entry.mod || 1;
     const total = Math.floor(roll * multiplier * mod);
-    setBaseRoll(roll); changeField('baseRoll', roll);
-    setSilverMod(mod); changeField('silverMod', mod);
-    setStartingSilver(total); changeField('startingSilver', total);
+    changeField('baseRoll', roll);
+    changeField('silverMod', mod);
+    changeField('startingSilver', total);
   };
 
   return (
-    <div className="w-screen p-4 space-y-6 bg-parchment">
+    <div className="w-full max-w-4xl mx-auto p-4 space-y-6 bg-parchment">
       {/* Player Info */}
       <div className="form-group">
-        <label>Player Name</label>
+        <label htmlFor="playerName">Player Name</label>
         <input
+          id="playerName"
           name="playerName"
           className="form-control w-full"
           value={playerName}
-          onChange={onChange}
+          onChange={e => changeField('playerName', e.target.value)}
         />
       </div>
       <div className="form-group">
-        <label>Character Name</label>
+        <label htmlFor="characterName">Character Name</label>
         <input
+          id="characterName"
           name="characterName"
           className="form-control w-full"
           value={characterName}
-          onChange={onChange}
+          onChange={e => changeField('characterName', e.target.value)}
         />
       </div>
 
       {/* Age & Sex */}
       <div className="form-group">
-        <label>Age</label>
+        <label htmlFor="age">Age</label>
         <input
+          id="age"
           name="age"
           type="number"
           min="0"
           className="form-control w-full"
           value={age}
-          onChange={onChange}
+          onChange={e => changeField('age', e.target.value)}
         />
       </div>
       <div className="form-group">
-        <label>Sex</label>
+        <label htmlFor="sex">Sex</label>
         <select
+          id="sex"
           name="sex"
           className="form-control w-full"
           value={sex}
-          onChange={onChange}
+          onChange={e => changeField('sex', e.target.value)}
         >
           <option value="">Select Sex</option>
           <option value="Male">Male</option>
@@ -153,16 +123,17 @@ export function ConceptStep({ formData = {}, onChange, onNext }) {
       {/* Culture & Class */}
       <div className="form-group flex space-x-2">
         <div className="flex-1">
-          <label>Culture</label>
+          <label htmlFor="culture">Culture</label>
           <select
+            id="culture"
             name="culture"
             className="form-control w-full"
             value={culture}
             onChange={e => {
-              onChange(e);
-              onChange({ target: { name: 'socialClass', value: '' } });
-              onChange({ target: { name: 'socialRoll', value: null } });
-              onChange({ target: { name: 'startingSilver', value: null } });
+              changeField('culture', e.target.value);
+              changeField('socialClass', '');
+              changeField('socialRoll', null);
+              changeField('startingSilver', null);
             }}
           >
             <option value="">Select a Culture</option>
@@ -181,14 +152,15 @@ export function ConceptStep({ formData = {}, onChange, onNext }) {
         </button>
       </div>
       <div className="form-group">
-        <label>
+        <label htmlFor="socialClass">
           Social Class{socialRoll != null && ` (roll: ${socialRoll})`}
         </label>
         <select
+          id="socialClass"
           name="socialClass"
           className="form-control w-full"
           value={socialClass}
-          onChange={onChange}
+          onChange={e => changeField('socialClass', e.target.value)}
           disabled={!culture}
         >
           <option value="">Select Social Class</option>
@@ -211,8 +183,10 @@ export function ConceptStep({ formData = {}, onChange, onNext }) {
       {startingSilver != null && (
         <>
           <div className="form-group">
-            <label>Base Roll (4d6)</label>
+            <label htmlFor="baseRoll">Base Roll (4d6)</label>
             <input
+              id="baseRoll"
+              name="baseRoll"
               readOnly
               className="form-control w-full"
               value={baseRoll}
@@ -229,5 +203,3 @@ export function ConceptStep({ formData = {}, onChange, onNext }) {
     </div>
   );
 }
-
-export default ConceptStep;
