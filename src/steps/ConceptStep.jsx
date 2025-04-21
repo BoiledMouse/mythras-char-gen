@@ -32,28 +32,32 @@ const socialClassTables = {
   ],
 };
 
-// helper: roll 1d100
-function rollD100() {
-  return rollDice('1d100');
-}
+const rollD100 = () => rollDice('1d100');
 
-export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
-  const {
-    playerName = '', characterName = '', age = '', sex = '',
-    culture = '', socialClass = '', startingSilver = null
-  } = formData;
+const ConceptStep = ({ formData, onChange, onNext }) => {
+  // Ensure formData is an object
+  const data = formData || {};
+  const playerName = data.playerName || '';
+  const characterName = data.characterName || '';
+  const age = data.age || '';
+  const sex = data.sex || '';
+  const culture = data.culture || '';
+  const socialClass = data.socialClass || '';
+  const startingSilver = data.startingSilver;
 
   const handleGenerateSilver = () => {
     if (!culture || !socialClass) return;
     const baseRoll = rollDice('4d6');
-    const baseSilver = baseRoll * cultureBaseMultiplier[culture];
-    const clsEntry = socialClassTables[culture].find(e => e.name === socialClass);
+    const baseSilver = baseRoll * (cultureBaseMultiplier[culture] || 0);
+    const clsEntry = socialClassTables[culture]?.find(e => e.name === socialClass);
     const total = Math.floor(baseSilver * (clsEntry?.mod || 1));
     onChange({ target: { name: 'startingSilver', value: total } });
   };
 
+  const disabledNext = !playerName || !characterName || !age || !sex || !culture || !socialClass || startingSilver == null;
+
   return (
-    <div className="w-full p-4 space-y-6">
+    <div className="w-full p-4 max-w-none space-y-6">
       <div className="form-group">
         <label>Player Name</label>
         <input
@@ -63,7 +67,6 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
           className="form-control w-full"
         />
       </div>
-
       <div className="form-group">
         <label>Character Name</label>
         <input
@@ -73,7 +76,6 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
           className="form-control w-full"
         />
       </div>
-
       <div className="form-group">
         <label>Age</label>
         <input
@@ -85,7 +87,6 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
           className="form-control w-full"
         />
       </div>
-
       <div className="form-group">
         <label>Sex</label>
         <select
@@ -100,7 +101,6 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
           <option value="Other">Other</option>
         </select>
       </div>
-
       <div className="form-group">
         <label>Culture</label>
         <select
@@ -119,7 +119,6 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
           ))}
         </select>
       </div>
-
       <div className="form-group">
         <label>Social Class</label>
         <select
@@ -130,12 +129,12 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
           className="form-control w-full"
         >
           <option value="">Select Social Class</option>
-          {culture && socialClassTables[culture].map(sc => (
-            <option key={sc.name} value={sc.name}>{sc.name}</option>
-          ))}
+          {cultureOptions.includes(culture) &&
+            socialClassTables[culture].map(sc => (
+              <option key={sc.name} value={sc.name}>{sc.name}</option>
+            ))}
         </select>
       </div>
-
       <div className="form-group">
         <button
           type="button"
@@ -146,8 +145,7 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
           Generate Starting Silver
         </button>
       </div>
-
-      {startingSilver !== null && (
+      {startingSilver != null && (
         <div className="form-group">
           <label>Starting Silver (sp)</label>
           <input
@@ -159,11 +157,10 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
           />
         </div>
       )}
-
       <button
         className="btn btn-primary w-full"
         onClick={onNext}
-        disabled={!playerName || !characterName || !age || !sex || !culture || !socialClass || startingSilver === null}
+        disabled={disabledNext}
       >
         Next
       </button>
