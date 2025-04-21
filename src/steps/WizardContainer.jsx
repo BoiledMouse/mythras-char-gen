@@ -8,6 +8,7 @@ import MagicStep from './MagicStep';
 import CultStep from './CultStep';
 import ReviewStep from './ReviewStep';
 
+
 export default function WizardContainer() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({});
