@@ -1,6 +1,6 @@
 // src/steps/WizardContainer.jsx
 import React, { useState } from 'react';
-import ConceptStep     from './ConceptStep';
+import ConceptStep       from './ConceptStep';
 import { AttributesStep }  from './AttributesStep';
 import { SkillsStep }      from './SkillsStep';
 import { EquipmentStep }   from './EquipmentStep';
@@ -10,7 +10,7 @@ export default function WizardContainer() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData]       = useState({});
 
-  // Unified change handler for both native events and (name, value) calls
+  // Unified change handler for both native events and (name, value)
   const handleChange = (...args) => {
     let name, value;
     if (args[0] && args[0].target) {
@@ -46,6 +46,7 @@ export default function WizardContainer() {
 
   return (
     <div>
+      {/* top nav */}
       <nav className="wizard-nav">
         {steps.map((step, idx) => (
           <button
@@ -58,21 +59,27 @@ export default function WizardContainer() {
         ))}
       </nav>
 
+      {/* current step */}
       <div className="w-full">
         {steps[currentStep].component}
       </div>
 
-      <footer>
-        <button
-          onClick={() => setCurrentStep(n => Math.max(n - 1, 0))}
-          disabled={currentStep === 0}
-          className="btn btn-secondary"
-        >
-          Previous
-        </button>
+      {/* footer */}
+      <footer
+        className={`mt-6 flex ${
+          currentStep > 0 ? 'justify-between' : 'justify-end'
+        }`}
+      >
+        {currentStep > 0 && (
+          <button
+            onClick={() => setCurrentStep(n => Math.max(n - 1, 0))}
+            className="btn btn-secondary"
+          >
+            Previous
+          </button>
+        )}
         <button
           onClick={() => setCurrentStep(n => Math.min(n + 1, steps.length - 1))}
-          disabled={currentStep === steps.length - 1}
           className="btn btn-primary"
         >
           Next
