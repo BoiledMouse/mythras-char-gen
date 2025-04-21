@@ -13,21 +13,16 @@ body {
   font-family: 'EB Garamond', serif;
   color: #1F2937;       /* gray-900 */
   background-color: #3B2B1F; /* fallback wood */
-  background-image: 
-    /* wood grain stripes */
-    var(--tw-gradient-stops),
-    /* tiny noise/fleck over */
-    var(--tw-gradient-stops);
-  /* use the utilities from tailwind.config */
   @apply bg-wood-grain-texture;
-  background-size: auto 100%, 100% auto;
+  background-size: auto 100%;
   background-blend-mode: multiply;
 }
 
-/* 4) Parchment panels */
+/* 4) Parchment panels (no circular @apply) */
 @layer components {
-  .bg-parchment {
-    @apply bg-parchment bg-parchment-texture bg-blend-overlay;
+  .panel-parchment {
+    background-color: theme("colors.parchment");
+    @apply bg-parchment-texture bg-blend-overlay;
   }
 }
 
