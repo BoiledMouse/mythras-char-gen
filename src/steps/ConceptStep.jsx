@@ -37,7 +37,7 @@ function rollD100() {
   return rollDice('1d100');
 }
 
-export const ConceptStep = ({ formData, onChange, onNext }) => {
+export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
   const {
     playerName = '', characterName = '', age = '', sex = '',
     culture = '', socialClass = '', startingSilver = null
