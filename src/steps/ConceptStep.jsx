@@ -1,4 +1,4 @@
-// src/steps/ConceptStep.jsx -blablablablabla
+// src/steps/ConceptStep.jsx -blablablablablabla
 import React from 'react';
 import { rollDice } from '../utils/dice';
 
