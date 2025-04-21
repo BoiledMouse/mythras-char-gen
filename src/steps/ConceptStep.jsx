@@ -48,13 +48,11 @@ export default function ConceptStep({ formData = {}, onChange }) {
   } = formData;
 
   // Helper to call parent onChange(fieldName, value)
-  const change = (name, value) => onChange(name, value);
-
-  // Field change handler
+    // Field change handler: pass native event to parent
   const handleField = e => {
-    const { name, value } = e.target;
-    change(name, value);
+    onChange(e);
   };
+
 
   // Roll to pick a social class
   const handleRollClass = () => {
