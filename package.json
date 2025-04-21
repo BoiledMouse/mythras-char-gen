@@ -8,7 +8,7 @@
     "build": "react-scripts build",
     "postbuild": "rm -rf docs && mkdir docs && cp -R build/* docs/",
     "predeploy": "npm run build",
-    "deploy": "echo 'Built to docs/ - push to GitHub to deploy'"
+    "deploy":  "gh-pages -d build"
   },
   "dependencies": {
     "file-saver": "^2.0.5",
