@@ -34,8 +34,8 @@ const socialClassTables = {
 
 const rollD100 = () => rollDice('1d100');
 
-const ConceptStep = ({ formData, onChange, onNext }) => {
-  // Ensure formData is an object
+// Named and default export for compatibility
+export const ConceptStep = ({ formData, onChange, onNext }) => {
   const data = formData || {};
   const playerName = data.playerName || '';
   const characterName = data.characterName || '';
@@ -54,7 +54,8 @@ const ConceptStep = ({ formData, onChange, onNext }) => {
     onChange({ target: { name: 'startingSilver', value: total } });
   };
 
-  const disabledNext = !playerName || !characterName || !age || !sex || !culture || !socialClass || startingSilver == null;
+  const disabledNext = 
+    !playerName || !characterName || !age || !sex || !culture || !socialClass || startingSilver == null;
 
   return (
     <div className="w-full p-4 max-w-none space-y-6">
@@ -129,10 +130,9 @@ const ConceptStep = ({ formData, onChange, onNext }) => {
           className="form-control w-full"
         >
           <option value="">Select Social Class</option>
-          {cultureOptions.includes(culture) &&
-            socialClassTables[culture].map(sc => (
-              <option key={sc.name} value={sc.name}>{sc.name}</option>
-            ))}
+          {cultureOptions.includes(culture) && socialClassTables[culture].map(sc => (
+            <option key={sc.name} value={sc.name}>{sc.name}</option>
+          ))}
         </select>
       </div>
       <div className="form-group">
