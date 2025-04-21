@@ -1,52 +1,46 @@
-/* src/index.css */
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond&family=Pirata+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Full-screen wood background delegated via JS or global CSS */
-html, body, #root {
-  height: 100%;
-  margin: 0;
-}
-
+/* 1. Wood‑grain background on the <body> */
 body {
-  font-family: 'EB Garamond', serif;
-  color: #1f2937;
-  background-color: #3b2b1f; /* tavern wood base */
-  background-image: theme('backgroundImage.wood-grain');
-  background-size: cover;
-  background-position: center;
+  background-color: #6b4c3b; /* base brown */
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.03),
+      rgba(255,255,255,0.03) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.05),
+      rgba(0,0,0,0.05) 2px,
+      transparent 2px,
+      transparent 20px
+    );
 }
 
-/* Responsive padding for wizard container */
+/* 2. Parchment panels using two overlaid radial‑noise layers */
+.bg-parchment {
+  background-color: #f5e9d3;
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(0,0,0,0.02) 0%, transparent 70%),
+    radial-gradient(circle at 75% 75%, rgba(0,0,0,0.015) 0%, transparent 60%);
+  background-blend-mode: multiply, multiply;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 8px;
+}
+
+/* 3. Responsive padding for wizard container */
 #wizard-root {
   @apply px-4 sm:px-6 md:px-8 lg:px-10;
 }
 
-/* Parchment panel background: base color + subtle texture */
-.bg-parchment {
-  background-color: #f5e1c8; /* parchment base */
-  background-image: theme('backgroundImage.parchment-texture');
-  background-size: auto, cover;
-  background-position: center;
-  background-blend-mode: overlay;
-}
-
-/* Force all <select> and <option> text to be dark gray */
-select,
-select option {
-  color: #1f2937; /* Tailwind’s gray‑900 */
-}
-
-/* Simple form styling */
-.input {
-  @apply block w-full px-3 py-2 border rounded-md;
-}
-.btn-primary {
-  @apply inline-block px-4 py-2 bg-yellow-600 text-white rounded-md;
-}
-.btn-secondary {
-  @apply inline-block px-3 py-1 bg-gray-200 text-gray-800 rounded-md;
+/* 4. Serif headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'EB Garamond', serif;
 }
