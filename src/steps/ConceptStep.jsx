@@ -67,7 +67,7 @@ const ConceptStep = ({ formData = {}, onChange, onNext }) => {
     !playerName || !characterName || !age || !sex || !culture || !socialClass || startingSilver == null;
 
   return (
-    <div className="w-screen p-4 space-y-6">
+    <div className="w-full p-4 space-y-6">
       <div className="form-group">
         <label>Player Name</label>
         <input
@@ -129,66 +129,7 @@ const ConceptStep = ({ formData = {}, onChange, onNext }) => {
             {cultureOptions.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
-        <button
-          type="button"
-          className="btn btn-secondary mt-6"
-          onClick={handleRollSocialClass}
-          disabled={!culture}
-        >
-          Roll Class
-        </button>
-      </div>
-      <div className="form-group">
-        <label>
-          Social Class{socialRoll != null && ` (roll: ${socialRoll})`}
-        </label>
-        <select
-          name="socialClass"
-          className="form-control w-full"
-          value={socialClass}
-          onChange={onChange}
-          disabled={!culture}
-        >
-          <option value="">Select Social Class</option>
-          {culture && socialClassTables[culture].map(sc => (
-            <option key={sc.name} value={sc.name}>{sc.name}</option>
-          ))}
-        </select>
-      </div>
-      <div className="form-group">
-        <button
-          className="btn btn-secondary w-full"
-          onClick={handleGenerateSilver}
-          disabled={!culture || !socialClass}
-        >
-          Generate Starting Silver
-        </button>
-      </div>
-      {startingSilver != null && (
-        <>
-          <div className="form-group">
-            <label>Base Roll (4d6)</label>
-            <input
-              readOnly
-              className="form-control w-full"
-              value={baseRoll}
-            />
-          </div>
-          <div className="form-group">
-            <label>Calculation</label>
-            <div className="p-2 bg-gray-100 rounded w-full">
-              (4d6 = {baseRoll}) × {cultureBaseMultiplier[culture]} × {silverMod} = <strong>{startingSilver} sp</strong>
-            </div>
-          </div>
-        </>
-      )}
-      <button
-        className="btn btn-primary w-full"
-        onClick={() => onNext(formData)}
-        disabled={disabledNext}
-      >
-        Next
-      </button>
+        
     </div>
   );
 };
