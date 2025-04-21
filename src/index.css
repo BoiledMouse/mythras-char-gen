@@ -1,48 +1,42 @@
 /* src/index.css */
 
-/* Import custom fonts */
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond&family=Pirata+One&display=swap');
-
-/* Tailwind directives */
+/* 1) Tailwind base layers */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Base layer ───────────────────────────────────────────────────────────── */
-@layer base {
-  body {
-    font-family: 'EB Garamond', serif;
-    color: #1f2937; /* gray‑900 */
-    background-image: url("./assets/wood.jpg");
-    background-size: cover;
-    background-position: center;
+/* 2) Google fonts */
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond&family=Pirata+One&display=swap');
+
+/* 3) Global body styles */
+body {
+  font-family: 'EB Garamond', serif;
+  color: #1F2937;       /* gray-900 */
+  background-color: #3B2B1F; /* fallback wood */
+  background-image: 
+    /* wood grain stripes */
+    var(--tw-gradient-stops),
+    /* tiny noise/fleck over */
+    var(--tw-gradient-stops);
+  /* use the utilities from tailwind.config */
+  @apply bg-wood-grain-texture;
+  background-size: auto 100%, 100% auto;
+  background-blend-mode: multiply;
+}
+
+/* 4) Parchment panels */
+@layer components {
+  .bg-parchment {
+    @apply bg-parchment bg-parchment-texture bg-blend-overlay;
   }
 }
 
-/* ─── Components layer ─────────────────────────────────────────────────────── */
-@layer components {
-  /* parchment‑textured panels */
-  .bg-parchment {
-    background-image: url("./assets/parchment.jpg");
-    background-size: cover;
-    background-position: center;
-  }
+/* 5) Wizard container padding */
+#wizard-root {
+  @apply px-4 sm:px-6 md:px-8 lg:px-10;
+}
 
-  /* wizard container responsive padding */
-  #wizard-root {
-    @apply px-4 sm:px-6 md:px-8 lg:px-10;
-  }
-
-  /* styled form controls */
-  .form-input {
-    @apply mt-1 block w-full rounded border-gray-300 
-           bg-white text-gray-800 shadow-sm 
-           focus:outline-none focus:ring focus:ring-yellow-300 focus:border-yellow-400;
-  }
-
-  .form-select {
-    @apply mt-1 block w-full rounded border-gray-300 
-           bg-white text-gray-800 shadow-sm 
-           focus:outline-none focus:ring focus:ring-yellow-300 focus:border-yellow-400;
-  }
+/* 6) Form inputs styling */
+.form-select {
+  @apply mt-1 block w-full rounded border-gray-300 bg-white text-gray-800 shadow-sm focus:ring focus:ring-gold focus:border-gold;
 }
