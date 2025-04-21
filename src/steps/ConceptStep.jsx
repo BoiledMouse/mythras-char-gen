@@ -96,16 +96,21 @@ export function ConceptStep() {
       </div>
       <div>
         <label className="block font-semibold">Career</label>
-        <select
-          className="mt-1 input"
-          value={character.career}
-          onChange={e => updateCharacter({ career: e.target.value })}
-        >
-          <option value="">Select a career…</option>
-          {careerList.map(c => (
-            <option key={c} value={c}>{careers[c].displayName}</option>
-          ))}
-        </select>
+<select
+  className="mt-1 input"
+  value={character.career}
+  onChange={e => updateCharacter({ career: e.target.value })}
+>
+  <option value="">Select a career…</option>
+  {careerList.map(key => {
+    const entry = careers[key] || {};
+    return (
+      <option key={key} value={key}>
+        {entry.displayName || key}
+      </option>
+    )
+  })}
+</select>
       </div>
 
       {/* Social Class */}
