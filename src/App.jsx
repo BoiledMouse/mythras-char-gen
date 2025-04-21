@@ -2,8 +2,10 @@
 import React from 'react';
 import WizardContainer from './steps/WizardContainer';
 
-function App() {
-  return <WizardContainer />;
+export default function App() {
+  return (
+    <div id="wizard-root" className="panel-parchment min-h-screen">
+      <WizardContainer />
+    </div>
+  );
 }
-
-export default App;  // ← default export
