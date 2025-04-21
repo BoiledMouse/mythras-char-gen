@@ -196,5 +196,4 @@ export const ConceptStep = ({ formData = {}, onChange, onNext }) => {
   );
 };
 
-export { ConceptStep };
 export default ConceptStep;
