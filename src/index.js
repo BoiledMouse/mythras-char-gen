@@ -1,24 +1,13 @@
-// src/index.js
-
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
-import { CharacterProvider } from './context/characterContext';
 import './index.css';
-import woodBg from './assets/wood.jpg';
 
-// Apply full‑screen wood background to the <body> element
-const bodyStyle = document.body.style;
-bodyStyle.backgroundImage = `url(${woodBg})`;
-bodyStyle.backgroundSize = 'cover';
-bodyStyle.backgroundPosition = 'center';
-bodyStyle.backgroundRepeat = 'no-repeat';
-
+// (If you still want the wood bg applied here, you can re‑add it,
+// but for now let’s just focus on the provider wrapping.)
 ReactDOM.render(
   <React.StrictMode>
-    <CharacterProvider>
-      <App />
-    </CharacterProvider>
+    <App />
   </React.StrictMode>,
   document.getElementById('root')
 );
