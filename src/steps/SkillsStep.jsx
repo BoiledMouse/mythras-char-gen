@@ -7,29 +7,16 @@ import skillsData from '../data/skills.json';
 import StepWrapper from '../components/StepWrapper';
 
 export default function SkillsStep({ formData }) {
-  // grab rolled/bought attributes from context
+  // 1) get attributes from context
   const { character, updateCharacter } = useCharacter();
-  const {
-    STR = 0,
-    DEX = 0,
-    INT = 0,
-    CON = 0,
-    POW = 0,
-    CHA = 0,
-    SIZ = 0,
-  } = character;
+  const { STR=0, DEX=0, INT=0, CON=0, POW=0, CHA=0, SIZ=0 } = character;
 
-  // pull culture, career and age from the formData passed in
-  const {
-    culture: cultKey = '',
-    career: careerKey = '',
-    age = 0,
-  } = formData;
-
+  // 2) get age, culture, career from formData
+  const { age=0, culture: cultKey='', career: careerKey='' } = formData;
   const cultureDef = cultures[cultKey] || {};
   const careerDef  = careers[careerKey] || {};
 
-  // age‐based bonus bucket
+  // 3) age‐based bonus bucket
   const ageBuckets = [
     { max: 16, bonus: 100, maxInc: 10 },
     { max: 27, bonus: 150, maxInc: 15 },
@@ -40,24 +27,24 @@ export default function SkillsStep({ formData }) {
   const { bonus: initialBonusPool, maxInc } =
     ageBuckets.find(b => age <= b.max);
 
-  // helper to compute a base value from "STR+DEX" or "INTx2"
+  // 4) computeBase helper
   const attrs = { STR, DEX, INT, CON, POW, CHA, SIZ };
   const computeBase = expr => {
     const parts = expr.split(/\s*([+x])\s*/).filter(Boolean);
-    let val = parseInt(attrs[parts[0]] || 0, 10);
+    let val = parseInt(attrs[parts[0]]||0,10);
     for (let i = 1; i < parts.length; i += 2) {
       const op = parts[i], tok = parts[i+1];
-      const v  = /^\d+$/.test(tok) ? +tok : attrs[tok] || 0;
-      val = op === 'x' ? val * v : val + v;
+      const v  = /^\d+$/.test(tok) ? +tok : attrs[tok]||0;
+      val = op==='x' ? val*v : val+v;
     }
     return val;
   };
 
-  // build base tables
+  // 5) build base tables
   const baseStandard = {};
   skillsData.standard.forEach(({ name, base }) => {
     let b = computeBase(base);
-    if (name === 'Customs' || name === 'Native Tongue') b += 40;
+    if (name==='Customs' || name==='Native Tongue') b += 40;
     baseStandard[name] = b;
   });
   const baseProfessional = {};
@@ -65,45 +52,46 @@ export default function SkillsStep({ formData }) {
     baseProfessional[name] = computeBase(base);
   });
 
-  // which skills apply?
+  // 6) which skills apply?
   const cultStd  = cultureDef.standardSkills    || [];
   const cultProf = cultureDef.professionalSkills || [];
   const carStd   = careerDef.standardSkills     || [];
   const carProf  = careerDef.professionalSkills || [];
+  const combatStyles = cultureDef.combatStyles || [];
 
-  // fixed cultural & career pools
+  // 7) fixed pools
   const CULT_POOL   = 100;
   const CAREER_POOL = 100;
 
-  // wizard phases
-  const [phase,      setPhase     ] = useState(1);
+  // 8) wizard phases and allocations
+  const [phase,      setPhase]        = useState(1);
 
-  // cultural allocations
-  const [cStdAlloc,    setCStdAlloc   ] = useState({});
-  const [cProfSel,     setCProfSel    ] = useState([]);
-  const [cProfAlloc,   setCProfAlloc  ] = useState({});
-  const [cCombatSel,   setCCombatSel  ] = useState('');
-  const [cCombatAlloc, setCCombatAlloc] = useState(0);
+  // cultural
+  const [cStdAlloc,   setCStdAlloc]   = useState({});
+  const [cProfSel,    setCProfSel]    = useState([]);
+  const [cProfAlloc,  setCProfAlloc]  = useState({});
+  const [cCombSel,    setCCombSel]    = useState('');
+  const [cCombAlloc,  setCCombAlloc]  = useState(0);
 
-  // career allocations
-  const [rStdAlloc,  setRStdAlloc ] = useState({});
-  const [rProfSel,   setRProfSel  ] = useState([]);
-  const [rProfAlloc, setRProfAlloc] = useState({});
+  // career
+  const [rStdAlloc,   setRStdAlloc]   = useState({});
+  const [rProfSel,    setRProfSel]    = useState([]);
+  const [rProfAlloc,  setRProfAlloc]  = useState({});
 
-  // bonus allocations
-  const [bonusSel,   setBonusSel ] = useState([]);
-  const [bonusAlloc, setBonusAlloc] = useState({});
-  const [bonusLeft,  setBonusLeft] = useState(initialBonusPool);
+  // bonus
+  const [bonusSel,    setBonusSel]    = useState([]);
+  const [bonusAlloc,  setBonusAlloc]  = useState({});
+  const [bonusLeft,   setBonusLeft]   = useState(initialBonusPool);
 
-  const sum = o => Object.values(o).reduce((a,v)=>(a + (v||0)), 0);
+  const sum = o => Object.values(o).reduce((a,v)=>(a + (v||0)),0);
 
-  // persist on finish
+  // 9) persist when finish
   useEffect(() => {
     if (phase > 3) {
       const final = { ...baseStandard, ...baseProfessional };
       cultStd.forEach(s => final[s] += cStdAlloc[s]||0);
       cProfSel.forEach(s => final[s] += cProfAlloc[s]||0);
-      if (cCombatSel) final[cCombatSel] += cCombatAlloc;
+      if (cCombSel) final[cCombSel] += cCombAlloc;
       carStd.forEach(s => final[s] += rStdAlloc[s]||0);
       rProfSel.forEach(s => final[s] += rProfAlloc[s]||0);
       bonusSel.forEach(s => final[s] += bonusAlloc[s]||0);
@@ -122,9 +110,22 @@ export default function SkillsStep({ formData }) {
     }
   };
 
+  // combat style slider (special)
+  const handleCombat = e => {
+    let v = parseInt(e.target.value,10)||0;
+    v = Math.max(0, Math.min(maxInc, v));
+    const poolLeft = CULT_POOL
+      - sum(cStdAlloc)
+      - sum(cProfAlloc)
+      - cCombAlloc;
+    if (v - cCombAlloc <= poolLeft) {
+      setCCombAlloc(v);
+    }
+  };
+
   // bonus slider
   const handleBonus = skill => e => {
-    let v = parseInt(e.target.value,10) || 0;
+    let v = parseInt(e.target.value,10)||0;
     if (v>0 && v<5) v = 0;
     v = Math.max(0, Math.min(maxInc, v));
     const prev = bonusAlloc[skill]||0, delta = v - prev;
@@ -137,33 +138,32 @@ export default function SkillsStep({ formData }) {
   return (
     <StepWrapper title="Skills">
       <p>
-        Age: <strong>{age}</strong> &nbsp;
-        Cultural: <strong>100</strong> pts &nbsp;
-        Career:  <strong>100</strong> pts &nbsp;
-        Bonus:   <strong>{initialBonusPool}</strong> pts &nbsp;
-        Max per skill: +{maxInc}%
+        Age: <strong>{age}</strong> •
+        Cultural pool: <strong>100</strong> •
+        Career pool:  <strong>100</strong> •
+        Bonus pool:   <strong>{initialBonusPool}</strong> •
+        Max per skill: <strong>+{maxInc}%</strong>
       </p>
 
-      {/* Cultural */}
+      {/*─── PHASE 1: CULTURAL ───*/}
       {phase===1 && <>
         <h3>Cultural Skills</h3>
         <p>Points left: <strong>
-          {CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombatAlloc}
+          {CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc}
         </strong></p>
 
         <h4>Standard</h4>
-        {cultStd.map(s => (
+        {cultStd.map(s=>(
           <div key={s} className="flex items-center mb-2">
             <span className="w-40">{s} (Base {baseStandard[s]}%)</span>
             <input
-              type="range"
-              min={0} max={maxInc} step={1}
+              type="range" min={0} max={maxInc} step={1}
               value={cStdAlloc[s]||0}
               onChange={handleSlider(
                 setCStdAlloc,
                 cStdAlloc,
                 s,
-                CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombatAlloc,
+                CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc,
                 v=>v,
                 maxInc
               )}
@@ -174,13 +174,13 @@ export default function SkillsStep({ formData }) {
         ))}
 
         <h4>Professional (max 3)</h4>
-        {cultProf.map(s => (
+        {cultProf.map(s=>(
           <label key={s} className="inline-flex items-center mr-4">
             <input
               type="checkbox"
               checked={cProfSel.includes(s)}
-              onChange={() => {
-                setCProfSel(sel =>
+              onChange={()=>{
+                setCProfSel(sel=>
                   sel.includes(s)
                     ? sel.filter(x=>x!==s)
                     : sel.length<3 ? [...sel,s] : sel
@@ -191,18 +191,17 @@ export default function SkillsStep({ formData }) {
             {s}
           </label>
         ))}
-        {cProfSel.map(s => (
+        {cProfSel.map(s=>(
           <div key={s} className="flex items-center mb-2">
             <span className="w-40">{s} (Base {baseProfessional[s]}%)</span>
             <input
-              type="range"
-              min={0} max={maxInc} step={1}
+              type="range" min={0} max={maxInc} step={1}
               value={cProfAlloc[s]||0}
               onChange={handleSlider(
                 setCProfAlloc,
                 cProfAlloc,
                 s,
-                CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombatAlloc,
+                CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc,
                 v=>v,
                 maxInc
               )}
@@ -213,38 +212,30 @@ export default function SkillsStep({ formData }) {
         ))}
 
         <h4>Combat Style</h4>
-        {cultureDef.combatStyles?.map(cs => (
+        {combatStyles.map(cs=>(
           <label key={cs} className="inline-flex items-center mr-4">
             <input
               type="radio"
-              name="comb"
-              checked={cCombatSel===cs}
-              onChange={()=> setCCombatSel(cs)}
+              name="combat"
+              checked={cCombSel===cs}
+              onChange={()=>setCCombSel(cs)}
               className="mr-1"
             />
             {cs}
           </label>
         ))}
-        {cCombatSel && (
+        {cCombSel && (
           <div className="flex items-center mb-4">
             <span className="w-40">
-              {cCombatSel} (Base {baseProfessional[cCombatSel]}%)
+              {cCombSel} (Base {baseProfessional[cCombSel]}%)
             </span>
             <input
-              type="range"
-              min={0} max={maxInc} step={1}
-              value={cCombatAlloc}
-              onChange={handleSlider(
-                _=>setCCombatAlloc,
-                { [cCombatSel]: cCombatAlloc },
-                cCombatSel,
-                CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombatAlloc,
-                v=>v,
-                maxInc
-              )}
+              type="range" min={0} max={maxInc} step={1}
+              value={cCombAlloc}
+              onChange={handleCombat}
               className="flex-1 mx-2"
             />
-            <span className="w-12 text-right">+{cCombatAlloc}</span>
+            <span className="w-12 text-right">+{cCombAlloc}</span>
           </div>
         )}
 
@@ -253,7 +244,7 @@ export default function SkillsStep({ formData }) {
         </button>
       </>}
 
-      {/* Career */}
+      {/*─── PHASE 2: CAREER ───*/}
       {phase===2 && <>
         <h3>Career Skills</h3>
         <p>Points left: <strong>
@@ -261,12 +252,11 @@ export default function SkillsStep({ formData }) {
         </strong></p>
 
         <h4>Standard</h4>
-        {carStd.map(s => (
+        {carStd.map(s=>(
           <div key={s} className="flex items-center mb-2">
             <span className="w-40">{s} (Base {baseStandard[s]}%)</span>
             <input
-              type="range"
-              min={0} max={maxInc} step={1}
+              type="range" min={0} max={maxInc} step={1}
               value={rStdAlloc[s]||0}
               onChange={handleSlider(
                 setRStdAlloc,
@@ -283,13 +273,13 @@ export default function SkillsStep({ formData }) {
         ))}
 
         <h4>Professional (max 3)</h4>
-        {carProf.map(s => (
+        {carProf.map(s=>(
           <label key={s} className="inline-flex items-center mr-4">
             <input
               type="checkbox"
               checked={rProfSel.includes(s)}
               onChange={()=>{
-                setRProfSel(sel =>
+                setRProfSel(sel=>
                   sel.includes(s)
                     ? sel.filter(x=>x!==s)
                     : sel.length<3 ? [...sel,s] : sel
@@ -300,12 +290,11 @@ export default function SkillsStep({ formData }) {
             {s}
           </label>
         ))}
-        {rProfSel.map(s => (
+        {rProfSel.map(s=>(
           <div key={s} className="flex items-center mb-2">
             <span className="w-40">{s} (Base {baseProfessional[s]}%)</span>
             <input
-              type="range"
-              min={0} max={maxInc} step={1}
+              type="range" min={0} max={maxInc} step={1}
               value={rProfAlloc[s]||0}
               onChange={handleSlider(
                 setRProfAlloc,
@@ -322,42 +311,39 @@ export default function SkillsStep({ formData }) {
         ))}
 
         <div className="flex justify-between mt-4">
-          <button onClick={()=>setPhase(1)} className="btn btn-secondary">
-            Back
-          </button>
-          <button onClick={()=>setPhase(3)} className="btn btn-primary">
+          <button onClick={()=>setPhase(1)} className="btn btn-secondary">Back</button>
+          <button onClick={()=>{
+            // prepopulate bonusSel with all available skills
+            const available = Array.from(new Set([
+              ...cultStd,
+              ...cProfSel,
+              ...(cCombSel?[cCombSel]:[]),
+              ...carStd,
+              ...rProfSel
+            ]));
+            setBonusSel(available);
+            setBonusAlloc(Object.fromEntries(available.map(s=>[s,0])));
+            setBonusLeft(initialBonusPool);
+            setPhase(3);
+          }} className="btn btn-primary">
             Next: Bonus
           </button>
         </div>
       </>}
 
-      {/* Bonus */}
+      {/*─── PHASE 3: BONUS ───*/}
       {phase===3 && <>
         <h3>Bonus Skills</h3>
         <p>Points left: <strong>{bonusLeft}</strong></p>
 
-        <h4>Add Hobby</h4>
-        <select
-          className="form-control mb-4"
-          onChange={e=>{
-            const s = e.target.value;
-            if (s && !bonusSel.includes(s))
-              setBonusSel(sel => [...sel,s]);
-          }}
-        >
-          <option value="">-- pick skill --</option>
-          {[...new Set([...cultStd, ...cultProf, ...carStd, ...carProf])]
-            .map(s=><option key={s} value={s}>{s}</option>)}
-        </select>
-
+        <h4>Allocate to any available skill</h4>
         {bonusSel.map(s=>(
           <div key={s} className="flex items-center mb-2">
             <span className="w-40">
               {s} (Base {baseStandard[s] ?? baseProfessional[s]}%)
             </span>
             <input
-              type="range"
-              min={0} max={maxInc} step={1}
+              type="range" min={0} max={maxInc} step={1}
               value={bonusAlloc[s]||0}
               onChange={handleBonus(s)}
               className="flex-1 mx-2"
@@ -366,22 +352,38 @@ export default function SkillsStep({ formData }) {
           </div>
         ))}
 
+        <h4>Add a Hobby Skill</h4>
+        <select
+          className="form-control mb-4"
+          onChange={e=>{
+            const s = e.target.value;
+            if (s && !bonusSel.includes(s)) {
+              setBonusSel(sel=>[...sel,s]);
+              setBonusAlloc(a=>({...a,[s]:0}));
+            }
+          }}
+        >
+          <option value="">-- pick a hobby --</option>
+          {Object.keys({...baseStandard,...baseProfessional})
+            .filter(s=>!bonusSel.includes(s))
+            .map(s=>(
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
         <div className="flex justify-between mt-4">
-          <button onClick={()=>setPhase(2)} className="btn btn-secondary">
-            Back
-          </button>
-          <button
-            onClick={()=>setPhase(4)}
-            disabled={bonusLeft>0}
-            className="btn btn-success"
-          >
+          <button onClick={()=>setPhase(2)} className="btn btn-secondary">Back</button>
+          <button onClick={()=>setPhase(4)}
+                  disabled={bonusLeft>0}
+                  className="btn btn-success">
             Finish
           </button>
         </div>
       </>}
 
+      {/*─── DONE ───*/}
       {phase>3 && (
-        <div className="text-center"><h3>All set!</h3></div>
+        <div className="text-center"><h3>All done!</h3></div>
       )}
     </StepWrapper>
   );
