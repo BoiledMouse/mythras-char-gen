@@ -1,8 +1,4 @@
 [
-  { "name": "Camp (per week)",        "category": "Accommodation", "cost": 1 },
-  { "name": "Inn – Common Room",      "category": "Accommodation", "cost": 5 },
-  { "name": "Inn – Private Room",     "category": "Accommodation", "cost": 15 },
-  { "name": "Town House (per month)", "category": "Accommodation", "cost": 200 },
 
   { "name": "Common Clothes",         "category": "Clothing",      "cost": 2 },
   { "name": "Fine Clothes",           "category": "Clothing",      "cost": 25 },
@@ -48,5 +44,12 @@
   { "name": "Catapult",               "category": "Siege",         "cost": 3000 },
 
   { "name": "Cart (two‑wheeled)",     "category": "Vehicles",      "cost": 150 },
-  { "name": "Wagon (four‑wheeled)",   "category": "Vehicles",      "cost": 300 }
+  { "name": "Wagon (four‑wheeled)",   "category": "Vehicles",      "cost": 300 },
+
+  { "name": "Linothorax",             "category": "Armour",        "cost": 20 },
+  { "name": "Bezainted Armour",       "category": "Armour",        "cost": 50 },
+  { "name": "Chainmail",              "category": "Armour",        "cost": 75 },
+  { "name": "Hoplite Cuirass",        "category": "Armour",        "cost": 150 }
 ]
+```
+
