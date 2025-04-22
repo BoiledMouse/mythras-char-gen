@@ -85,7 +85,7 @@ export function ReviewStep() {
             ))}
           </div>
 
-          {/* Concept fields: Species, Frame, Height, Weight, Career, Culture, Social Class */}
+          {/* Concept fields */}
           <div className="col-span-3 grid grid-cols-4 gap-4 mb-6">
             {[
               { key: 'species', label: 'Species' },
