@@ -14,56 +14,58 @@ export function ReviewStep() {
     updateCharacter({ [name]: value });
   };
 
-  // Determine which skills to display: all standard plus any extras learned
+  // Skills to display: standard skills plus extras
   const standardNames = skillsData.standard.map(s => s.name);
   const learnedNames = character.skills ? Object.keys(character.skills) : [];
   const extraNames = learnedNames.filter(n => !standardNames.includes(n));
   const displayedSkills = [...standardNames, ...extraNames];
+
+  // Equipment list pulled directly from equipment step context
+  const equipmentList = Array.isArray(character.equipment)
+    ? character.equipment
+    : Object.values(character.equipment || {});
 
   return (
     <div className="review-step p-6 bg-gray-100">
       <div className="sheet-container max-w-7xl mx-auto bg-white shadow rounded-lg overflow-hidden">
         {/* Page 1 */}
         <section className="page p-6 grid grid-cols-3 gap-6">
-          {/* Header Fields */}
-          <div className="col-span-3 grid grid-cols-3 gap-4 mb-4">
-            <input
-              name="playerName"
-              value={character.playerName || ''}
-              onChange={handleChange}
-              placeholder="Player"
-              className="border p-2 rounded w-full"
-            />
-            <input
-              name="name"
-              value={character.name || ''}
-              onChange={handleChange}
-              placeholder="Character"
-              className="border p-2 rounded w-full"
-            />
-            <input
-              name="gender"
-              value={character.gender || ''}
-              onChange={handleChange}
-              placeholder="Gender"
-              className="border p-2 rounded w-full"
-            />
-          </div>
-
-          {/* Basic Info */}
-          <div className="col-span-3 grid grid-cols-4 gap-4 mb-6">
+          {/* Header: player, char name, concept data */}
+          <div className="col-span-3 grid grid-cols-4 gap-4 mb-4">
             {[
-              { name: 'species', label: 'Species' },
-              { name: 'career', label: 'Career' },
-              { name: 'socialClass', label: 'Social Class' },
-              { name: 'culture', label: 'Culture' }
+              { name: 'playerName', placeholder: 'Player' },
+              { name: 'name', placeholder: 'Character' },
+              { name: 'gender', placeholder: 'Gender' },
+              { name: 'age', placeholder: 'Age' }
             ].map(f => (
               <input
                 key={f.name}
                 name={f.name}
                 value={character[f.name] || ''}
                 onChange={handleChange}
-                placeholder={f.label}
+                placeholder={f.placeholder}
+                className="border p-2 rounded w-full"
+              />
+            ))}
+          </div>
+
+          {/* Concept fields: species, frame, height, weight, career, culture, social class */}
+          <div className="col-span-3 grid grid-cols-4 gap-4 mb-6">
+            {[
+              { name: 'species', placeholder: 'Species' },
+              { name: 'frame', placeholder: 'Frame' },
+              { name: 'height', placeholder: 'Height' },
+              { name: 'weight', placeholder: 'Weight' },
+              { name: 'career', placeholder: 'Career' },
+              { name: 'culture', placeholder: 'Culture' },
+              { name: 'socialClass', placeholder: 'Social Class' }
+            ].map(f => (
+              <input
+                key={f.name}
+                name={f.name}
+                value={character[f.name] || ''}
+                onChange={handleChange}
+                placeholder={f.placeholder}
                 className="border p-2 rounded w-full"
               />
             ))}
@@ -71,6 +73,7 @@ export function ReviewStep() {
 
           {/* Characteristics and Attributes */}
           <div className="col-span-3 grid grid-cols-2 gap-6">
+            {/* Characteristics */}
             <div>
               <h3 className="font-semibold mb-2">Characteristics</h3>
               {['STR','CON','SIZ','DEX','INT','POW','CHA'].map(stat => (
@@ -86,6 +89,7 @@ export function ReviewStep() {
                 </div>
               ))}
             </div>
+            {/* Attributes */}
             <div>
               <h3 className="font-semibold mb-2">Attributes</h3>
               {[
@@ -133,33 +137,33 @@ export function ReviewStep() {
             />
           </div>
 
-          {/* Skills Section */}
+          {/* Skills */}
           <div className="col-span-3 mt-6">
             <h3 className="font-semibold mb-2">Skills</h3>
             <div className="grid grid-cols-3 gap-4">
               {displayedSkills.map(name => (
                 <div key={name} className="flex justify-between items-center p-2 border rounded">
                   <span>{name}</span>
-                  <span>{character.skills?.[name] ?? ''}%</span>
+                  <span>{character.skills?.[name] ?? 0}%</span>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Page 2: Equipment & Other */}
+        {/* Page 2: Equipment & Other Details */}
         <section className="page p-6 grid grid-cols-2 gap-6 bg-gray-50">
-          {/* Equipment list */}
           <div>
             <h3 className="font-semibold mb-2">Equipment</h3>
             <ul className="list-disc list-inside">
-              {character.equipment?.map((item, i) => (
-                <li key={i} className="mb-1">{item}</li>
-              )) || <li className="text-gray-500">No equipment selected</li>}
+              {equipmentList.length
+                ? equipmentList.map((item, i) => (
+                    <li key={i} className="mb-1">{item}</li>
+                  ))
+                : <li className="text-gray-500">No equipment selected</li>
+              }
             </ul>
           </div>
-
-          {/* Placeholder for further sections */}
           <div>
             <h3 className="font-semibold mb-2">Other Details</h3>
             <p className="text-sm text-gray-600">Movement, Hit Locations, Combat Styles, etc.</p>
