@@ -22,22 +22,17 @@ export function ReviewStep() {
     ...(skillsData.sorcery || []).map(s => s.name),
     ...(skillsData.theism || []).map(s => s.name),
   ];
-  const combatNames = [...(skillsData.combatStyles || []).map(s => s.name), 'Unarmed'];
-  const learnedNames = character.skills ? Object.keys(character.skills) : [];
+const learnedNames = character.skills ? Object.keys(character.skills) : [];
+const resistanceList = ['Brawn', 'Endurance', 'Evade', 'Willpower'];
 
-  // Resistances
-  const resistanceList = ['Brawn', 'Endurance', 'Evade', 'Willpower'];
-
-  // Display filters
-  const standardDisplayed = standardNames.filter(n => !resistanceList.includes(n) && !combatNames.includes(n));
-  const resistancesDisplayed = resistanceList;
-  const combatDisplayed = combatNames.filter(n => (character.skills?.[n] ?? 0) > 0);
-  const professionalDisplayed = professionalNames.filter(n => {
-  const score = character.skills?.[n] ?? 0;
-  const base = skillsData.standard.find(s => s.name === n)?.base || 0; // fallback for missing
-  return score > base;
-});
-  const magicDisplayed = allMagicNames.filter(n => learnedNames.includes(n));
+const selected = character.selectedSkills || {};
+const combatDisplayed = selected.combat || [];
+const professionalDisplayed = selected.professional || [];
+const standardDisplayed = selected.standard?.filter(
+  n => !resistanceList.includes(n) && n !== 'Unarmed'
+) || [];
+const resistancesDisplayed = resistanceList.filter(n => learnedNames.includes(n));
+const magicDisplayed = allMagicNames.filter(n => learnedNames.includes(n));
 
   // Equipment & silver
   const equipmentAlloc = character.equipmentAlloc || {};
