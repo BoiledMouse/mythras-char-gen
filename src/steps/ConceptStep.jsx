@@ -1,173 +1,232 @@
+// src/steps/ConceptStep.jsx
 import React from 'react';
-import { useCharacter } from '../context/characterContext';
-import skillsData from '../data/skills.json';
+import { rollDice } from '../utils/dice';
+import careers from '../data/careers.json';
 
-/**
- * ReviewStep: renders the Mythras character sheet,
- * populating fields from context and falling back to inputs for missing values.
- */
-export function ReviewStep() {
-  const { character, updateCharacter } = useCharacter();
+// 1) Define cultures and their silver multipliers here
+const cultureOptions = ['Barbarian', 'Civilised', 'Nomadic', 'Primitive'];
+const cultureBaseMultiplier = {
+  Barbarian: 50,
+  Civilised: 75,
+  Nomadic: 25,
+  Primitive: 10,
+};
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    updateCharacter({ [name]: value });
+// 2) Social class tables (unchanged)
+const socialClassTables = {
+  Barbarian: [
+    { name: 'Outcast',   min: 1,  max: 5,  mod: 0.25 },
+    { name: 'Slave',     min: 6,  max: 15, mod: 0.5 },
+    { name: 'Freeman',   min: 16, max: 80, mod: 1 },
+    { name: 'Gentile',   min: 81, max: 95, mod: 3 },
+    { name: 'Chieftain', min: 96, max: 100, mod: 5 },
+  ],
+  Civilised: [
+    { name: 'Outcast',     min: 1,  max: 2,  mod: 0.25 },
+    { name: 'Slave',       min: 3,  max: 20, mod: 0.5 },
+    { name: 'Freeman',     min: 21, max: 70, mod: 1 },
+    { name: 'Gentile',     min: 71, max: 95, mod: 3 },
+    { name: 'Aristocracy', min: 96, max: 100, mod: 5 },
+  ],
+  Nomadic: [
+    { name: 'Outcast',   min: 1,  max: 5,  mod: 0.25 },
+    { name: 'Slave',     min: 6,  max: 10, mod: 0.5 },
+    { name: 'Freeman',   min: 11, max: 90, mod: 1 },
+    { name: 'Chieftain', min: 91, max: 100, mod: 3 },
+  ],
+  Primitive: [
+    { name: 'Outcast',   min: 1,  max: 5,  mod: 0.25 },
+    { name: 'Freeman',   min: 6,  max: 80, mod: 1 },
+    { name: 'Chieftain', min: 81, max: 100, mod: 2 },
+  ],
+};
+
+export default function ConceptStep({ formData = {}, onChange }) {
+  const {
+    characterName = '',
+    playerName    = '',
+    age           = '',
+    sex           = '',
+    culture       = '',
+    career        = '',
+    socialClass   = '',
+    socialRoll    = null,
+    baseRoll      = null,
+    silverMod     = null,
+    startingSilver= null,
+  } = formData;
+
+  const handleField = e => onChange(e);
+
+  const handleRollClass = () => {
+    if (!culture) return;
+    const roll = rollDice('1d100');
+    const entry = (socialClassTables[culture]||[])
+      .find(e => roll >= e.min && roll <= e.max) || {};
+    onChange({ target: { name: 'socialRoll', value: roll } });
+    onChange({ target: { name: 'socialClass', value: entry.name || '' } });
+    onChange({ target: { name: 'startingSilver', value: null } });
   };
 
-  // Determine which skills to show: standard + extras
-  const standardNames = skillsData.standard.map(s => s.name);
-  const learnedNames = character.skills ? Object.keys(character.skills) : [];
-  const extraNames = learnedNames.filter(n => !standardNames.includes(n));
-  const displayedSkills = [...standardNames, ...extraNames];
-
-  // Equipment list from context
-  const equipmentList = Array.isArray(character.equipment)
-    ? character.equipment
-    : (character.equipment ? Object.values(character.equipment) : []);
+  const handleGenerateSilver = () => {
+    if (!culture || !socialClass) return;
+    const roll = rollDice('4d6');
+    const mult = cultureBaseMultiplier[culture] || 0;
+    const mod  = (socialClassTables[culture]||[])
+      .find(e => e.name === socialClass)?.mod || 1;
+    const total = Math.floor(roll * mult * mod);
+    onChange({ target: { name: 'baseRoll', value: roll } });
+    onChange({ target: { name: 'silverMod', value: mod } });
+    onChange({ target: { name: 'startingSilver', value: total } });
+  };
 
   return (
-    <div className="review-step p-6 bg-gray-100">
-      <div className="sheet-container max-w-7xl mx-auto bg-white shadow rounded-lg overflow-hidden">
-        {/* Page 1 */}
-        <section className="page p-6 grid grid-cols-3 gap-6">
-          {/* Header: Player, Character, Gender, Age */}
-          <div className="col-span-3 grid grid-cols-4 gap-4 mb-4">
-            {[
-              { key: 'playerName', label: 'Player' },
-              { key: 'characterName', label: 'Character' },
-              { key: 'sex', label: 'Sex' },
-              { key: 'age', label: 'Age' }
-            ].map(field => (
-              <input
-                key={field.key}
-                name={field.key}
-                value={character[field.key] ?? character.concept?.[field.key] ?? ''}
-                onChange={handleChange}
-                placeholder={field.label}
-                className="border p-2 rounded w-full"
-              />
+    <div className="panel-parchment p-6 max-w-4xl mx-auto w-full space-y-6">
+    <h2 className="font-semibold">Character Concept</h2>
+      {/* Character Name */}
+      <label htmlFor="characterName" className="block">
+        <span className="font-medium">Character Name</span>
+        <input
+          id="characterName"
+          name="characterName"
+          type="text"
+          className="form-control mt-1"
+          value={characterName}
+          onChange={handleField}
+          placeholder="Enter character name"
+        />
+      </label>
+
+      {/* Player Name */}
+      <label htmlFor="playerName" className="block">
+        <span className="font-medium">Player Name</span>
+        <input
+          id="playerName"
+          name="playerName"
+          type="text"
+          className="form-control mt-1"
+          value={playerName}
+          onChange={handleField}
+          placeholder="Enter your name"
+        />
+      </label>
+
+      {/* Age */}
+      <label htmlFor="age" className="block">
+        <span className="font-medium">Age</span>
+        <input
+          id="age"
+          name="age"
+          type="number"
+          min="0"
+          className="form-control mt-1"
+          value={age}
+          onChange={handleField}
+        />
+      </label>
+
+      {/* Sex */}
+      <label htmlFor="sex" className="block">
+        <span className="font-medium">Sex</span>
+        <select
+          id="sex"
+          name="sex"
+          className="form-control mt-1"
+          value={sex}
+          onChange={handleField}
+        >
+          <option value="" disabled>Select sex</option>
+          <option>Male</option>
+          <option>Female</option>
+          <option>Other</option>
+        </select>
+      </label>
+
+      {/* Culture */}
+      <label htmlFor="culture" className="block">
+        <span className="font-medium">Culture</span>
+        <select
+          id="culture"
+          name="culture"
+          className="form-control mt-1"
+          value={culture}
+          onChange={e => {
+            handleField(e);
+            onChange({ target: { name: 'socialClass',   value: '' } });
+            onChange({ target: { name: 'socialRoll',     value: null } });
+            onChange({ target: { name: 'startingSilver', value: null } });
+          }}
+        >
+          <option value="" disabled>Select a culture</option>
+          {cultureOptions.map(c => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+      </label>
+
+      {/* Career */}
+      <label htmlFor="career" className="block">
+        <span className="font-medium">Career</span>
+        <select
+          id="career"
+          name="career"
+          className="form-control mt-1"
+          value={career}
+          onChange={handleField}
+        >
+          <option value="" disabled>Select a career</option>
+          {Object.entries(careers).map(([key,def]) => (
+            <option key={key} value={key}>{def.name}</option>
+          ))}
+        </select>
+      </label>
+
+      {/* Social Class & Roll */}
+      <div className="space-y-1">
+        <span className="font-medium">
+          Social Class{socialRoll!=null && ` (roll: ${socialRoll})`}
+        </span>
+        <div className="flex space-x-2">
+          <select
+            id="socialClass"
+            name="socialClass"
+            className="form-control flex-1 mt-1"
+            value={socialClass}
+            onChange={handleField}
+            disabled={!culture}
+          >
+            <option value="" disabled>Select social class</option>
+            {(socialClassTables[culture]||[]).map(sc => (
+              <option key={sc.name} value={sc.name}>{sc.name}</option>
             ))}
-          </div>
+          </select>
+          <button
+            type="button"
+            className="btn btn-secondary mt-1"
+            onClick={handleRollClass}
+            disabled={!culture}
+          >
+            Roll Class
+          </button>
+        </div>
+      </div>
 
-          {/* Concept fields: Species, Frame, Height, Weight, Career, Culture, Social Class */}
-          <div className="col-span-3 grid grid-cols-4 gap-4 mb-6">
-            {[
-              { key: 'species', label: 'Species' },
-              { key: 'frame', label: 'Frame' },
-              { key: 'height', label: 'Height' },
-              { key: 'weight', label: 'Weight' },
-              { key: 'career', label: 'Career' },
-              { key: 'culture', label: 'Culture' },
-              { key: 'socialClass', label: 'Social Class' }
-            ].map(field => (
-              <input
-                key={field.key}
-                name={field.key}
-                value={character[field.key] ?? character.concept?.[field.key] ?? ''}
-                onChange={handleChange}
-                placeholder={field.label}
-                className="border p-2 rounded w-full"
-              />
-            ))}
+      {/* Starting Silver */}
+      <div className="space-y-1">
+        <button
+          type="button"
+          className="btn btn-secondary w-full"
+          onClick={handleGenerateSilver}
+          disabled={!culture || !socialClass}
+        >
+          Generate Starting Silver
+        </button>
+        {startingSilver!=null && (
+          <div className="text-sm">
+            (4d6 = {baseRoll}) × {cultureBaseMultiplier[culture]} × {silverMod} =&nbsp;
+            <strong>{startingSilver} sp</strong>
           </div>
-
-          {/* Characteristics & Attributes */}
-          <div className="col-span-3 grid grid-cols-2 gap-6">
-            {/* Characteristics */}
-            <div>
-              <h3 className="font-semibold mb-2">Characteristics</h3>
-              {['STR','CON','SIZ','DEX','INT','POW','CHA'].map(stat => (
-                <div key={stat} className="flex items-center mb-2">
-                  <span className="w-20 font-medium">{stat}</span>
-                  <input
-                    name={stat}
-                    type="number"
-                    value={character[stat] ?? ''}
-                    onChange={handleChange}
-                    className="border p-1 rounded w-16"
-                  />
-                </div>
-              ))}
-            </div>
-            {/* Attributes */}
-            <div>
-              <h3 className="font-semibold mb-2">Attributes</h3>
-              {[
-                { key: 'actionPoints', label: 'Action Points' },
-                { key: 'damageMod', label: 'Damage Modifier' },
-                { key: 'xpMod', label: 'Experience Modifier' },
-                { key: 'healingRate', label: 'Healing Rate' },
-                { key: 'initiativeBonus', label: 'Initiative Bonus' },
-                { key: 'luckPoints', label: 'Luck Points' },
-                { key: 'movementRate', label: 'Movement Rate' }
-              ].map(attr => (
-                <div key={attr.key} className="flex items-center mb-2">
-                  <span className="w-32 font-medium">{attr.label}</span>
-                  <input
-                    name={attr.key}
-                    type="number"
-                    value={character[attr.key] ?? ''}
-                    onChange={handleChange}
-                    className="border p-1 rounded w-16"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Background & Contacts */}
-          <div className="col-span-2">
-            <label className="block font-semibold mb-1">Background, Community & Family</label>
-            <textarea
-              name="backgroundNotes"
-              value={character.backgroundNotes || ''}
-              onChange={handleChange}
-              rows={4}
-              className="w-full border p-2 rounded"
-            />
-          </div>
-          <div>
-            <label className="block font-semibold mb-1">Contacts, Allies & Enemies</label>
-            <textarea
-              name="contacts"
-              value={character.contacts || ''}
-              onChange={handleChange}
-              rows={4}
-              className="w-full border p-2 rounded"
-            />
-          </div>
-
-          {/* Skills */}
-          <div className="col-span-3 mt-6">
-            <h3 className="font-semibold mb-2">Skills</h3>
-            <div className="grid grid-cols-3 gap-4">
-              {displayedSkills.map(name => (
-                <div key={name} className="flex justify-between items-center p-2 border rounded">
-                  <span>{name}</span>
-                  <span>{character.skills?.[name] ?? 0}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Page 2: Equipment & Other Details */}
-        <section className="page p-6 grid grid-cols-2 gap-6 bg-gray-50">
-          <div>
-            <h3 className="font-semibold mb-2">Equipment</h3>
-            <ul className="list-disc list-inside">
-              {equipmentList.length
-                ? equipmentList.map((item, i) => (
-                    <li key={i} className="mb-1">{item}</li>
-                  ))
-                : <li className="text-gray-500">No equipment selected</li>}
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Other Details</h3>
-            <p className="text-sm text-gray-600">Movement, Hit Locations, Combat Styles, etc.</p>
-          </div>
-        </section>
+        )}
       </div>
     </div>
   );
