@@ -17,15 +17,18 @@ export function ReviewStep() {
   const magicNames = (skillsData.magic || []).map(s => s.name);
   const combatNames = [...(skillsData.combatStyles || []).map(s => s.name), 'Unarmed'];
   const learnedNames = character.skills ? Object.keys(character.skills) : [];
+
+  // Resistances
   const resistanceList = ['Brawn', 'Endurance', 'Evade', 'Willpower'];
 
   // Filter lists
   const standardDisplayed = standardNames.filter(n => !resistanceList.includes(n));
+  const resistancesDisplayed = resistanceList;
   const combatDisplayed = combatNames.filter(n => learnedNames.includes(n));
   const professionalDisplayed = professionalNames.filter(n => learnedNames.includes(n));
   const magicDisplayed = magicNames.filter(n => learnedNames.includes(n));
 
-  // Equipment allocation and cost calculations
+  // Equipment and silver
   const equipmentAlloc = character.equipmentAlloc || {};
   const startingSilver = Number(character.startingSilver) || 0;
   const totalSpent = Object.entries(equipmentAlloc).reduce((sum, [name, qty]) => {
@@ -34,33 +37,34 @@ export function ReviewStep() {
   }, 0);
   const silverRemaining = startingSilver - totalSpent;
   const equipmentList = Object.entries(equipmentAlloc)
-    .filter(([_, qty]) => qty > 0)
+    .filter(([, qty]) => qty > 0)
     .map(([name, qty]) => `${name} x${qty}`);
 
-  // Hit points calculation based on CON + SIZ
+  // HP per location
   const hpSum = (Number(character.CON) || 0) + (Number(character.SIZ) || 0);
   const thresholds = [5, 10, 15, 20, 25, 30, 35, 40];
   const hpTable = {
-    'Leg': [1, 2, 3, 4, 5, 6, 7, 8],
-    'Abdomen': [2, 3, 4, 5, 6, 7, 8, 9],
-    'Chest': [3, 4, 5, 6, 7, 8, 9, 10],
-    'Each Arm': [1, 1, 2, 3, 4, 5, 6, 7],
-    'Head': [1, 2, 3, 4, 5, 6, 7, 8],
+    Leg: [1,2,3,4,5,6,7,8],
+    Abdomen: [2,3,4,5,6,7,8,9],
+    Chest: [3,4,5,6,7,8,9,10],
+    'Each Arm': [1,1,2,3,4,5,6,7],
+    Head: [1,2,3,4,5,6,7,8],
   };
-  const getHp = locKey => {
+  const getHp = key => {
     let idx = thresholds.findIndex(t => hpSum <= t);
     if (idx === -1) idx = thresholds.length - 1;
-    let base = hpTable[locKey][idx];
-    if (hpSum > thresholds[thresholds.length - 1]) {
-      const extra = Math.floor((hpSum - thresholds[thresholds.length - 1] - 1) / 5) + 1;
-      base += extra;
+    let val = hpTable[key][idx];
+    if (hpSum > thresholds[thresholds.length-1]) {
+      const extra = Math.floor((hpSum - thresholds[thresholds.length-1] - 1)/5) + 1;
+      val += extra;
     }
-    return base;
+    return val;
   };
 
   return (
     <div className="review-step p-6 bg-gray-100">
       <div className="sheet-container max-w-7xl mx-auto bg-white shadow rounded-lg overflow-hidden">
+
         {/* Page 1 */}
         <section className="page p-6 grid grid-cols-3 gap-6">
           {/* Header Inputs */}
@@ -156,10 +160,10 @@ export function ReviewStep() {
                 ['Each Arm','Right Arm'],
                 ['Leg','Left Leg'],
                 ['Leg','Right Leg'],
-              ].map(([locKey,label]) => (
+              ].map(([key,label]) => (
                 <div key={label} className="flex justify-between items-center p-2 border rounded">
                   <span>{label}</span>
-                  <span>{getHp(locKey)}</span>
+                  <span>{getHp(key)}</span>
                 </div>
               ))}
             </div>
@@ -220,9 +224,9 @@ export function ReviewStep() {
                 </div>
               ))}
             </div>
-            <h3 className="font-semibold mb-2">Magic Skills</h3>
+            <h3 className="font-semibold mb-2">Resistances</h3>
             <div className="grid grid-cols-4 gap-4 mb-6">
-              {resistanceList.map(n => (
+              {resistancesDisplayed.map(n => (
                 <div key={n} className="flex justify-between items-center p-2 border rounded">
                   <span>{n}</span>
                   <span>{character.skills?.[n] || 0}%</span>
@@ -242,7 +246,7 @@ export function ReviewStep() {
                 ))
               )}
             </div>
-            <h3 className="font-semibold mb-2">Professional Skills</h3>
+            <h3 className="font-semibold mb-2">Professional Skills</nenerate>
             <div className="grid grid-cols-3 gap-4 mb-6">
               {!professionalDisplayed.length ? (
                 <p className="text-sm text-gray-500">None learned</p>
@@ -255,7 +259,7 @@ export function ReviewStep() {
                 ))
               )}
             </div>
-            <h3 className="font-semibold mb-2">Magic Skills</nenerate>
+            <h3 className="font-semibold mb-2">Magic Skills</h3>
             <div className="grid grid-cols-3 gap-4 mb-6">
               {!magicDisplayed.length ? (
                 <p className="text-sm text-gray-500">None learned</p>
@@ -265,8 +269,8 @@ export function ReviewStep() {
                     <span>{n}</span>
                     <span>{character.skills?.[n] || 0}%</span>
                   </div>
-                ))
-              )}
+                )))
+              }
             </div>
           </div>
         </section>
