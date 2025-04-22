@@ -1,7 +1,7 @@
-// src/steps/ConceptStep.jsx
 import React from 'react';
 import { rollDice } from '../utils/dice';
 import careers from '../data/careers.json';
+import { useCharacter } from '../context/characterContext';
 
 // 1) Define cultures and their silver multipliers here
 const cultureOptions = ['Barbarian', 'Civilised', 'Nomadic', 'Primitive'];
@@ -42,6 +42,7 @@ const socialClassTables = {
 };
 
 export default function ConceptStep({ formData = {}, onChange }) {
+  const { updateCharacter } = useCharacter();
   const {
     characterName = '',
     playerName    = '',
@@ -56,7 +57,11 @@ export default function ConceptStep({ formData = {}, onChange }) {
     startingSilver= null,
   } = formData;
 
-  const handleField = e => onChange(e);
+  const sync = e => {
+    const { name, value } = e.target;
+    onChange(e);
+    updateCharacter({ [name]: value });
+  };
 
   const handleRollClass = () => {
     if (!culture) return;
@@ -64,8 +69,13 @@ export default function ConceptStep({ formData = {}, onChange }) {
     const entry = (socialClassTables[culture]||[])
       .find(e => roll >= e.min && roll <= e.max) || {};
     onChange({ target: { name: 'socialRoll', value: roll } });
+    updateCharacter({ socialRoll: roll });
+
     onChange({ target: { name: 'socialClass', value: entry.name || '' } });
+    updateCharacter({ socialClass: entry.name || '' });
+
     onChange({ target: { name: 'startingSilver', value: null } });
+    updateCharacter({ startingSilver: null });
   };
 
   const handleGenerateSilver = () => {
@@ -75,65 +85,68 @@ export default function ConceptStep({ formData = {}, onChange }) {
     const mod  = (socialClassTables[culture]||[])
       .find(e => e.name === socialClass)?.mod || 1;
     const total = Math.floor(roll * mult * mod);
+
     onChange({ target: { name: 'baseRoll', value: roll } });
+    updateCharacter({ baseRoll: roll });
+
     onChange({ target: { name: 'silverMod', value: mod } });
+    updateCharacter({ silverMod: mod });
+
     onChange({ target: { name: 'startingSilver', value: total } });
+    updateCharacter({ startingSilver: total });
   };
 
   return (
     <div className="panel-parchment p-6 max-w-4xl mx-auto w-full space-y-6">
-    <h2 className="font-semibold">Character Concept</h2>
+      <h2 className="font-semibold">Character Concept</h2>
+
       {/* Character Name */}
-      <label htmlFor="characterName" className="block">
+      <label className="block">
         <span className="font-medium">Character Name</span>
         <input
-          id="characterName"
           name="characterName"
           type="text"
           className="form-control mt-1"
           value={characterName}
-          onChange={handleField}
+          onChange={sync}
           placeholder="Enter character name"
         />
       </label>
 
       {/* Player Name */}
-      <label htmlFor="playerName" className="block">
+      <label className="block">
         <span className="font-medium">Player Name</span>
         <input
-          id="playerName"
           name="playerName"
           type="text"
           className="form-control mt-1"
           value={playerName}
-          onChange={handleField}
+          onChange={sync}
           placeholder="Enter your name"
         />
       </label>
 
       {/* Age */}
-      <label htmlFor="age" className="block">
+      <label className="block">
         <span className="font-medium">Age</span>
         <input
-          id="age"
           name="age"
           type="number"
           min="0"
           className="form-control mt-1"
           value={age}
-          onChange={handleField}
+          onChange={sync}
         />
       </label>
 
       {/* Sex */}
-      <label htmlFor="sex" className="block">
+      <label className="block">
         <span className="font-medium">Sex</span>
         <select
-          id="sex"
           name="sex"
           className="form-control mt-1"
           value={sex}
-          onChange={handleField}
+          onChange={sync}
         >
           <option value="" disabled>Select sex</option>
           <option>Male</option>
@@ -143,39 +156,35 @@ export default function ConceptStep({ formData = {}, onChange }) {
       </label>
 
       {/* Culture */}
-      <label htmlFor="culture" className="block">
+      <label className="block">
         <span className="font-medium">Culture</span>
         <select
-          id="culture"
           name="culture"
           className="form-control mt-1"
           value={culture}
           onChange={e => {
-            handleField(e);
-            onChange({ target: { name: 'socialClass',   value: '' } });
-            onChange({ target: { name: 'socialRoll',     value: null } });
-            onChange({ target: { name: 'startingSilver', value: null } });
+            sync(e);
+            // reset dependent
+            updateCharacter({ socialClass: '', socialRoll: null, startingSilver: null });
+            onChange({ target: { name: 'socialClass', value: '' } });
           }}
         >
           <option value="" disabled>Select a culture</option>
-          {cultureOptions.map(c => (
-            <option key={c} value={c}>{c}</option>
-          ))}
+          {cultureOptions.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </label>
 
       {/* Career */}
-      <label htmlFor="career" className="block">
+      <label className="block">
         <span className="font-medium">Career</span>
         <select
-          id="career"
           name="career"
           className="form-control mt-1"
           value={career}
-          onChange={handleField}
+          onChange={sync}
         >
           <option value="" disabled>Select a career</option>
-          {Object.entries(careers).map(([key,def]) => (
+          {Object.entries(careers).map(([key, def]) => (
             <option key={key} value={key}>{def.name}</option>
           ))}
         </select>
@@ -184,19 +193,18 @@ export default function ConceptStep({ formData = {}, onChange }) {
       {/* Social Class & Roll */}
       <div className="space-y-1">
         <span className="font-medium">
-          Social Class{socialRoll!=null && ` (roll: ${socialRoll})`}
+          Social Class{socialRoll != null && ` (roll: ${socialRoll})`}
         </span>
         <div className="flex space-x-2">
           <select
-            id="socialClass"
             name="socialClass"
             className="form-control flex-1 mt-1"
             value={socialClass}
-            onChange={handleField}
+            onChange={sync}
             disabled={!culture}
           >
             <option value="" disabled>Select social class</option>
-            {(socialClassTables[culture]||[]).map(sc => (
+            {(socialClassTables[culture] || []).map(sc => (
               <option key={sc.name} value={sc.name}>{sc.name}</option>
             ))}
           </select>
@@ -221,10 +229,10 @@ export default function ConceptStep({ formData = {}, onChange }) {
         >
           Generate Starting Silver
         </button>
-        {startingSilver!=null && (
+        {startingSilver != null && (
           <div className="text-sm">
-            (4d6 = {baseRoll}) × {cultureBaseMultiplier[culture]} × {silverMod} =&nbsp;
-            <strong>{startingSilver} sp</strong>
+            (4d6 = {baseRoll}) × {cultureBaseMultiplier[culture]} × {silverMod} =
+            <strong> {startingSilver} sp</strong>
           </div>
         )}
       </div>
