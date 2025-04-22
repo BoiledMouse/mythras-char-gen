@@ -30,7 +30,7 @@ export function ReviewStep() {
       <div className="sheet-container max-w-7xl mx-auto bg-white shadow rounded-lg overflow-hidden">
         {/* Page 1 */}
         <section className="page p-6 grid grid-cols-3 gap-6">
-          {/* Header: Player, Character, Gender, Age */}
+          {/* Header: Player, Character, Sex, Age */}
           <div className="col-span-3 grid grid-cols-4 gap-4 mb-4">
             {[
               { key: 'playerName', label: 'Player' },
@@ -41,7 +41,7 @@ export function ReviewStep() {
               <input
                 key={field.key}
                 name={field.key}
-                value={character[field.key] ?? character.concept?.[field.key] ?? ''}
+                value={character[field.key] ?? ''}
                 onChange={handleChange}
                 placeholder={field.label}
                 className="border p-2 rounded w-full"
@@ -63,7 +63,7 @@ export function ReviewStep() {
               <input
                 key={field.key}
                 name={field.key}
-                value={character[field.key] ?? character.concept?.[field.key] ?? ''}
+                value={character[field.key] ?? ''}
                 onChange={handleChange}
                 placeholder={field.label}
                 className="border p-2 rounded w-full"
@@ -89,7 +89,8 @@ export function ReviewStep() {
                 </div>
               ))}
             </div>
-            {/* Attributes */}
+
+            {/* Attributes: styled read-only boxes from derived values */}
             <div>
               <h3 className="font-semibold mb-2">Attributes</h3>
               {[
@@ -103,13 +104,9 @@ export function ReviewStep() {
               ].map(attr => (
                 <div key={attr.key} className="flex items-center mb-2">
                   <span className="w-32 font-medium">{attr.label}</span>
-                  <input
-                    name={attr.key}
-                    type="number"
-                    value={character[attr.key] ?? ''}
-                    onChange={handleChange}
-                    className="border p-1 rounded w-16"
-                  />
+                  <div className="bg-yellow-100 border border-yellow-300 rounded w-32 p-2">
+                    {character[attr.key] != null ? character[attr.key] : ''}
+                  </div>
                 </div>
               ))}
             </div>
