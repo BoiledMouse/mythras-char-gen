@@ -1,7 +1,6 @@
 // src/steps/WizardContainer.jsx
 import React, { useState } from 'react';
 import ConceptStep       from './ConceptStep';
-import { AttributesStep } from './AttributesStep';
 import AttributesStep from './AttributesStep';
 import { EquipmentStep }   from './EquipmentStep';
 import { ReviewStep }      from './ReviewStep';
