@@ -19,14 +19,18 @@ export function ReviewStep() {
   const professionalNames = skillsData.professional.map(s => s.name);
   const magicNames = (skillsData.magic || []).map(s => s.name);
   const combatNames = [...(skillsData.combatStyles || []).map(s => s.name), 'Unarmed'];
-  const learnedNames = character.skills ? Object.keys(character.skills) : [] ? Object.keys(character.skills) : [];
+  const learnedNames = character.skills ? Object.keys(character.skills) : [];
 
-  const standardDisplayed = standardNames;
+  // Define resistances list
+  const resistanceList = ['Brawn', 'Endurance', 'Evade', 'Willpower'];
+
+  // Filter Standard Skills to exclude Resistances
+  const standardDisplayed = standardNames.filter(name => !resistanceList.includes(name));
   const combatDisplayed = combatNames.filter(name => learnedNames.includes(name));
   const professionalDisplayed = professionalNames.filter(name => learnedNames.includes(name));
   const magicDisplayed = magicNames.filter(name => learnedNames.includes(name));
   const extraDisplayed = learnedNames.filter(
-    name => !standardNames.includes(name) && !professionalNames.includes(name) && !magicNames.includes(name) && !combatNames.includes(name)
+    name => !standardNames.includes(name) && !professionalNames.includes(name) && !magicNames.includes(name) && !combatNames.includes(name) && !resistanceList.includes(name)
   );
 
   // Equipment
@@ -122,6 +126,7 @@ export function ReviewStep() {
                 </div>
               ))}
             </div>
+
           </div>
 
           {/* Background & Contacts */}
@@ -163,10 +168,10 @@ export function ReviewStep() {
               ))}
             </div>
 
-            {/** Resistances **/}
+            {/* Resistances */}
             <h3 className="font-semibold mb-2">Resistances</h3>
             <div className="grid grid-cols-4 gap-4 mb-6">
-              {['Brawn','Endurance','Evade','Willpower'].map(name => (
+              {resistanceList.map(name => (
                 <div key={name} className="flex justify-between items-center p-2 border rounded">
                   <span>{name}</span>
                   <span>{character.skills?.[name] ?? 0}%</span>
@@ -220,16 +225,7 @@ export function ReviewStep() {
             </div>
 
             {/* Other / Custom Skills */}
-            {extraDisplayed.length > 0 && (
-              <>
-                <h3 className="font-semibold mb-2">Other Skills</h3>
-                <div className="grid grid-cols-3 gap-4 mb-6">
-                  {extraDisplayed.map(name => (
-                    <div key={name} className="flex justify-between items-center p-2 border rounded">
-                      <span>{name}</span>
-                      <span>{character.skills?.[name] ?? 0}%</span>
-                    </div>
-                  ))}
+            
                 </div>
               </>
             )}
