@@ -4,7 +4,6 @@ import StepWrapper from '../components/StepWrapper';
 import cultures from '../data/cultures.json';
 import careers from '../data/careers.json';
 import skillsData from '../data/skills.json';
-import { SkillsStep } from './steps/SkillsStep';
 
 export function SkillsStep({ formData, onChange }) {
   // pull culture, career and age from the wizard's formData
