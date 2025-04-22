@@ -1,292 +1,233 @@
-// src/steps/SkillsStep.jsx
-import React, { useState, useEffect } from 'react';
-import cultures     from '../data/cultures.json';
-import careers      from '../data/careers.json';
-import skillsData   from '../data/skills.json';
-import StepWrapper  from '../components/StepWrapper';
+// src/steps/ConceptStep.jsx
+import React from 'react';
+import { rollDice } from '../utils/dice';
+import careers from '../data/careers.json';
 
-export default function SkillsStep({ formData, onChange }) {
-  // pull age/culture/career from the form
-  const { age = 0, culture: cultKey = '', career: careerKey = '' } = formData;
+// 1) Define cultures and their silver multipliers here
+const cultureOptions = ['Barbarian', 'Civilised', 'Nomadic', 'Primitive'];
+const cultureBaseMultiplier = {
+  Barbarian: 50,
+  Civilised: 75,
+  Nomadic: 25,
+  Primitive: 10,
+};
 
-  const cultureDef = cultures[cultKey] || {};
-  const careerDef  = careers[careerKey] || {};
+// 2) Social class tables (unchanged)
+const socialClassTables = {
+  Barbarian: [
+    { name: 'Outcast',   min: 1,  max: 5,  mod: 0.25 },
+    { name: 'Slave',     min: 6,  max: 15, mod: 0.5 },
+    { name: 'Freeman',   min: 16, max: 80, mod: 1 },
+    { name: 'Gentile',   min: 81, max: 95, mod: 3 },
+    { name: 'Chieftain', min: 96, max: 100, mod: 5 },
+  ],
+  Civilised: [
+    { name: 'Outcast',     min: 1,  max: 2,  mod: 0.25 },
+    { name: 'Slave',       min: 3,  max: 20, mod: 0.5 },
+    { name: 'Freeman',     min: 21, max: 70, mod: 1 },
+    { name: 'Gentile',     min: 71, max: 95, mod: 3 },
+    { name: 'Aristocracy', min: 96, max: 100, mod: 5 },
+  ],
+  Nomadic: [
+    { name: 'Outcast',   min: 1,  max: 5,  mod: 0.25 },
+    { name: 'Slave',     min: 6,  max: 10, mod: 0.5 },
+    { name: 'Freeman',   min: 11, max: 90, mod: 1 },
+    { name: 'Chieftain', min: 91, max: 100, mod: 3 },
+  ],
+  Primitive: [
+    { name: 'Outcast',   min: 1,  max: 5,  mod: 0.25 },
+    { name: 'Freeman',   min: 6,  max: 80, mod: 1 },
+    { name: 'Chieftain', min: 81, max: 100, mod: 2 },
+  ],
+};
 
-  // map your attribute names from formData
-  const attrs = {
-    STR: Number(formData.STR   || 0),
-    DEX: Number(formData.DEX   || 0),
-    CON: Number(formData.CON   || 0),
-    SIZ: Number(formData.SIZ   || 0),
-    INT: Number(formData.INT   || 0),
-    POW: Number(formData.POW   || 0),
-    CHA: Number(formData.CHA   || 0),
+export default function ConceptStep({ formData = {}, onChange }) {
+  const {
+    characterName = '',
+    playerName    = '',
+    age           = '',
+    sex           = '',
+    culture       = '',
+    career        = '',
+    socialClass   = '',
+    socialRoll    = null,
+    baseRoll      = null,
+    silverMod     = null,
+    startingSilver= null,
+  } = formData;
+
+  const handleField = e => onChange(e);
+
+  const handleRollClass = () => {
+    if (!culture) return;
+    const roll = rollDice('1d100');
+    const entry = (socialClassTables[culture]||[])
+      .find(e => roll >= e.min && roll <= e.max) || {};
+    onChange({ target: { name: 'socialRoll', value: roll } });
+    onChange({ target: { name: 'socialClass', value: entry.name || '' } });
+    onChange({ target: { name: 'startingSilver', value: null } });
   };
 
-  // age buckets exactly as per the PDF
-  const ageBuckets = [
-    { max: 16, bonus: 100, maxInc: 10 },
-    { max: 27, bonus: 150, maxInc: 15 },
-    { max: 43, bonus: 200, maxInc: 20 },
-    { max: 64, bonus: 250, maxInc: 25 },
-    { max: Infinity, bonus: 300, maxInc: 30 },
-  ];
-  const { bonus: bonusPool, maxInc } = ageBuckets.find(b => age <= b.max);
-
-  const CULTURAL_POOL = 100;
-  const CAREER_POOL  = 100;
-
-  // helper to compute a base% from the "STR+INT" strings in your data
-  const computeBase = expr => {
-    const toks = expr.split(/\s*([+x])\s*/).filter(Boolean);
-    const get = t => (/^\d+$/.test(t) ? +t : attrs[t] || 0);
-    let val = get(toks[0]);
-    for (let i = 1; i < toks.length; i += 2) {
-      const op = toks[i], tk = toks[i+1], x = get(tk);
-      val = op === 'x' ? val * x : val + x;
-    }
-    return val;
+  const handleGenerateSilver = () => {
+    if (!culture || !socialClass) return;
+    const roll = rollDice('4d6');
+    const mult = cultureBaseMultiplier[culture] || 0;
+    const mod  = (socialClassTables[culture]||[])
+      .find(e => e.name === socialClass)?.mod || 1;
+    const total = Math.floor(roll * mult * mod);
+    onChange({ target: { name: 'baseRoll', value: roll } });
+    onChange({ target: { name: 'silverMod', value: mod } });
+    onChange({ target: { name: 'startingSilver', value: total } });
   };
-
-  // build base lookup
-  const baseStandard = {};
-  skillsData.standard.forEach(({ name, base }) => {
-    let v = computeBase(base);
-    if (name === 'Customs' || name === 'Native Tongue') v += 40;
-    baseStandard[name] = v;
-  });
-  const baseProfessional = {};
-  skillsData.professional.forEach(({ name, base }) => {
-    baseProfessional[name] = computeBase(base);
-  });
-
-  // which skills come from culture, career, combat
-  const cultStd   = cultureDef.standardSkills    || [];
-  const cultProf  = cultureDef.professionalSkills|| [];
-  const carStd    = careerDef.standardSkills     || [];
-  const carProf   = careerDef.professionalSkills || [];
-  const combatStyles = cultureDef.combatStyles  || [];
-
-  // local state for the three‑step allocation
-  const [step,      setStep     ] = useState(1);
-  const [cultLeft,  setCultLeft ] = useState(CULTURAL_POOL);
-  const [careLeft,  setCareLeft ] = useState(CAREER_POOL);
-  const [bonusLeft, setBonusLeft] = useState(bonusPool);
-
-  const [cultStdAlloc,  setCultStdAlloc ]  = useState({});
-  const [cultProfAlloc, setCultProfAlloc] = useState({});
-  const [combatAlloc,   setCombatAlloc  ] = useState({});
-  const [carStdAlloc,   setCarStdAlloc  ] = useState({});
-  const [carProfAlloc,  setCarProfAlloc ] = useState({});
-  const [bonusAlloc,    setBonusAlloc   ] = useState({});
-
-  const allocHandler = (setter, allocObj, pool, setPool, key) => e => {
-    let v = parseInt(e.target.value,10) || 0;
-    if (v>0 && v<5) v = 0;
-    v = Math.max(0, Math.min(maxInc, v));
-    const prev = allocObj[key]||0, delta = v - prev;
-    if (delta <= pool) {
-      setter({ ...allocObj, [key]: v });
-      setPool(pl => pl - delta);
-    }
-  };
-
-  // when user finishes bonus step, write back `formData.skills`
-  useEffect(() => {
-    if (step === 4) {
-      const final = { ...baseStandard, ...baseProfessional };
-      cultStd .forEach(s=> final[s]+= cultStdAlloc[s]   || 0);
-      cultProf.forEach(s=> final[s]+= cultProfAlloc[s]  || 0);
-      Object.entries(combatAlloc).forEach(([s,v])=> final[s]+=v);
-      carStd .forEach(s=> final[s]+= carStdAlloc[s]     || 0);
-      carProf.forEach(s=> final[s]+= carProfAlloc[s]    || 0);
-      Object.entries(bonusAlloc).forEach(([s,v])=> final[s]+=v);
-      onChange('skills', final);
-    }
-  }, [step]);
 
   return (
-    <StepWrapper title="Skills Allocation">
-      <p>
-        <b>Age:</b> {age} &nbsp;|&nbsp;
-        <b>Culture:</b> {cultKey || '—'} &nbsp;|&nbsp;
-        <b>Career:</b> {careerDef.name||careerKey||'—'}
-      </p>
-      <p>
-        Pools ⇒ Cultural: <b>{CULTURAL_POOL}</b>, Career: <b>{CAREER_POOL}</b>, Bonus: <b>{bonusPool}</b>, Max/skill: +<b>{maxInc}</b>
-      </p>
+    <div className="panel-parchment p-6 max-w-4xl mx-auto w-full space-y-6">
+    <h2 className="font-semibold">Character Concept</h2>
+      {/* Character Name */}
+      <label htmlFor="characterName" className="block">
+        <span className="font-medium">Character Name</span>
+        <input
+          id="characterName"
+          name="characterName"
+          type="text"
+          className="form-control mt-1"
+          value={characterName}
+          onChange={handleField}
+          placeholder="Enter character name"
+        />
+      </label>
 
-      {step===1 && <>
-        <h3>Step 1: Cultural Skills ({cultLeft} pts left)</h3>
-        <h4>Standard</h4>
-        {cultStd.map(skill => (
-          <div key={skill} className="slider-row">
-            <label>{skill} (base {baseStandard[skill]||0}%)</label>
-            <input
-              type="range" min={0} max={maxInc} step={1}
-              value={cultStdAlloc[skill]||0}
-              onChange={allocHandler(
-                setCultStdAlloc,cultStdAlloc,
-                cultLeft, setCultLeft, skill
-              )}
-            />
-            <span>+{cultStdAlloc[skill]||0}%</span>
-          </div>
-        ))}
-        <h4>Professional (pick up to {cultProf.length})</h4>
-        {cultProf.map(skill => {
-          const checked = skill in cultProfAlloc;
-          return (
-            <div key={skill} className="slider-row">
-              <input
-                type="checkbox" checked={checked}
-                onChange={e => {
-                  if (e.target.checked) setCultProfAlloc({ ...cultProfAlloc, [skill]:0 });
-                  else {
-                    const { [skill]:_,...r } = cultProfAlloc;
-                    setCultProfAlloc(r);
-                  }
-                }}
-              />
-              <label>{skill} (base {baseProfessional[skill]||0}%)</label>
-              {checked && (
-                <>
-                  <input
-                    type="range"
-                    min={0} max={maxInc} step={1}
-                    value={cultProfAlloc[skill]}
-                    onChange={allocHandler(
-                      setCultProfAlloc,cultProfAlloc,
-                      cultLeft, setCultLeft, skill
-                    )}
-                  />
-                  <span>+{cultProfAlloc[skill]}%</span>
-                </>
-              )}
-            </div>
-          );
-        })}
-        <h4>Combat Styles (choose one)</h4>
-        {combatStyles.map(skill => {
-          const selected = skill in combatAlloc;
-          return (
-            <div key={skill} className="slider-row">
-              <input
-                type="radio" name="combat"
-                checked={selected}
-                onChange={()=>setCombatAlloc({ [skill]:0 })}
-              />
-              <label>{skill} (base {baseProfessional[skill]||0}%)</label>
-              {selected && (
-                <>
-                  <input
-                    type="range"
-                    min={0} max={maxInc} step={1}
-                    value={combatAlloc[skill]}
-                    onChange={allocHandler(
-                      setCombatAlloc,combatAlloc,
-                      cultLeft,setCultLeft, skill
-                    )}
-                  />
-                  <span>+{combatAlloc[skill]}%</span>
-                </>
-              )}
-            </div>
-          );
-        })}
-        <button
-          className="btn btn-primary"
-          disabled={cultLeft!==0}
-          onClick={()=>setStep(2)}
-        >Next: Career</button>
-      </>}
+      {/* Player Name */}
+      <label htmlFor="playerName" className="block">
+        <span className="font-medium">Player Name</span>
+        <input
+          id="playerName"
+          name="playerName"
+          type="text"
+          className="form-control mt-1"
+          value={playerName}
+          onChange={handleField}
+          placeholder="Enter your name"
+        />
+      </label>
 
-      {step===2 && <>
-        <h3>Step 2: Career Skills ({careLeft} pts left)</h3>
-        <h4>Standard</h4>
-        {carStd.map(skill => (
-          <div key={skill} className="slider-row">
-            <label>{skill} (base {baseStandard[skill]||0}%)</label>
-            <input
-              type="range" min={0} max={maxInc} step={1}
-              value={carStdAlloc[skill]||0}
-              onChange={allocHandler(
-                setCarStdAlloc,carStdAlloc,
-                careLeft,setCareLeft,skill
-              )}
-            />
-            <span>+{carStdAlloc[skill]||0}%</span>
-          </div>
-        ))}
-        <h4>Professional (pick up to {carProf.length})</h4>
-        {carProf.map(skill => {
-          const checked = skill in carProfAlloc;
-          return (
-            <div key={skill} className="slider-row">
-              <input
-                type="checkbox" checked={checked}
-                onChange={e => {
-                  if (e.target.checked) setCarProfAlloc({ ...carProfAlloc, [skill]:0 });
-                  else {
-                    const { [skill]:_,...r } = carProfAlloc;
-                    setCarProfAlloc(r);
-                  }
-                }}
-              />
-              <label>{skill} (base {baseProfessional[skill]||0}%)</label>
-              {checked && (
-                <>
-                  <input
-                    type="range"
-                    min={0} max={maxInc} step={1}
-                    value={carProfAlloc[skill]}
-                    onChange={allocHandler(
-                      setCarProfAlloc,carProfAlloc,
-                      careLeft,setCareLeft,skill
-                    )}
-                  />
-                  <span>+{carProfAlloc[skill]}%</span>
-                </>
-              )}
-            </div>
-          );
-        })}
-        <button
-          className="btn btn-primary"
-          disabled={careLeft!==0}
-          onClick={()=>setStep(3)}
-        >Next: Bonus</button>
-      </>}
+      {/* Age */}
+      <label htmlFor="age" className="block">
+        <span className="font-medium">Age</span>
+        <input
+          id="age"
+          name="age"
+          type="number"
+          min="0"
+          className="form-control mt-1"
+          value={age}
+          onChange={handleField}
+        />
+      </label>
 
-      {step===3 && <>
-        <h3>Step 3: Bonus / Hobby Skills ({bonusLeft} pts left)</h3>
-        {[
-          ...new Set([
-            ...cultStd, ...cultProf,
-            ...carStd,  ...carProf,
-            ...combatStyles
-          ])
-        ].map(skill => (
-          <div key={skill} className="slider-row">
-            <label>{skill} (base {baseStandard[skill] ?? baseProfessional[skill] ?? 0}%)</label>
-            <input
-              type="range"
-              min={0} max={maxInc} step={1}
-              value={bonusAlloc[skill]||0}
-              onChange={allocHandler(
-                setBonusAlloc,bonusAlloc,
-                bonusLeft,setBonusLeft,skill
-              )}
-            />
-            <span>+{bonusAlloc[skill]||0}%</span>
-          </div>
-        ))}
+      {/* Sex */}
+      <label htmlFor="sex" className="block">
+        <span className="font-medium">Sex</span>
+        <select
+          id="sex"
+          name="sex"
+          className="form-control mt-1"
+          value={sex}
+          onChange={handleField}
+        >
+          <option value="" disabled>Select sex</option>
+          <option>Male</option>
+          <option>Female</option>
+          <option>Other</option>
+        </select>
+      </label>
+
+      {/* Culture */}
+      <label htmlFor="culture" className="block">
+        <span className="font-medium">Culture</span>
+        <select
+          id="culture"
+          name="culture"
+          className="form-control mt-1"
+          value={culture}
+          onChange={e => {
+            handleField(e);
+            onChange({ target: { name: 'socialClass',   value: '' } });
+            onChange({ target: { name: 'socialRoll',     value: null } });
+            onChange({ target: { name: 'startingSilver', value: null } });
+          }}
+        >
+          <option value="" disabled>Select a culture</option>
+          {cultureOptions.map(c => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+      </label>
+
+      {/* Career */}
+      <label htmlFor="career" className="block">
+        <span className="font-medium">Career</span>
+        <select
+          id="career"
+          name="career"
+          className="form-control mt-1"
+          value={career}
+          onChange={handleField}
+        >
+          <option value="" disabled>Select a career</option>
+          {Object.entries(careers).map(([key,def]) => (
+            <option key={key} value={key}>{def.name}</option>
+          ))}
+        </select>
+      </label>
+
+      {/* Social Class & Roll */}
+      <div className="space-y-1">
+        <span className="font-medium">
+          Social Class{socialRoll!=null && ` (roll: ${socialRoll})`}
+        </span>
+        <div className="flex space-x-2">
+          <select
+            id="socialClass"
+            name="socialClass"
+            className="form-control flex-1 mt-1"
+            value={socialClass}
+            onChange={handleField}
+            disabled={!culture}
+          >
+            <option value="" disabled>Select social class</option>
+            {(socialClassTables[culture]||[]).map(sc => (
+              <option key={sc.name} value={sc.name}>{sc.name}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="btn btn-secondary mt-1"
+            onClick={handleRollClass}
+            disabled={!culture}
+          >
+            Roll Class
+          </button>
+        </div>
+      </div>
+
+      {/* Starting Silver */}
+      <div className="space-y-1">
         <button
-          className="btn btn-primary"
-          disabled={bonusLeft!==0}
-          onClick={()=>setStep(4)}
-        >Finish Skills</button>
-      </>}
-    </StepWrapper>
+          type="button"
+          className="btn btn-secondary w-full"
+          onClick={handleGenerateSilver}
+          disabled={!culture || !socialClass}
+        >
+          Generate Starting Silver
+        </button>
+        {startingSilver!=null && (
+          <div className="text-sm">
+            (4d6 = {baseRoll}) × {cultureBaseMultiplier[culture]} × {silverMod} =&nbsp;
+            <strong>{startingSilver} sp</strong>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
