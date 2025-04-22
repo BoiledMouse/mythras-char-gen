@@ -220,7 +220,7 @@ export function ReviewStep() {
                 </div>
               ))}
             </div>
-            <h3 className="font-semibold mb-2">Resistances</nenerate>
+            <h3 className="font-semibold mb-2">Magic Skills</h3>
             <div className="grid grid-cols-4 gap-4 mb-6">
               {resistanceList.map(n => (
                 <div key={n} className="flex justify-between items-center p-2 border rounded">
