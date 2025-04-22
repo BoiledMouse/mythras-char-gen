@@ -61,7 +61,7 @@ export function ReviewStep() {
             ))}
           </div>
 
-          {/* Concept fields: Species, Frame, Height, Weight, Career, Culture, Social Class */}
+          {/* Concept fields */}
           <div className="col-span-3 grid grid-cols-4 gap-4 mb-6">
             {[
               { key: 'species', label: 'Species' },
@@ -85,7 +85,6 @@ export function ReviewStep() {
 
           {/* Characteristics & Attributes */}
           <div className="col-span-3 grid grid-cols-2 gap-6">
-
             {/* Characteristics */}
             <div>
               <h3 className="font-semibold mb-2">Characteristics</h3>
@@ -123,7 +122,6 @@ export function ReviewStep() {
                 </div>
               ))}
             </div>
-
           </div>
 
           {/* Background & Contacts */}
@@ -165,7 +163,7 @@ export function ReviewStep() {
               ))}
             </div>
 
-            {/* Resistances */}
+            {/** Resistances **/}
             <h3 className="font-semibold mb-2">Resistances</h3>
             <div className="grid grid-cols-4 gap-4 mb-6">
               {['Brawn','Endurance','Evade','Willpower'].map(name => (
@@ -214,7 +212,7 @@ export function ReviewStep() {
                   <div key={name} className="flex justify-between items-center p-2 border rounded">
                     <span>{name}</span>
                     <span>{character.skills?.[name] ?? 0}%</span>
-                  ),
+                  </div>
                 ))
               ) : (
                 <p className="text-sm text-gray-500">No magic skills learned</p>
