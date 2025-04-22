@@ -205,61 +205,7 @@ export function ReviewStep() {
           </div>
 
           {/* Characteristics & Attributes */}
-          <div className="col-span-3 grid grid-cols-2 gap-6 mb-6">
-            <div>
-              <h3 className="font-semibold mb-2">Characteristics</h3>
-              {['STR','CON','SIZ','DEX','INT','POW','CHA'].map(stat => (
-                <div key={stat} className="flex items-center mb-2">
-                  <span className="w-20 font-medium">{stat}</span>
-                  <div className="bg-yellow-100 border border-yellow-300 rounded w-32 p-2 text-center">
-                    {character[stat] || ''}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">Attributes</h3>
-              {[
-                { key: 'actionPoints', label: 'Action Points' },
-                { key: 'damageMod', label: 'Damage Modifier' },
-                { key: 'xpMod', label: 'Experience Modifier' },
-                { key: 'healingRate', label: 'Healing Rate' },
-                { key: 'initiativeBonus', label: 'Initiative Bonus' },
-                { key: 'luckPoints', label: 'Luck Points' },
-                { key: 'movementRate', label: 'Movement Rate' },
-              ].map(a => (
-                <div key={a.key} className="flex items-center mb-2">
-                  <span className="w-32 font-medium">{a.label}</span>
-                  <div className="bg-yellow-100 border border-yellow-300 rounded w-32 p-2 text-center">
-                    {character[a.key] != null ? character[a.key] : ''}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* HP per Location */}
-          <section className="page grid grid-cols-3 gap-4 mb-6">
-            <div className="col-span-3">
-              <h3 className="font-semibold mb-2">HP per Location</h3>
-              <div className="grid grid-cols-3 gap-4">
-                {[
-                  ['Head','Head'],
-                  ['Chest','Chest'],
-                  ['Abdomen','Abdomen'],
-                  ['Each Arm','Left Arm'],
-                  ['Each Arm','Right Arm'],
-                  ['Leg','Left Leg'],
-                  ['Leg','Right Leg'],
-                ].map(([key,label]) => (
-                  <div key={label} className="flex justify-between items-center p-2 border rounded">
-                    <span>{label}</span>
-                    <span>{getHp(key)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
+          <div className="col-span-3 grid grid-cols-2 gap-6 mb-6">$1</div>
 
           {/* Background & Contacts */}
           <section className="page grid grid-cols-3 gap-6 mb-6">
