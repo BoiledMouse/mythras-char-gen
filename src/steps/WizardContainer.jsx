@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import ConceptStep       from './ConceptStep';
 import { AttributesStep }  from './AttributesStep';
-import { SkillsStep }      from './SkillsStep';
+import SkillsStep           from './SkillsStep';
 import { EquipmentStep }   from './EquipmentStep';
 import { ReviewStep }      from './ReviewStep';
 
