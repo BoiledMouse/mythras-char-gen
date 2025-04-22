@@ -1,50 +1,39 @@
-/* src/steps/WizardContainer.css */
-
-.wizard-panel {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
+.wizard-container {
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
 }
 
-/* Tabs bar */
-.wizard-nav {
+/* 1) Make tabs a row, and pull them down 1px so their bottom border
+      overlaps the panel’s border seamlessly */
+.wizard-tabs {
   display: flex;
-  margin: 0;               /* flush with container */
-  padding: 0;
-  border-bottom: 1px solid #ccc;
+  margin-bottom: -2px;
+  padding-left: 1.5rem; /* shift right to align with panel padding */
 }
 
-/* Each tab */
-.wizard-nav button {
-  background: transparent;
-  border: 1px solid #ccc;
-  border-bottom: none;      /* remove bottom border so it looks connected */
+/* 2) Each tab */
+.wizard-tab {
   padding: 0.5rem 1rem;
-  margin: 0;                /* no gap */
+  margin-right: 0.25rem;
+  border: 2px solid #2e1f0f;
+  border-bottom: none;           /* hide bottom edge so panel border continues */
+  border-radius: 0.25rem 0.25rem 0 0;
+  background: #dec454;
+  font-style: italic;
   cursor: pointer;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  font-size: 1rem;
 }
 
-/* Active tab */
-.wizard-nav button.active {
-  background: #fff;
+/* 3) Active tab gets a little extra weight */
+.wizard-tab.active {
+  background: #d8b33f;
   font-weight: bold;
 }
 
-/* Content area sits directly under the tabs */
-.wizard-content {
-  border: 1px solid #ccc;
-  border-top: none;        /* already have tab border */
-  padding: 1rem;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-}
-
-/* Footer navigation */
-.wizard-footer {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 1rem;
+/* 4) The panel under the tabs */
+.wizard-panel {
+  border: 2px solid #2e1f0f;
+  border-radius: 0.5rem;
+  padding: 1.5rem;  /* content padding */
+  background: #f3df9d;
 }
