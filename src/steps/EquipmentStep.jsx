@@ -6,21 +6,22 @@ import StepWrapper from '../components/StepWrapper';
 
 export default function EquipmentStep() {
   const { character, updateCharacter } = useCharacter();
-  // 1) Pull in the starting silver from ConceptStep
-  const startingSilver = character.startingSilver ?? 0;
 
-  // 2) Local state for silver and equipment quantities
-  const [silver, setSilver] = useState(startingSilver);
+  // 1) get the starting silver (set in ConceptStep)
+  const startingSilverFromContext = character.startingSilver ?? 0;
+
+  // 2) local state for silver & quantities
+  const [silver, setSilver] = useState(startingSilverFromContext);
   const [quantities, setQuantities] = useState(
     character.equipmentAlloc || {}
   );
 
-  // 3) If they re‑roll in ConceptStep, reset our local silver
+  // 3) if startingSilver changes (you re‑rolled), reset local silver
   useEffect(() => {
     setSilver(character.startingSilver ?? 0);
   }, [character.startingSilver]);
 
-  // 4) Persist any changes back into the character context
+  // 4) persist both silver & quantities back into context
   useEffect(() => {
     updateCharacter({
       startingSilver: silver,
@@ -28,13 +29,14 @@ export default function EquipmentStep() {
     });
   }, [silver, quantities]);
 
-  // 5) Helpers
+  // helper to change item qty
   const handleQtyChange = (name, val) => {
     let v = parseInt(val, 10);
     if (isNaN(v) || v < 0) v = 0;
     setQuantities(prev => ({ ...prev, [name]: v }));
   };
 
+  // compute totals
   const totalSpent = Object.entries(quantities).reduce(
     (sum, [name, qty]) => {
       const item = equipmentList.find(e => e.name === name);
@@ -59,7 +61,7 @@ export default function EquipmentStep() {
           />
         </div>
 
-        {/* Equipment table */}
+        {/* Equipment purchase table */}
         <div>
           <h3 className="font-semibold mb-2">Select Equipment</h3>
           <div className="overflow-x-auto">
