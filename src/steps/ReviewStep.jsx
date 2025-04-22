@@ -8,40 +8,41 @@ import skillsData from '../data/skills.json';
  */
 export function ReviewStep() {
   const { character, updateCharacter } = useCharacter();
+  const concept = character.concept || character; // support nested concept data
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     updateCharacter({ [name]: value });
   };
 
-  // Skills to display: standard skills plus extras
+  // Determine which skills to show: standard + extras
   const standardNames = skillsData.standard.map(s => s.name);
   const learnedNames = character.skills ? Object.keys(character.skills) : [];
   const extraNames = learnedNames.filter(n => !standardNames.includes(n));
   const displayedSkills = [...standardNames, ...extraNames];
 
-  // Equipment list pulled directly from equipment step context
+  // Equipment list from context
   const equipmentList = Array.isArray(character.equipment)
     ? character.equipment
-    : Object.values(character.equipment || {});
+    : (character.equipment ? Object.values(character.equipment) : []);
 
   return (
     <div className="review-step p-6 bg-gray-100">
       <div className="sheet-container max-w-7xl mx-auto bg-white shadow rounded-lg overflow-hidden">
         {/* Page 1 */}
         <section className="page p-6 grid grid-cols-3 gap-6">
-          {/* Header: player, char name, concept data */}
+          {/* Header: concept fields */}
           <div className="col-span-3 grid grid-cols-4 gap-4 mb-4">
             {[
-              { name: 'playerName', placeholder: 'Player' },
-              { name: 'name', placeholder: 'Character' },
+              { name: 'player', placeholder: 'Player' },
+              { name: 'characterName', placeholder: 'Character' },
               { name: 'gender', placeholder: 'Gender' },
               { name: 'age', placeholder: 'Age' }
             ].map(f => (
               <input
                 key={f.name}
                 name={f.name}
-                value={character[f.name] || ''}
+                value={concept[f.name] ?? character[f.name] ?? ''}
                 onChange={handleChange}
                 placeholder={f.placeholder}
                 className="border p-2 rounded w-full"
@@ -63,7 +64,7 @@ export function ReviewStep() {
               <input
                 key={f.name}
                 name={f.name}
-                value={character[f.name] || ''}
+                value={concept[f.name] ?? character[f.name] ?? ''}
                 onChange={handleChange}
                 placeholder={f.placeholder}
                 className="border p-2 rounded w-full"
@@ -71,7 +72,7 @@ export function ReviewStep() {
             ))}
           </div>
 
-          {/* Characteristics and Attributes */}
+          {/* Characteristics & Attributes */}
           <div className="col-span-3 grid grid-cols-2 gap-6">
             {/* Characteristics */}
             <div>
@@ -99,7 +100,7 @@ export function ReviewStep() {
                 { key: 'healingRate', label: 'Healing Rate' },
                 { key: 'initiativeBonus', label: 'Initiative Bonus' },
                 { key: 'luckPoints', label: 'Luck Points' },
-                { key: 'movementRate', label: 'Movement Rate' },
+                { key: 'movementRate', label: 'Movement Rate' }
               ].map(attr => (
                 <div key={attr.key} className="flex items-center mb-2">
                   <span className="w-32 font-medium">{attr.label}</span>
@@ -160,8 +161,7 @@ export function ReviewStep() {
                 ? equipmentList.map((item, i) => (
                     <li key={i} className="mb-1">{item}</li>
                   ))
-                : <li className="text-gray-500">No equipment selected</li>
-              }
+                : <li className="text-gray-500">No equipment selected</li>}
             </ul>
           </div>
           <div>
