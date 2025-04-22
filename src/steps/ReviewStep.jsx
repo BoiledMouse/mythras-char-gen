@@ -7,6 +7,100 @@ import StepWrapper from '../components/StepWrapper';
 export function ReviewStep() {
   const { character, updateCharacter } = useCharacter();
 
+  // Helper: generate markdown export
+  const generateMarkdown = () => {
+    const lines = [];
+    // Header
+    lines.push(`# ${character.characterName || 'Character'}`);
+    lines.push('');
+    lines.push(`**Player**: ${character.playerName || ''}`);
+    lines.push(`**Sex**: ${character.sex || ''}`);
+    lines.push(`**Age**: ${character.age || ''}`);
+    lines.push('');
+    // Concept
+    ['species','frame','height','weight','career','culture','socialClass'].forEach(k => {
+      const label = k.charAt(0).toUpperCase() + k.slice(1);
+      lines.push(`**${label}**: ${character[k]||''}`);
+    });
+    lines.push('');
+    // Characteristics
+    lines.push('## Characteristics');
+    ['STR','CON','SIZ','DEX','INT','POW','CHA'].forEach(stat => {
+      lines.push(`- **${stat}**: ${character[stat]||''}`);
+    });
+    lines.push('');
+    // Attributes
+    lines.push('## Attributes');
+    ['actionPoints','damageMod','xpMod','healingRate','initiativeBonus','luckPoints','movementRate'].forEach(key => {
+      const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s=>s.toUpperCase());
+      lines.push(`- **${label}**: ${character[key]||''}`);
+    });
+    lines.push('');
+    // HP per Location
+    lines.push('## Hit Points per Location');
+    ['Head','Chest','Abdomen','Each Arm','Leg'].forEach(loc => {
+      lines.push(`- **${loc}**: ${getHp(loc)}`);
+    });
+    lines.push('');
+    // Background
+    lines.push('## Background, Community & Family');
+    lines.push(character.backgroundNotes|| '');
+    lines.push('');
+    // Contacts
+    lines.push('## Contacts, Allies & Enemies');
+    lines.push(character.contacts|| '');
+    lines.push('');
+    // Silver and Equipment
+    lines.push('## Money & Equipment');
+    lines.push(`- **Silver Remaining**: ${silverRemaining} SP`);
+    if(equipmentList.length) {
+      lines.push('- **Equipment**:');
+      equipmentList.forEach(item=> lines.push(`  - ${item}`));
+    }
+    lines.push('');
+    // Skills
+    lines.push('## Skills');
+    if(standardDisplayed.length) {
+      lines.push('### Standard Skills');
+      standardDisplayed.forEach(n=> lines.push(`- ${n}: ${character.skills?.[n]||0}%`));
+      lines.push('');
+    }
+    if(resistancesDisplayed.length) {
+      lines.push('### Resistances');
+      resistancesDisplayed.forEach(n=> lines.push(`- ${n}: ${character.skills?.[n]||0}%`));
+      lines.push('');
+    }
+    if(combatDisplayed.length) {
+      lines.push('### Combat Skills');
+      combatDisplayed.forEach(n=> lines.push(`- ${n}: ${character.skills?.[n]||0}%`));
+      lines.push('');
+    }
+    if(professionalDisplayed.length) {
+      lines.push('### Professional Skills');
+      professionalDisplayed.forEach(n=> lines.push(`- ${n}: ${character.skills?.[n]||0}%`));
+      lines.push('');
+    }
+    if(magicDisplayed.length) {
+      lines.push('### Magic Skills');
+      magicDisplayed.forEach(n=> lines.push(`- ${n}: ${character.skills?.[n]||0}%`));
+      lines.push('');
+    }
+    return lines.join('
+');
+  };
+
+  const exportMarkdown = () => {
+    const blob = new Blob([generateMarkdown()], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${character.characterName||'character'}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const { character, updateCharacter } = useCharacter();
+
   const handleChange = e => {
     const { name, value } = e.target;
     updateCharacter({ [name]: value });
