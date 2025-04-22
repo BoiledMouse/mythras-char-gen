@@ -31,12 +31,11 @@ export function ReviewStep() {
   // Display filters
   const standardDisplayed = standardNames.filter(n => !resistanceList.includes(n) && !combatNames.includes(n));
   const resistancesDisplayed = resistanceList;
-  const combatDisplayed = combatNames.filter(n => learnedNames.includes(n));
+  const combatDisplayed = combatNames.filter(n => (character.skills?.[n] ?? 0) > 0);
   const professionalDisplayed = professionalNames.filter(n => {
   const score = character.skills?.[n] ?? 0;
-  const skillDef = skillsData.professional.find(s => s.name === n);
-  if (!skillDef || typeof skillDef.base !== 'number') return false;
-  return score > skillDef.base;
+  const base = skillsData.standard.find(s => s.name === n)?.base || 0; // fallback for missing
+  return score > base;
 });
   const magicDisplayed = allMagicNames.filter(n => learnedNames.includes(n));
 
