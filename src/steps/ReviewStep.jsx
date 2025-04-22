@@ -3,6 +3,8 @@ import { useCharacter } from '../context/characterContext';
 import skillsData from '../data/skills.json';
 import equipmentData from '../data/equipment.json';
 
+import StepWrapper from '../components/StepWrapper';
+
 export function ReviewStep() {
   const { character, updateCharacter } = useCharacter();
 
@@ -62,7 +64,7 @@ export function ReviewStep() {
   };
 
   return (
-    <div className="review-step p-6 bg-gray-100">
+    <StepWrapper title="Review">
       <div className="sheet-container max-w-7xl mx-auto bg-white shadow rounded-lg overflow-hidden">
 
         {/* Page 1 */}
@@ -276,5 +278,6 @@ export function ReviewStep() {
         </section>
       </div>
     </div>
+  </StepWrapper>
   );
 }
