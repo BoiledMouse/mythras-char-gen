@@ -8,7 +8,6 @@ import skillsData from '../data/skills.json';
  */
 export function ReviewStep() {
   const { character, updateCharacter } = useCharacter();
-  const concept = character.concept || character; // support nested concept data
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,42 +30,42 @@ export function ReviewStep() {
       <div className="sheet-container max-w-7xl mx-auto bg-white shadow rounded-lg overflow-hidden">
         {/* Page 1 */}
         <section className="page p-6 grid grid-cols-3 gap-6">
-          {/* Header: concept fields */}
+          {/* Header: Player, Character, Gender, Age */}
           <div className="col-span-3 grid grid-cols-4 gap-4 mb-4">
             {[
-              { name: 'player', placeholder: 'Player' },
-              { name: 'characterName', placeholder: 'Character' },
-              { name: 'gender', placeholder: 'Gender' },
-              { name: 'age', placeholder: 'Age' }
-            ].map(f => (
+              { key: 'playerName', label: 'Player' },
+              { key: 'name', label: 'Character' },
+              { key: 'gender', label: 'Gender' },
+              { key: 'age', label: 'Age' }
+            ].map(field => (
               <input
-                key={f.name}
-                name={f.name}
-                value={concept[f.name] ?? character[f.name] ?? ''}
+                key={field.key}
+                name={field.key}
+                value={character[field.key] || ''}
                 onChange={handleChange}
-                placeholder={f.placeholder}
+                placeholder={field.label}
                 className="border p-2 rounded w-full"
               />
             ))}
           </div>
 
-          {/* Concept fields: species, frame, height, weight, career, culture, social class */}
+          {/* Concept fields: Species, Frame, Height, Weight, Career, Culture, Social Class */}
           <div className="col-span-3 grid grid-cols-4 gap-4 mb-6">
             {[
-              { name: 'species', placeholder: 'Species' },
-              { name: 'frame', placeholder: 'Frame' },
-              { name: 'height', placeholder: 'Height' },
-              { name: 'weight', placeholder: 'Weight' },
-              { name: 'career', placeholder: 'Career' },
-              { name: 'culture', placeholder: 'Culture' },
-              { name: 'socialClass', placeholder: 'Social Class' }
-            ].map(f => (
+              { key: 'species', label: 'Species' },
+              { key: 'frame', label: 'Frame' },
+              { key: 'height', label: 'Height' },
+              { key: 'weight', label: 'Weight' },
+              { key: 'career', label: 'Career' },
+              { key: 'culture', label: 'Culture' },
+              { key: 'socialClass', label: 'Social Class' }
+            ].map(field => (
               <input
-                key={f.name}
-                name={f.name}
-                value={concept[f.name] ?? character[f.name] ?? ''}
+                key={field.key}
+                name={field.key}
+                value={character[field.key] || ''}
                 onChange={handleChange}
-                placeholder={f.placeholder}
+                placeholder={field.label}
                 className="border p-2 rounded w-full"
               />
             ))}
