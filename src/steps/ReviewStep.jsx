@@ -17,6 +17,9 @@ export function ReviewStep() {
   // Skill categories
   const standardNames = skillsData.standard.map(s => s.name);
   const professionalNames = skillsData.professional.map(s => s.name);
+  // Magic and combat categories may not always exist in JSON
+  const magicNames = (skillsData.magic || []).map(s => s.name);
+  const combatNames = [...(skillsData.combatStyles || []).map(s => s.name), 'Unarmed'];(s => s.name);
   const magicNames = skillsData.magic.map(s => s.name);
   const combatNames = [...skillsData.combatStyles.map(s => s.name), 'Unarmed'];
   const learnedNames = character.skills ? Object.keys(character.skills) : [];
