@@ -1,4 +1,3 @@
-// src/steps/AttributesStep.jsx
 import React, { useState, useEffect } from 'react';
 import { useCharacter } from '../context/characterContext';
 import apTable from '../data/tables/actionPoints.json';
@@ -12,6 +11,8 @@ export default function AttributesStep() {
   const { character, updateCharacter } = useCharacter();
   const [method, setMethod] = useState('roll');
   const [maxPoints, setMaxPoints] = useState(80);
+
+  // Base characteristic allocation
   const initialAlloc = {
     STR: character.STR || 3,
     CON: character.CON || 3,
@@ -24,7 +25,7 @@ export default function AttributesStep() {
   const [alloc, setAlloc] = useState(initialAlloc);
   const [rolls, setRolls] = useState({});
 
-  // Whenever the local alloc changes, push it into context
+  // Sync base alloc with context
   useEffect(() => {
     updateCharacter(alloc);
   }, [alloc]);
@@ -74,14 +75,39 @@ export default function AttributesStep() {
     return e.points;
   })();
 
-  const initiative  = Math.floor((alloc.INT + alloc.DEX) / 2);
+  const initiative = Math.floor((alloc.INT + alloc.DEX) / 2);
   const magicPoints = alloc.POW;
-  const hpPerLoc    = alloc.CON + alloc.SIZ;
-  const movement    = '6m';
+  const hpPerLoc = alloc.CON + alloc.SIZ;
+  const movement = '6m';
+
+  // Sync derived attributes with context
+  useEffect(() => {
+    updateCharacter({
+      actionPoints,
+      damageMod,
+      xpMod: experienceMod,
+      healingRate,
+      initiativeBonus: initiative,
+      luckPoints,
+      movementRate: movement,
+      magicPoints,
+      hpPerLoc
+    });
+  }, [
+    actionPoints,
+    damageMod,
+    experienceMod,
+    healingRate,
+    initiative,
+    luckPoints,
+    movement,
+    magicPoints,
+    hpPerLoc
+  ]);
 
   // Dice helpers
-  const rollDie   = () => Math.ceil(Math.random() * 6);
-  const roll3d6   = () => [rollDie(), rollDie(), rollDie()];
+  const rollDie = () => Math.ceil(Math.random() * 6);
+  const roll3d6 = () => [rollDie(), rollDie(), rollDie()];
   const roll2d6p6 = () => [rollDie(), rollDie()].concat([6]);
   const rollAttributes = () => {
     const newRolls = {
@@ -114,8 +140,8 @@ export default function AttributesStep() {
 
   return (
     <StepWrapper title="Attributes">
-      {/* Method toggle */}
       <div className="space-y-6">
+        {/* Method toggle */}
         <div>
           <label className="inline-flex items-center">
             <input
@@ -190,7 +216,7 @@ export default function AttributesStep() {
           </div>
         )}
 
-        {/* Derived */}
+        {/* Derived display */}
         <div className="pt-4 border-t border-wood">
           <h3 className="font-semibold">Derived Attributes</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-2">
