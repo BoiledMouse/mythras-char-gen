@@ -41,7 +41,7 @@ export function ReviewStep() {
               <input
                 key={field.key}
                 name={field.key}
-                value={character[field.key] || ''}
+                value={character[field.key] ?? character.concept?.[field.key] ?? ''}
                 onChange={handleChange}
                 placeholder={field.label}
                 className="border p-2 rounded w-full"
