@@ -32,7 +32,11 @@ export function ReviewStep() {
   const standardDisplayed = standardNames.filter(n => !resistanceList.includes(n) && !combatNames.includes(n));
   const resistancesDisplayed = resistanceList;
   const combatDisplayed = combatNames.filter(n => learnedNames.includes(n));
-  const professionalDisplayed = professionalNames.filter(n => learnedNames.includes(n));
+  const professionalDisplayed = professionalNames.filter(n => {
+  const score = character.skills?.[n] ?? 0;
+  const base = skillsData.professional.find(s => s.name === n)?.base || 0;
+  return score > base;
+});
   const magicDisplayed = allMagicNames.filter(n => learnedNames.includes(n));
 
   // Equipment & silver
