@@ -53,24 +53,25 @@ export function SkillsStep({ formData, onChange }) {
     baseProfessional[name]=computeBase(base);
   });
 
-  // state: step, pools & allocations
+  // state: which step and pools
   const [step, setStep]       = useState(1);
   const [cultLeft, setCult]   = useState(CULT_POOL);
   const [carLeft,  setCar]    = useState(CAREER_POOL);
   const [bonusLeft,setBonus]  = useState(bonusPool);
 
-  const [cultStdAlloc, setCultStd]   = useState({});
-  const [cultProfSel, setCultProfSel]= useState([]);
-  const [cultProfAlloc,setCultProf]  = useState({});
-  const [combatSel, setCombatSel]    = useState('');
-  const [combatAlloc, setCombatAlloc]= useState({});
+  // allocations
+  const [cultStdAlloc, setCultStd]     = useState({});
+  const [cultProfSel, setCultProfSel]  = useState([]);
+  const [cultProfAlloc, setCultProf]   = useState({});
+  const [combatSel, setCombatSel]      = useState('');
+  const [combatAlloc,setCombatAlloc]   = useState({});
 
-  const [carStdAlloc, setCarStd]     = useState({});
-  const [carProfSel, setCarProfSel]  = useState([]);
-  const [carProfAlloc,setCarProf]    = useState({});
+  const [carStdAlloc, setCarStd]       = useState({});
+  const [carProfSel, setCarProfSel]    = useState([]);
+  const [carProfAlloc, setCarProf]     = useState({});
 
-  const [bonusSel,   setBonusSel]    = useState([]);
-  const [bonusAlloc, setBonusAlloc]  = useState({});
+  const [bonusSel, setBonusSel]         = useState([]);
+  const [bonusAlloc,setBonusAlloc]      = useState({});
 
   // generic slider handler
   function mkHandler(alloc, setAlloc, left, setLeft) {
@@ -85,240 +86,238 @@ export function SkillsStep({ formData, onChange }) {
       }
     };
   }
-  const handleCultStd   = mkHandler(cultStdAlloc,  setCultStd,   cultLeft, setCult);
-  const handleCultProf  = mkHandler(cultProfAlloc, setCultProf,  cultLeft, setCult);
-  const handleCombat    = mkHandler(combatAlloc,   setCombatAlloc,carLeft,  setCar);
-  const handleCarStd    = mkHandler(carStdAlloc,   setCarStd,     carLeft,  setCar);
-  const handleCarProf   = mkHandler(carProfAlloc,  setCarProf,    carLeft,  setCar);
-  const handleBonus     = mkHandler(bonusAlloc,    setBonusAlloc, bonusLeft,setBonus);
+  const handleCultStd  = mkHandler(cultStdAlloc, setCultStd, cultLeft, setCult);
+  const handleCultProf = mkHandler(cultProfAlloc,setCultProf,cultLeft, setCult);
+  const handleCombat   = mkHandler(combatAlloc,  setCombatAlloc,carLeft, setCar);
+  const handleCarStd   = mkHandler(carStdAlloc,  setCarStd,carLeft, setCar);
+  const handleCarProf  = mkHandler(carProfAlloc, setCarProf,carLeft, setCar);
+  const handleBonus    = mkHandler(bonusAlloc,   setBonusAlloc,bonusLeft, setBonus);
 
-  // toggle professional picks (max 3)
-  const toggleCultProf = skill => {
-    const chosen = cultProfSel.includes(skill)
+  // toggle up to 3 profs
+  const toggleCultProf = skill=>{
+    const sel = cultProfSel.includes(skill)
       ? cultProfSel.filter(s=>s!==skill)
       : cultProfSel.length<3 ? [...cultProfSel,skill] : cultProfSel;
-    // if unselecting, refund any alloc
     if(cultProfSel.includes(skill)){
-      setCult(set=>set + (cultProfAlloc[skill]||0));
-      setCultProf(a=>{ let n={...a}; delete n[skill]; return n; });
+      setCult(l=>l+(cultProfAlloc[skill]||0));
+      setCultProf(a=>{ let n={...a}; delete n[skill]; return n });
     }
-    setCultProfSel(chosen);
+    setCultProfSel(sel);
   };
-  const toggleCarProf = skill => {
-    const chosen = carProfSel.includes(skill)
+  const toggleCarProf = skill=>{
+    const sel = carProfSel.includes(skill)
       ? carProfSel.filter(s=>s!==skill)
       : carProfSel.length<3 ? [...carProfSel,skill] : carProfSel;
     if(carProfSel.includes(skill)){
-      setCar(l=>l + (carProfAlloc[skill]||0));
-      setCarProf(a=>{ let n={...a}; delete n[skill]; return n; });
+      setCar(l=>l+(carProfAlloc[skill]||0));
+      setCarProf(a=>{ let n={...a}; delete n[skill]; return n });
     }
-    setCarProfSel(chosen);
+    setCarProfSel(sel);
   };
-  // pick combat style (only 1)
-  const pickCombat = skill => {
+  // pick 1 combat
+  const pickCombat = skill=>{
     if(combatSel){
-      setCar(l=>l + (combatAlloc[combatSel]||0));
+      setCar(l=>l+(combatAlloc[combatSel]||0));
       setCombatAlloc({});
     }
     setCombatSel(skill);
   };
 
-  // when step===4, commit to context
+  // when finishing step 3
   useEffect(()=>{
     if(step===4){
       const final = {...baseStandard,...baseProfessional};
-      // cultural standard + prof
-      (cultureDef.standardSkills||[]).forEach(s=> final[s]+=cultStdAlloc[s]||0);
-      cultProfSel.forEach(s=> final[s]+=cultProfAlloc[s]||0);
-      // combat
+      ;(cultureDef.standardSkills||[]).forEach(s=>final[s]+=cultStdAlloc[s]||0);
+      cultProfSel.forEach(s=>final[s]+=cultProfAlloc[s]||0);
       if(combatSel) final[combatSel]+=combatAlloc[combatSel]||0;
-      // career standard + prof
-      (careerDef.standardSkills||[]).forEach(s=> final[s]+=carStdAlloc[s]||0);
-      carProfSel.forEach(s=> final[s]+=carProfAlloc[s]||0);
-      // bonus
-      bonusSel.forEach(s=> final[s]+=bonusAlloc[s]||0);
+      ;(careerDef.standardSkills||[]).forEach(s=>final[s]+=carStdAlloc[s]||0);
+      carProfSel.forEach(s=>final[s]+=carProfAlloc[s]||0);
+      bonusSel.forEach(s=>final[s]+=bonusAlloc[s]||0);
       updateCharacter({ skills: final });
     }
   },[step]);
 
-  // gather ALL available for bonus
-  const allAvail = [
-    ...new Set([
-      ...(cultureDef.standardSkills||[]),
-      ...(cultureDef.professionalSkills||[]),
-      ...(careerDef.standardSkills||[]),
-      ...(careerDef.professionalSkills||[]),
-      ...cultProfSel,
-      ...carProfSel,
-      combatSel? [combatSel] : []
-    ].flat())
-  ];
+  // gather ALL unlocked
+  const allAvail = Array.from(new Set([
+    ...(cultureDef.standardSkills||[]),
+    ...(cultureDef.professionalSkills||[]),
+    ...(careerDef.standardSkills||[]),
+    ...(careerDef.professionalSkills||[]),
+    ...cultProfSel, ...carProfSel,
+    ...(combatSel?[combatSel]:[])
+  ]));
 
   return (
     <StepWrapper title="Skills Allocation">
       <p>
         Age: <strong>{age}</strong> ⇒&nbsp;
-        Pools → Cult: <strong>{CULT_POOL}</strong>, Career: <strong>{CAREER_POOL}</strong>, Bonus: <strong>{bonusPool}</strong>, 
-        Max per skill: +{maxInc}
+        Pools → Cult:<strong>{CULT_POOL}</strong>, Career:<strong>{CAREER_POOL}</strong>, Bonus:<strong>{bonusPool}</strong>, 
+        Max per skill:+{maxInc}
       </p>
 
-      {step===1 && <>
-        <h3>Step 1: Cultural Skills ({cultLeft} pts left)</h3>
-        {/* standard */}
-        <div className="mt-4">
-          <h4 className="font-bold">Standard</h4>
-          {(cultureDef.standardSkills||[]).map(skill=>{
-            const base=baseStandard[skill]||0, v=cultStdAlloc[skill]||0;
-            return (
-              <div key={skill} className="flex items-center my-2">
-                <div className="w-40">{skill} (base {base}%)</div>
-                <input type="range" min={0} max={maxInc} step={1}
-                  value={v} onChange={handleCultStd(skill)} className="flex-1"/>
-                <div className="w-12 text-right">+{v}%</div>
-              </div>
-            );
-          })}
-        </div>
+      {/* STEP 1: CULTURAL */}
+      {step===1 && (
+        <>
+          <h3>Step 1: Cultural Skills ({cultLeft} points left)</h3>
+          {/* standard */}
+          <div className="mt-4">
+            <h4 className="font-bold">Standard</h4>
+            {(cultureDef.standardSkills||[]).map(skill=>{
+              const b=baseStandard[skill]||0, v=cultStdAlloc[skill]||0;
+              return (
+                <div key={skill} className="flex items-center my-2">
+                  <div className="w-40">{skill} (base {b}%)</div>
+                  <input type="range" min={0} max={maxInc} step={1}
+                    value={v} onChange={handleCultStd(skill)} className="flex-1"/>
+                  <div className="w-12 text-right">+{v}%</div>
+                </div>
+              );
+            })}
+          </div>
+          {/* professional */}
+          <div className="mt-6">
+            <h4 className="font-bold">Professional (pick up to 3)</h4>
+            {(cultureDef.professionalSkills||[]).map(skill=>{
+              const b=baseProfessional[skill]||0, sel=cultProfSel.includes(skill), v=cultProfAlloc[skill]||0;
+              return (
+                <div key={skill} className="mb-4">
+                  <label className="inline-flex items-center">
+                    <input type="checkbox" className="mr-2"
+                      checked={sel} onChange={()=>toggleCultProf(skill)} />
+                    {skill} (base {b}%)
+                  </label>
+                  {sel && (
+                    <div className="flex items-center mt-2">
+                      <input type="range" min={0} max={maxInc} step={1}
+                        value={v} onChange={handleCultProf(skill)} className="flex-1"/>
+                      <div className="w-12 text-right">+{v}%</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {/* combat */}
+          <div className="mt-6">
+            <h4 className="font-bold">Combat Styles (pick 1)</h4>
+            {(cultureDef.combatStyles||[]).map(skill=>{
+              const b=baseProfessional[skill]||0, sel=combatSel===skill, v=combatAlloc[skill]||0;
+              return (
+                <div key={skill} className="mb-3">
+                  <label className="inline-flex items-center">
+                    <input type="radio" name="combat" className="mr-2"
+                      checked={sel} onChange={()=>pickCombat(skill)} />
+                    {skill} (base {b}%)
+                  </label>
+                  {sel && (
+                    <div className="flex items-center mt-2">
+                      <input type="range" min={0} max={maxInc} step={1}
+                        value={v} onChange={handleCombat(skill)} className="flex-1"/>
+                      <div className="w-12 text-right">+{v}%</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <button className="btn btn-primary mt-6"
+            disabled={cultLeft>0}
+            onClick={()=>setStep(2)}>
+            Next → Career Skills
+          </button>
+        </>
+      )}
 
-        {/* professional */}
-        <div className="mt-6">
-          <h4 className="font-bold">Professional (pick up to 3)</h4>
-          {(cultureDef.professionalSkills||[]).map(skill=>{
-            const base=baseProfessional[skill]||0, sel=cultProfSel.includes(skill), v=cultProfAlloc[skill]||0;
-            return (
-              <div key={skill} className="mb-4">
-                <label className="inline-flex items-center">
-                  <input type="checkbox" className="mr-2" checked={sel}
-                    onChange={()=>toggleCultProf(skill)} />
-                  {skill} (base {base}%)
-                </label>
-                {sel && (
-                  <div className="flex items-center mt-2">
-                    <input type="range" min={0} max={maxInc} step={1}
-                      value={v} onChange={handleCultProf(skill)} className="flex-1"/>
-                    <div className="w-12 text-right">+{v}%</div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {/* STEP 2: CAREER */}
+      {step===2 && (
+        <>
+          <h3>Step 2: Career Skills ({carLeft} points left)</h3>
+          <div className="mt-4">
+            <h4 className="font-bold">Standard</h4>
+            {(careerDef.standardSkills||[]).map(skill=>{
+              const b=baseStandard[skill]||0, v=carStdAlloc[skill]||0;
+              return (
+                <div key={skill} className="flex items-center my-2">
+                  <div className="w-40">{skill} (base {b}%)</div>
+                  <input type="range" min={0} max={maxInc} step={1}
+                    value={v} onChange={handleCarStd(skill)} className="flex-1"/>
+                  <div className="w-12 text-right">+{v}%</div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-6">
+            <h4 className="font-bold">Professional (pick up to 3)</h4>
+            {(careerDef.professionalSkills||[]).map(skill=>{
+              const b=baseProfessional[skill]||0, sel=carProfSel.includes(skill), v=carProfAlloc[skill]||0;
+              return (
+                <div key={skill} className="mb-4">
+                  <label className="inline-flex items-center">
+                    <input type="checkbox" className="mr-2"
+                      checked={sel} onChange={()=>toggleCarProf(skill)} />
+                    {skill} (base {b}%)
+                  </label>
+                  {sel && (
+                    <div className="flex items-center mt-2">
+                      <input type="range" min={0} max={maxInc} step={1}
+                        value={v} onChange={handleCarProf(skill)} className="flex-1"/>
+                      <div className="w-12 text-right">+{v}%</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <button className="btn btn-primary mt-6"
+            disabled={carLeft>0}
+            onClick={()=>setStep(3)}>
+            Next → Bonus / Hobby
+          </button>
+        </>
+      )}
 
-        {/* combat */}
-        <div className="mt-6">
-          <h4 className="font-bold">Combat Styles (pick 1)</h4>
-          {(cultureDef.combatStyles||[]).map(skill=>{
-            const base=baseProfessional[skill]||0, sel=combatSel===skill, v=combatAlloc[skill]||0;
-            return (
-              <div key={skill} className="mb-3">
-                <label className="inline-flex items-center">
-                  <input type="radio" name="combat" className="mr-2"
-                    checked={sel} onChange={()=>pickCombat(skill)} />
-                  {skill} (base {base}%)
-                </label>
-                {sel && (
-                  <div className="flex items-center mt-2">
-                    <input type="range" min={0} max={maxInc} step={1}
-                      value={v} onChange={handleCombat(skill)} className="flex-1"/>
-                    <div className="w-12 text-right">+{v}%</div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {/* STEP 3: BONUS */}
+      {step===3 && (
+        <>
+          <h3>Step 3: Bonus / Hobby ({bonusLeft} points left)</h3>
+          {/* sliders for all unlocked */}
+          <div className="mt-4 space-y-4">
+            {allAvail.map(skill=>{
+              const b = baseStandard[skill]||baseProfessional[skill]||0;
+              const v = bonusAlloc[skill]||0;
+              return (
+                <div key={skill} className="flex items-center">
+                  <div className="w-40">{skill} (base {b}%)</div>
+                  <input type="range" min={0} max={maxInc} step={1}
+                    value={v} onChange={handleBonus(skill)} className="flex-1"/>
+                  <div className="w-12 text-right">+{v}%</div>
+                </div>
+              );
+            })}
+          </div>
 
-        <button className="btn btn-primary mt-6"
-          disabled={cultLeft>0}
-          onClick={()=>setStep(2)}>
-          Next: Career Skills
-        </button>
-      </>}
+          {/* add new hobby */}
+          <div className="mt-6">
+            <label className="block mb-2 font-medium">Add Hobby Skill</label>
+            <select className="form-control"
+              onChange={e=>{
+                const s=e.target.value;
+                if(s && !bonusSel.includes(s)){
+                  setBonusSel(bs=>[...bs,s]);
+                }
+              }} defaultValue="">
+              <option value="" disabled>-- pick a skill --</option>
+              {allAvail.map(s=><option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
 
-      {step===2 && <>
-        <h3>Step 2: Career Skills ({carLeft} pts left)</h3>
-        {/* standard */}
-        <div className="mt-4">
-          <h4 className="font-bold">Standard</h4>
-          {(careerDef.standardSkills||[]).map(skill=>{
-            const base=baseStandard[skill]||0, v=carStdAlloc[skill]||0;
-            return (
-              <div key={skill} className="flex items-center my-2">
-                <div className="w-40">{skill} (base {base}%)</div>
-                <input type="range" min={0} max={maxInc} step={1}
-                  value={v} onChange={handleCarStd(skill)} className="flex-1"/>
-                <div className="w-12 text-right">+{v}%</div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* professional */}
-        <div className="mt-6">
-          <h4 className="font-bold">Professional (pick up to 3)</h4>
-          {(careerDef.professionalSkills||[]).map(skill=>{
-            const base=baseProfessional[skill]||0, sel=carProfSel.includes(skill), v=carProfAlloc[skill]||0;
-            return (
-              <div key={skill} className="mb-4">
-                <label className="inline-flex items-center">
-                  <input type="checkbox" className="mr-2"
-                    checked={sel} onChange={()=>toggleCarProf(skill)} />
-                  {skill} (base {base}%)
-                </label>
-                {sel && (
-                  <div className="flex items-center mt-2">
-                    <input type="range" min={0} max={maxInc} step={1}
-                      value={v} onChange={handleCarProf(skill)} className="flex-1"/>
-                    <div className="w-12 text-right">+{v}%</div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <button className="btn btn-primary mt-6"
-          disabled={carLeft>0}
-          onClick={()=>setStep(3)}>
-          Next: Bonus / Hobby
-        </button>
-      </>}
-
-      {step===3 && <>
-        <h3>Step 3: Bonus / Hobby ({bonusLeft} pts left)</h3>
-        <div className="mt-4">
-          <label className="block mb-2">Add Hobby Skill</label>
-          <select className="form-control mb-4"
-            onChange={e=>{
-              const s=e.target.value;
-              if(s && !bonusSel.includes(s)){
-                setBonusSel(bs=>[...bs,s]);
-              }
-            }} defaultValue="">
-            <option value="" disabled>-- pick a skill --</option>
-            {allAvail.map(s=> <option key={s} value={s}>{s}</option>)}
-          </select>
-
-          {bonusSel.map(skill=>{
-            const base=(baseStandard[skill]||baseProfessional[skill]||0);
-            const v=bonusAlloc[skill]||0;
-            return (
-              <div key={skill} className="flex items-center my-2">
-                <div className="w-40">{skill} (base {base}%)</div>
-                <input type="range" min={0} max={maxInc} step={1}
-                  value={v} onChange={handleBonus(skill)} className="flex-1"/>
-                <div className="w-12 text-right">+{v}%</div>
-              </div>
-            );
-          })}
-        </div>
-
-        <button className="btn btn-success mt-6"
-          disabled={bonusLeft>0}
-          onClick={()=>setStep(4)}>
-          Done
-        </button>
-      </>}
+          <button className="btn btn-success mt-6"
+            disabled={bonusLeft>0}
+            onClick={()=>setStep(4)}>
+            Done
+          </button>
+        </>
+      )}
     </StepWrapper>
   );
 }
