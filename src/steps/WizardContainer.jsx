@@ -1,26 +1,25 @@
 // src/steps/WizardContainer.jsx
 import React, { useState } from 'react';
-import ConceptStep       from './ConceptStep';
-import AttributesStep    from './AttributesStep';
-import SkillsStep        from './SkillsStep';
-import EquipmentStep     from './EquipmentStep';
-import ReviewStep        from './ReviewStep';
 import './WizardContainer.css';
+
+import ConceptStep from './ConceptStep';
+import { AttributesStep } from './AttributesStep';
+import SkillsStep from './SkillsStep';
+import EquipmentStep from './EquipmentStep';
+import { ReviewStep } from './ReviewStep';
 
 export default function WizardContainer() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData]       = useState({});
 
-  // unified change handler for both native events and (name, value) pairs
+  // Unified change handler for both native events and (name, value)
   const handleChange = (...args) => {
     let name, value;
     if (args[0] && args[0].target) {
       ({ name, value } = args[0].target);
     } else if (args.length === 2) {
       [name, value] = args;
-    } else {
-      return;
-    }
+    } else return;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -49,7 +48,7 @@ export default function WizardContainer() {
 
   return (
     <div className="wizard-panel">
-      {/* tabs nav */}
+      {/* Tabs */}
       <nav className="wizard-nav">
         {steps.map((step, idx) => (
           <button
@@ -62,29 +61,28 @@ export default function WizardContainer() {
         ))}
       </nav>
 
-      {/* step content */}
+      {/* Content */}
       <div className="wizard-content">
         {steps[currentStep].component}
       </div>
 
-      {/* footer with Prev / Next */}
+      {/* Footer */}
       <footer className="wizard-footer">
-        {currentStep > 0 && (
+        {currentStep > 0 ? (
           <button
+            onClick={() => setCurrentStep(n => Math.max(n - 1, 0))}
             className="btn btn-secondary"
-            onClick={() => setCurrentStep(n => n - 1)}
           >
             Previous
           </button>
-        )}
-        {currentStep < steps.length - 1 && (
-          <button
-            className="btn btn-primary"
-            onClick={() => setCurrentStep(n => n + 1)}
-          >
-            Next
-          </button>
-        )}
+        ) : <div />}
+
+        <button
+          onClick={() => setCurrentStep(n => Math.min(n + 1, steps.length - 1))}
+          className="btn btn-primary"
+        >
+          {currentStep < steps.length - 1 ? 'Next' : 'Finish'}
+        </button>
       </footer>
     </div>
   );
