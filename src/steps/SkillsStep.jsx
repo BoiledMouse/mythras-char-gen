@@ -4,26 +4,26 @@ import StepWrapper from '../components/StepWrapper';
 import cultures from '../data/cultures.json';
 import careers from '../data/careers.json';
 import skillsData from '../data/skills.json';
+import { SkillsStep } from './steps/SkillsStep';
 
 export function SkillsStep({ formData, onChange }) {
-  // 0) read culture, career and age from the wizard's formData
+  // pull culture, career and age from the wizard's formData
   const { culture: cultKey = '', career: careerKey = '', age: ageRaw = '' } = formData;
   const age = parseInt(ageRaw, 10) || 0;
+  const cultureDef = cultures[cultKey]  || {};
+  const careerDef  = careers[careerKey] || {};
 
-  const cultureDef = cultures[cultKey]    || {};
-  const careerDef  = careers[careerKey]   || {};
-
-  // 1) Age buckets for Bonus Pool & Max Increment
+  // Age buckets for bonus pool & max per skill
   const ageBuckets = [
-    { max: 16,      bonus: 100, maxInc: 10, rolls: 0 },
-    { max: 27,      bonus: 150, maxInc: 15, rolls: 1 },
-    { max: 43,      bonus: 200, maxInc: 20, rolls: 2 },
-    { max: 64,      bonus: 250, maxInc: 25, rolls: 3 },
-    { max: Infinity, bonus: 300, maxInc: 30, rolls: 4 },
+    { max: 16,      bonus: 100, maxInc: 10 },
+    { max: 27,      bonus: 150, maxInc: 15 },
+    { max: 43,      bonus: 200, maxInc: 20 },
+    { max: 64,      bonus: 250, maxInc: 25 },
+    { max: Infinity, bonus: 300, maxInc: 30 },
   ];
-  const { bonus: initialBonusPool, maxInc } = ageBuckets.find(b => age <= b.max);
+  const { bonus: initialBonus, maxInc } = ageBuckets.find(b => age <= b.max);
 
-  // 2) computeBase helper
+  // Compute base skill% from attribute expressions (e.g. "STR+DEX")
   const attrs = formData;
   const computeBase = expr => {
     const parts = expr.split(/\s*([+x])\s*/).filter(Boolean);
@@ -36,7 +36,7 @@ export function SkillsStep({ formData, onChange }) {
     return val;
   };
 
-  // 3) Build base tables
+  // Build base tables
   const baseStandard = {};
   skillsData.standard.forEach(({ name, base }) => {
     let b = computeBase(base);
@@ -48,20 +48,21 @@ export function SkillsStep({ formData, onChange }) {
     baseProfessional[name] = computeBase(base);
   });
 
-  // 4) Which skills apply?
+  // Skills lists from culture & career definitions
   const cultStd    = cultureDef.standardSkills     || [];
   const cultProf   = cultureDef.professionalSkills || [];
   const cultCombat = cultureDef.combatStyles       || [];
   const carStd     = careerDef.standardSkills      || [];
   const carProf    = careerDef.professionalSkills  || [];
 
-  // 5) State: three pools + allocations + phase
+  // Hard‑coded cultural & career pools
   const CULT_POOL   = 100;
   const CAREER_POOL = 100;
 
+  // State: pools, allocations and current phase
   const [cultLeft,   setCultLeft  ] = useState(CULT_POOL);
   const [careLeft,   setCareLeft  ] = useState(CAREER_POOL);
-  const [bonusLeft,  setBonusLeft ] = useState(initialBonusPool);
+  const [bonusLeft,  setBonusLeft ] = useState(initialBonus);
 
   const [cultStdAlloc,    setCultStdAlloc   ] = useState({});
   const [cultProfAlloc,   setCultProfAlloc  ] = useState({});
@@ -75,7 +76,7 @@ export function SkillsStep({ formData, onChange }) {
   // sum helper
   const sum = o => Object.values(o).reduce((a,b)=>(a + (b||0)),0);
 
-  // 6) Persist into formData.skills when all pools = 0
+  // Persist final skills when all pools are spent
   useEffect(() => {
     if (cultLeft===0 && careLeft===0 && bonusLeft===0) {
       const final = { ...baseStandard, ...baseProfessional };
@@ -89,11 +90,11 @@ export function SkillsStep({ formData, onChange }) {
     }
   }, [cultLeft, careLeft, bonusLeft]);
 
-  // 7a) slider handler
+  // Slider handler (clamped to [0..maxInc], snap 1–4 → 0)
   const handleSlider = (skill, allocObj, setter, poolVal, setPool) => e => {
-    let v = parseInt(e.target.value,10) || 0;
-    if (v>0 && v<5) v = 0;                // snap 1–4 → 0
-    v = Math.min(maxInc, Math.max(0, v)); // clamp
+    let v = parseInt(e.target.value,10)||0;
+    if (v>0 && v<5) v = 0;
+    v = Math.min(maxInc, Math.max(0, v));
     const prev = allocObj[skill]||0, delta = v - prev;
     if (delta <= poolVal) {
       setter({ ...allocObj, [skill]: v });
@@ -101,14 +102,14 @@ export function SkillsStep({ formData, onChange }) {
     }
   };
 
-  // 7b) checkbox handler (5% increments)
+  // Checkbox handler for 5% lumps
   const handleCheckbox = (skill, allocObj, setter, poolVal, setPool) => e => {
     const checked = e.target.checked;
     const prev = allocObj[skill] || 0;
-    if (checked && poolVal >= 5) {
+    if (checked && poolVal>=5) {
       setter({ ...allocObj, [skill]: 5 });
       setPool(pl => pl - 5);
-    } else if (!checked && prev > 0) {
+    } else if (!checked && prev>0) {
       const { [skill]:_, ...rest } = allocObj;
       setter(rest);
       setPool(pl => pl + prev);
@@ -119,22 +120,21 @@ export function SkillsStep({ formData, onChange }) {
     <StepWrapper title="Skills Allocation">
       <p>
         Age: <strong>{age}</strong> ⇒&nbsp;
-        Bonus Pool: <strong>{initialBonusPool}</strong> pts,&nbsp;
+        Bonus Pool: <strong>{initialBonus}</strong> pts,&nbsp;
         Max per skill: <strong>+{maxInc}</strong>
       </p>
 
       {phase===1 && (
         <>
           <h3>Cultural Skills ({CULT_POOL} pts)</h3>
-          <p>Points left: {cultLeft}</p>
+          <p>Points left: <strong>{cultLeft}</strong></p>
 
           <h4>Standard</h4>
           {cultStd.map(s => (
             <div key={s} className="flex items-center mb-2">
               <div className="w-48">{s} (base {baseStandard[s]}%)</div>
               <input
-                type="range"
-                min={0} max={maxInc} step={1}
+                type="range" min={0} max={maxInc} step={1}
                 value={cultStdAlloc[s]||0}
                 onChange={handleSlider(s, cultStdAlloc, setCultStdAlloc, cultLeft, setCultLeft)}
                 className="flex-1 mx-2"
@@ -161,8 +161,7 @@ export function SkillsStep({ formData, onChange }) {
             <div key={s} className="flex items-center mb-2">
               <div className="w-48">{s}</div>
               <input
-                type="range"
-                min={0} max={maxInc} step={1}
+                type="range" min={0} max={maxInc} step={1}
                 value={cultCombatAlloc[s]||0}
                 onChange={handleSlider(s, cultCombatAlloc, setCultCombatAlloc, cultLeft, setCultLeft)}
                 className="flex-1 mx-2"
@@ -184,15 +183,14 @@ export function SkillsStep({ formData, onChange }) {
       {phase===2 && (
         <>
           <h3>Career Skills ({CAREER_POOL} pts)</h3>
-          <p>Points left: {careLeft}</p>
+          <p>Points left: <strong>{careLeft}</strong></p>
 
           <h4>Standard</h4>
           {carStd.map(s => (
             <div key={s} className="flex items-center mb-2">
               <div className="w-48">{s} (base {baseStandard[s]}%)</div>
               <input
-                type="range"
-                min={0} max={maxInc} step={1}
+                type="range" min={0} max={maxInc} step={1}
                 value={carStdAlloc[s]||0}
                 onChange={handleSlider(s, carStdAlloc, setCarStdAlloc, careLeft, setCareLeft)}
                 className="flex-1 mx-2"
@@ -215,8 +213,14 @@ export function SkillsStep({ formData, onChange }) {
           ))}
 
           <div className="mt-4 flex justify-between">
-            <button onClick={()=>setPhase(1)} className="btn btn-secondary">Back</button>
-            <button onClick={()=>setPhase(3)} disabled={careLeft>0} className="btn btn-primary">
+            <button onClick={()=>setPhase(1)} className="btn btn-secondary">
+              Back
+            </button>
+            <button
+              onClick={()=>setPhase(3)}
+              disabled={careLeft>0}
+              className="btn btn-primary"
+            >
               Next: Bonus
             </button>
           </div>
@@ -225,10 +229,10 @@ export function SkillsStep({ formData, onChange }) {
 
       {phase===3 && (
         <>
-          <h3>Bonus / Hobby Skills ({initialBonusPool} pts)</h3>
-          <p>Points left: {bonusLeft}</p>
+          <h3>Bonus / Hobby Skills ({initialBonus} pts)</h3>
+          <p>Points left: <strong>{bonusLeft}</strong></p>
 
-          <label className="font-medium block mb-2">Add a skill:</label>
+          <label className="block mb-2 font-medium">Add a skill:</label>
           <select
             className="form-control mb-4"
             onChange={e => {
@@ -239,15 +243,14 @@ export function SkillsStep({ formData, onChange }) {
             <option value="">-- pick a skill --</option>
             {[...cultStd, ...cultProf, ...carStd, ...carProf]
               .filter((v,i,a)=>v && a.indexOf(v)===i)
-              .map(s=> <option key={s} value={s}>{s}</option>)}
+              .map(s => <option key={s} value={s}>{s}</option>)}
           </select>
 
-          {bonusSel.map(s=>(
+          {bonusSel.map(s => (
             <div key={s} className="flex items-center mb-2">
               <div className="w-48">{s} (base {baseStandard[s]||baseProfessional[s]}%)</div>
               <input
-                type="range"
-                min={0} max={maxInc} step={1}
+                type="range" min={0} max={maxInc} step={1}
                 value={bonusAlloc[s]||0}
                 onChange={handleSlider(s, bonusAlloc, setBonusAlloc, bonusLeft, setBonusLeft)}
                 className="flex-1 mx-2"
@@ -257,8 +260,12 @@ export function SkillsStep({ formData, onChange }) {
           ))}
 
           <div className="mt-4 flex justify-between">
-            <button onClick={()=>setPhase(2)} className="btn btn-secondary">Back</button>
-            <button disabled={bonusLeft>0} className="btn btn-success">Finish</button>
+            <button onClick={()=>setPhase(2)} className="btn btn-secondary">
+              Back
+            </button>
+            <button disabled={bonusLeft>0} className="btn btn-success">
+              Finish
+            </button>
           </div>
         </>
       )}
