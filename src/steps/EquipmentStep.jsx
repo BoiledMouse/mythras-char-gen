@@ -1,41 +1,46 @@
-// src/steps/EquipmentStep.jsx
 import React, { useState, useEffect } from 'react';
+import { useCharacter } from '../context/characterContext';
 import equipmentList from '../data/equipment.json';
 import StepWrapper from '../components/StepWrapper';
 
 export default function EquipmentStep({ formData = {}, onChange }) {
-  // 1) Pull in startingSilver & saved allocations from formData
+  const { character, updateCharacter } = useCharacter();
   const {
-    startingSilver = 0,
-    equipmentAlloc = {},
+    startingSilver = character.startingSilver || 0,
+    equipmentAlloc = character.equipmentAlloc || {},
   } = formData;
 
-  // 2) Local state mirrors formData, so we can edit before persisting
+  // Local state mirrors formData
   const [silver, setSilver] = useState(startingSilver);
   const [quantities, setQuantities] = useState(equipmentAlloc);
 
-  // 3) Sync back to formData whenever silver or quantities change
+  // Sync silver changes to formData and context
   useEffect(() => {
     onChange('startingSilver', silver);
+    updateCharacter({ startingSilver: silver });
   }, [silver]);
 
+  // Sync equipment quantities to formData and context
   useEffect(() => {
     onChange('equipmentAlloc', quantities);
+    updateCharacter({ equipmentAlloc: quantities });
   }, [quantities]);
 
-  // 4) If user changes startingSilver upstream (e.g. re‑roll in ConceptStep), reset local
+  // If concept re-roll changes startingSilver, reset local
   useEffect(() => {
-    setSilver(startingSilver);
-  }, [startingSilver]);
+    setSilver(character.startingSilver || 0);
+  }, [character.startingSilver]);
 
-  // helper to adjust quantity
   const handleQtyChange = (name, val) => {
     let v = parseInt(val, 10);
     if (isNaN(v) || v < 0) v = 0;
-    setQuantities(prev => ({ ...prev, [name]: v }));
+    setQuantities(prev => {
+      const next = { ...prev, [name]: v };
+      return next;
+    });
   };
 
-  // 5) Compute totals
+  // Compute totals
   const totalSpent = Object.entries(quantities).reduce(
     (sum, [name, qty]) => {
       const item = equipmentList.find(e => e.name === name);
@@ -86,15 +91,11 @@ export default function EquipmentStep({ formData = {}, onChange }) {
                           type="number"
                           min={0}
                           value={qty}
-                          onChange={e =>
-                            handleQtyChange(item.name, e.target.value)
-                          }
+                          onChange={e => handleQtyChange(item.name, e.target.value)}
                           className="w-16 border-gray-300 rounded text-right"
                         />
                       </td>
-                      <td className="px-2 py-1 text-right">
-                        {lineTotal}
-                      </td>
+                      <td className="px-2 py-1 text-right">{lineTotal}</td>
                     </tr>
                   );
                 })}
@@ -107,11 +108,11 @@ export default function EquipmentStep({ formData = {}, onChange }) {
         <div className="pt-4 border-t">
           <div>
             <span className="font-medium">Total Spent: </span>
-            {totalSpent} SP
+            {totalSpent} SP
           </div>
           <div>
             <span className="font-medium">Silver Remaining: </span>
-            {moneyLeft} SP
+            {moneyLeft} SP
           </div>
         </div>
       </div>
