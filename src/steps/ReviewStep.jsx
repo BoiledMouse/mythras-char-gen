@@ -246,7 +246,7 @@ export function ReviewStep() {
                 ))
               )}
             </div>
-            <h3 className="font-semibold mb-2">Professional Skills</nenerate>
+            <h3 className="font-semibold mb-2">Professional Skills</h3>
             <div className="grid grid-cols-3 gap-4 mb-6">
               {!professionalDisplayed.length ? (
                 <p className="text-sm text-gray-500">None learned</p>
