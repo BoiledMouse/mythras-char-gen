@@ -1,361 +1,211 @@
-// src/steps/SkillsStep.jsx
+// src/steps/AttributesStep.jsx
 import React, { useState, useEffect } from 'react';
 import { useCharacter } from '../context/characterContext';
-import cultures from '../data/cultures.json';
-import careers from '../data/careers.json';
-import skillsData from '../data/skills.json';
+import apTable from '../data/tables/actionPoints.json';
+import dmgTable from '../data/tables/damageModifiers.json';
+import expTable from '../data/tables/experienceModifiers.json';
+import healTable from '../data/tables/healingRate.json';
+import luckTable from '../data/tables/luckPoints.json';
 import StepWrapper from '../components/StepWrapper';
 
-export default function SkillsStep() {
+export default function AttributesStep() {
   const { character, updateCharacter } = useCharacter();
-  const {
-    STR = 0,
-    DEX = 0,
-    INT = 0,
-    CON = 0,
-    POW = 0,
-    CHA = 0,
-    SIZ = 0,
-    culture: cultKey = '',
-    career: careerKey = '',
-    age = 0
-  } = character;
-
-  const cultureDef = cultures[cultKey] || {};
-  const careerDef = careers[careerKey] || {};
-
-  // 1) Age‐based bonus bucket
-  const ageBuckets = [
-    { max: 16, bonus: 100, maxInc: 10 },
-    { max: 27, bonus: 150, maxInc: 15 },
-    { max: 43, bonus: 200, maxInc: 20 },
-    { max: 64, bonus: 250, maxInc: 25 },
-    { max: Infinity, bonus: 300, maxInc: 30 },
-  ];
-  const { bonus: initialBonusPool, maxInc } = ageBuckets.find(b => age <= b.max);
-
-  // 2) Compute base % from an expression like "STR+DEX"
-  const attrs = { STR, DEX, INT, CON, POW, CHA, SIZ };
-  const computeBase = expr => {
-    const parts = expr.split(/\s*([+x])\s*/).filter(Boolean);
-    let val = parseInt(attrs[parts[0]]||0, 10);
-    for (let i = 1; i < parts.length; i += 2) {
-      const op = parts[i], tok = parts[i+1];
-      const v = /^\d+$/.test(tok) ? +tok : +attrs[tok]||0;
-      val = op === 'x' ? val * v : val + v;
-    }
-    return val;
+  const [method, setMethod] = useState('roll');
+  const [maxPoints, setMaxPoints] = useState(80);
+  const initialAlloc = {
+    STR: character.STR || 3,
+    CON: character.CON || 3,
+    DEX: character.DEX || 3,
+    POW: character.POW || 3,
+    CHA: character.CHA || 3,
+    INT: character.INT || 8,
+    SIZ: character.SIZ || 8,
   };
+  const [alloc, setAlloc] = useState(initialAlloc);
+  const [rolls, setRolls] = useState({});
 
-  // 3) Build base tables
-  const baseStandard = {};
-  skillsData.standard.forEach(({ name, base }) => {
-    let b = computeBase(base);
-    if (name === 'Customs' || name === 'Native Tongue') b += 40;
-    baseStandard[name] = b;
-  });
-  const baseProfessional = {};
-  skillsData.professional.forEach(({ name, base }) => {
-    baseProfessional[name] = computeBase(base);
-  });
-
-  // 4) Which skills apply this step
-  const cultStd  = cultureDef.standardSkills    || [];
-  const cultProf = cultureDef.professionalSkills || [];
-  const carStd   = careerDef.standardSkills     || [];
-  const carProf  = careerDef.professionalSkills  || [];
-
-  // 5) Pools and allocations
-  const CULTURAL_POOL = 100;
-  const CAREER_POOL  = 100;
-
-  const [phase,       setPhase      ] = useState(1);
-  const [cultStdAlloc,   setCultStdAlloc] = useState({});
-  const [cultProfSel,    setCultProfSel ] = useState([]);
-  const [cultProfAlloc,  setCultProfAlloc] = useState({});
-  const [cultCombatSel,  setCultCombatSel] = useState('');
-  const [cultCombatAlloc, setCultCombatAlloc] = useState(0);
-
-  const [carStdAlloc,    setCarStdAlloc ] = useState({});
-  const [carProfSel,     setCarProfSel  ] = useState([]);
-  const [carProfAlloc,   setCarProfAlloc] = useState({});
-
-  const [bonusAlloc,     setBonusAlloc  ] = useState({});
-  const [bonusPoolLeft,  setBonusPoolLeft] = useState(initialBonusPool);
-  const [bonusSel,       setBonusSel    ] = useState([]);
-
-  const sum = o => Object.values(o).reduce((a,b)=>(a+(b||0)),0);
-
-  // 6) Persist when hitting “Finish”
+  // Whenever the local alloc changes, push it into context
   useEffect(() => {
-    if (phase > 3) {
-      const final = { ...baseStandard, ...baseProfessional };
-      cultStd.forEach(s => final[s] += cultStdAlloc[s] || 0);
-      cultProfSel.forEach(s => final[s] += cultProfAlloc[s] || 0);
-      if (cultCombatSel) final[cultCombatSel] += cultCombatAlloc;
-      carStd.forEach(s => final[s] += carStdAlloc[s] || 0);
-      carProfSel.forEach(s => final[s] += carProfAlloc[s] || 0);
-      bonusSel.forEach(s => final[s] += bonusAlloc[s] || 0);
-      updateCharacter({ skills: final });
-    }
-  }, [phase]);
+    updateCharacter(alloc);
+  }, [alloc]);
 
-  // Handlers for Cultural & Career sliders
-  const handleSlider = (setter, allocObj, key, poolLeft, setPoolLeft, limit) => e => {
-    let v = parseInt(e.target.value,10) || 0;
-    v = Math.max(0, Math.min(limit, v));
-    const prev = allocObj[key] || 0, delta = v - prev;
-    if (delta <= poolLeft) {
-      setter({ ...allocObj, [key]: v });
-      setPoolLeft(pl => pl - delta);
+  const sum = vals => Object.values(vals).reduce((a, b) => a + b, 0);
+  const pointsLeft = maxPoints - sum(alloc);
+
+  // Derived attributes
+  const actionPoints = (() => {
+    const t = alloc.INT + alloc.DEX;
+    let e = apTable.find(r => t >= r.min && t <= r.max);
+    if (!e) {
+      const l = apTable[apTable.length - 1];
+      return l.points + Math.floor((t - l.max) / 12);
     }
+    return e.points;
+  })();
+
+  const damageMod =
+    dmgTable.find(r => alloc.STR + alloc.SIZ >= r.min && alloc.STR + alloc.SIZ <= r.max)
+      ?.modifier || '';
+
+  const experienceMod = (() => {
+    let e = expTable.find(r => alloc.CHA >= r.min && alloc.CHA <= r.max);
+    if (!e) {
+      const l = expTable[expTable.length - 1];
+      return l.modifier + Math.floor((alloc.CHA - l.max) / 6);
+    }
+    return e.modifier;
+  })();
+
+  const healingRate = (() => {
+    let e = healTable.find(r => alloc.CON >= r.min && alloc.CON <= r.max);
+    if (!e) {
+      const l = healTable[healTable.length - 1];
+      return l.rate + Math.floor((alloc.CON - l.max) / 6);
+    }
+    return e.rate;
+  })();
+
+  const luckPoints = (() => {
+    let e = luckTable.find(r => alloc.POW >= r.min && alloc.POW <= r.max);
+    if (!e) {
+      const l = luckTable[luckTable.length - 1];
+      return l.points + Math.floor((alloc.POW - l.max) / 6);
+    }
+    return e.points;
+  })();
+
+  const initiative  = Math.floor((alloc.INT + alloc.DEX) / 2);
+  const magicPoints = alloc.POW;
+  const hpPerLoc    = alloc.CON + alloc.SIZ;
+  const movement    = '6m';
+
+  // Dice helpers
+  const rollDie   = () => Math.ceil(Math.random() * 6);
+  const roll3d6   = () => [rollDie(), rollDie(), rollDie()];
+  const roll2d6p6 = () => [rollDie(), rollDie()].concat([6]);
+  const rollAttributes = () => {
+    const newRolls = {
+      STR: roll3d6(),
+      CON: roll3d6(),
+      DEX: roll3d6(),
+      POW: roll3d6(),
+      CHA: roll3d6(),
+      INT: roll2d6p6(),
+      SIZ: roll2d6p6(),
+    };
+    const newAlloc = {};
+    Object.entries(newRolls).forEach(([k, arr]) => {
+      newAlloc[k] = arr.reduce((a, b) => a + b, 0);
+    });
+    setRolls(newRolls);
+    setAlloc(newAlloc);
   };
 
-  // Bonus slider
-  const handleBonus = skill => e => {
-    let v = parseInt(e.target.value,10) || 0;
-    if (v > 0 && v < 5) v = 0;        // snap 1–4 ⇒ 0
-    v = Math.max(0, Math.min(maxInc, v));
-    const prev = bonusAlloc[skill]||0, delta = v - prev;
-    if (delta <= bonusPoolLeft) {
-      setBonusAlloc(a => ({ ...a, [skill]: v }));
-      setBonusPoolLeft(pl => pl - delta);
-    }
+  const handleChange = (attr, delta) => {
+    setAlloc(prev => {
+      const min = ['INT', 'SIZ'].includes(attr) ? 8 : 3;
+      let v = (prev[attr] || 0) + delta;
+      if (v < min) v = min;
+      if (v > 18) v = 18;
+      if (v - prev[attr] > pointsLeft) v = prev[attr];
+      return { ...prev, [attr]: v };
+    });
   };
 
   return (
-    <StepWrapper title="Skills">
-      <p>Age: <strong>{age}</strong></p>
-      <p>Cultural Pool: <strong>{CULTURAL_POOL}</strong> pts, Career Pool: <strong>{CAREER_POOL}</strong> pts, Bonus Pool: <strong>{initialBonusPool}</strong> pts, Max per skill: +{maxInc}%</p>
+    <StepWrapper title="Attributes">
+      {/* Method toggle */}
+      <div className="space-y-6">
+        <div>
+          <label className="inline-flex items-center">
+            <input
+              type="radio"
+              checked={method === 'roll'}
+              onChange={() => setMethod('roll')}
+              className="mr-2"
+            />
+            Roll Attributes
+          </label>
+          <label className="inline-flex items-center ml-6">
+            <input
+              type="radio"
+              checked={method === 'point'}
+              onChange={() => setMethod('point')}
+              className="mr-2"
+            />
+            Point Buy
+          </label>
 
-      {phase === 1 && (
-        <>
-          <h3>Cultural Skills (100 pts)</h3>
-          <p>Points left: <strong>{CULTURAL_POOL - sum(cultStdAlloc) - sum(cultProfAlloc) - cultCombatAlloc}</strong></p>
-          <h4>Standard (culture)</h4>
-          {cultStd.map(s => (
-            <div key={s} className="flex items-center mb-2">
-              <span className="w-40">{s} (Base {baseStandard[s]}%)</span>
+          {method === 'point' && (
+            <div className="mt-2">
+              <label>Total Points:</label>
               <input
-                type="range"
-                min={0} max={15} step={1}
-                value={cultStdAlloc[s]||0}
-                onChange={handleSlider(setCultStdAlloc, cultStdAlloc, s,
-                  CULTURAL_POOL - sum(cultStdAlloc) - sum(cultProfAlloc) - cultCombatAlloc,
-                  v=>v, 15)}
-                className="flex-1 mx-2"
+                type="number"
+                min={0}
+                value={maxPoints}
+                onChange={e => setMaxPoints(+e.target.value || 0)}
+                className="form-control w-20 ml-2 inline-block"
               />
-              <span className="w-12 text-right">+{cultStdAlloc[s]||0}</span>
-            </div>
-          ))}
-
-          <h4>Professional (max 3)</h4>
-          {cultProf.map(s => (
-            <label key={s} className="inline-flex items-center mr-4">
-              <input
-                type="checkbox"
-                checked={cultProfSel.includes(s)}
-                onChange={() => {
-                  setCultProfSel(sel =>
-                    sel.includes(s)
-                      ? sel.filter(x=>x!==s)
-                      : sel.length < 3
-                        ? [...sel,s] : sel
-                  );
-                }}
-                className="mr-1"
-              />
-              {s}
-            </label>
-          ))}
-          {cultProfSel.map(s => (
-            <div key={s} className="flex items-center mb-2">
-              <span className="w-40">{s} (Base {baseProfessional[s]}%)</span>
-              <input
-                type="range"
-                min={0} max={15} step={1}
-                value={cultProfAlloc[s]||0}
-                onChange={handleSlider(setCultProfAlloc, cultProfAlloc, s,
-                  CULTURAL_POOL - sum(cultStdAlloc) - sum(cultProfAlloc) - cultCombatAlloc,
-                  v=>v, 15)}
-                className="flex-1 mx-2"
-              />
-              <span className="w-12 text-right">+{cultProfAlloc[s]||0}</span>
-            </div>
-          ))}
-
-          <h4>Combat Style (choose one)</h4>
-          {cultureDef.combatStyles?.map(cs => (
-            <label key={cs} className="inline-flex items-center mr-4">
-              <input
-                type="radio"
-                name="combat"
-                checked={cultCombatSel === cs}
-                onChange={()=> setCultCombatSel(cs)}
-                className="mr-1"
-              />
-              {cs}
-            </label>
-          ))}
-          {cultCombatSel && (
-            <div className="flex items-center mb-4">
-              <span className="w-40">{cultCombatSel} (Base {baseProfessional[cultCombatSel]}%)</span>
-              <input
-                type="range"
-                min={0} max={15} step={1}
-                value={cultCombatAlloc}
-                onChange={handleSlider(setCultCombatAlloc, { [cultCombatSel]: cultCombatAlloc }, cultCombatSel,
-                  CULTURAL_POOL - sum(cultStdAlloc) - sum(cultProfAlloc) - cultCombatAlloc,
-                  v=>v, 15)}
-                className="flex-1 mx-2"
-              />
-              <span className="w-12 text-right">+{cultCombatAlloc}</span>
+              <span className="ml-4">Left: {pointsLeft}</span>
             </div>
           )}
-
-          <button
-            onClick={()=> setPhase(2)}
-            className="px-4 py-2 bg-gold rounded text-white"
-          >
-            Next: Career
-          </button>
-        </>
-      )}
-
-      {phase === 2 && (
-        <>
-          <h3>Career Skills (100 pts)</h3>
-          <p>Points left: <strong>{CAREER_POOL - sum(carStdAlloc) - sum(carProfAlloc)}</strong></p>
-          <h4>Standard (career)</h4>
-          {carStd.map(s => (
-            <div key={s} className="flex items-center mb-2">
-              <span className="w-40">{s} (Base {baseStandard[s]}%)</span>
-              <input
-                type="range"
-                min={0} max={15} step={1}
-                value={carStdAlloc[s]||0}
-                onChange={handleSlider(setCarStdAlloc, carStdAlloc, s,
-                  CAREER_POOL - sum(carStdAlloc) - sum(carProfAlloc),
-                  v=>v, 15)}
-                className="flex-1 mx-2"
-              />
-              <span className="w-12 text-right">+{carStdAlloc[s]||0}</span>
-            </div>
-          ))}
-
-          <h4>Professional (max 3)</h4>
-          {carProf.map(s => (
-            <label key={s} className="inline-flex items-center mr-4">
-              <input
-                type="checkbox"
-                checked={carProfSel.includes(s)}
-                onChange={() => {
-                  setCarProfSel(sel =>
-                    sel.includes(s)
-                      ? sel.filter(x=>x!==s)
-                      : sel.length < 3 ? [...sel,s] : sel
-                  );
-                }}
-                className="mr-1"
-              />
-              {s}
-            </label>
-          ))}
-          {carProfSel.map(s => (
-            <div key={s} className="flex items-center mb-2">
-              <span className="w-40">{s} (Base {baseProfessional[s]}%)</span>
-              <input
-                type="range"
-                min={0} max={15} step={1}
-                value={carProfAlloc[s]||0}
-                onChange={handleSlider(setCarProfAlloc, carProfAlloc, s,
-                  CAREER_POOL - sum(carStdAlloc) - sum(carProfAlloc),
-                  v=>v, 15)}
-                className="flex-1 mx-2"
-              />
-              <span className="w-12 text-right">+{carProfAlloc[s]||0}</span>
-            </div>
-          ))}
-
-          <div className="flex justify-between mt-4">
-            <button
-              onClick={()=> setPhase(1)}
-              className="px-4 py-2 bg-gray-300 rounded"
-            >
-              Back
-            </button>
-            <button
-              onClick={()=> setPhase(3)}
-              className="px-4 py-2 bg-gold rounded text-white"
-            >
-              Next: Bonus
-            </button>
-          </div>
-        </>
-      )}
-
-      {phase === 3 && (
-        <>
-          <h3>Bonus Skills (free to pick any culture/career skill + one hobby)</h3>
-          <p>Points left: <strong>{bonusPoolLeft}</strong></p>
-
-          <h4>Add a Hobby Skill</h4>
-          <select
-            className="border rounded p-2 mb-4 w-full"
-            onChange={e => {
-              const s = e.target.value;
-              if (s && !bonusSel.includes(s)) setBonusSel(sel => [...sel, s]);
-            }}
-          >
-            <option value="">-- pick a hobby --</option>
-            {[...new Set([...cultStd, ...cultProf, ...carStd, ...carProf])].map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-
-          {bonusSel.map(s => (
-            <div key={s} className="flex items-center mb-2">
-              <span className="w-40">{s} (Base {baseStandard[s] ?? baseProfessional[s]}%)</span>
-              <input
-                type="range"
-                min={0} max={maxInc} step={1}
-                value={bonusAlloc[s]||0}
-                onChange={handleBonus(s)}
-                className="flex-1 mx-2"
-              />
-              <span className="w-12 text-right">+{bonusAlloc[s]||0}</span>
-            </div>
-          ))}
-
-          <div className="flex justify-between mt-4">
-            <button
-              onClick={()=> setPhase(2)}
-              className="px-4 py-2 bg-gray-300 rounded"
-            >
-              Back
-            </button>
-            <button
-              onClick={()=> setPhase(4)}
-              disabled={bonusPoolLeft > 0}
-              className="px-4 py-2 bg-green-600 text-white rounded"
-            >
-              Finish
-            </button>
-          </div>
-        </>
-      )}
-
-      {phase > 3 && (
-        <div className="text-center">
-          <h3>All done – hit Review below</h3>
-          <button
-            onClick={()=> updateCharacter({ step: 'review' })}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
-          >
-            Go to Review
-          </button>
         </div>
-      )}
+
+        {/* Rolling UI */}
+        {method === 'roll' ? (
+          <div className="space-y-4">
+            <button onClick={rollAttributes} className="btn btn-primary">Roll</button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {Object.keys(alloc).map(k => (
+                <div key={k} className="border border-wood p-3 rounded panel-parchment">
+                  <h4 className="font-semibold">{k}</h4>
+                  <p className="text-sm">Rolled: {rolls[k]?.join(' + ') || '-'}</p>
+                  <p className="text-xl font-bold">{alloc[k]}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* Point-buy UI */
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {Object.keys(alloc).map(k => {
+              const min = ['INT', 'SIZ'].includes(k) ? 8 : 3;
+              return (
+                <div key={k} className="flex items-center">
+                  <span className="w-12 font-medium">{k}</span>
+                  <button onClick={() => handleChange(k, -1)} className="btn btn-secondary px-2">-</button>
+                  <input
+                    type="number"
+                    min={min}
+                    max={18}
+                    value={alloc[k]}
+                    readOnly
+                    className="form-control mx-2 w-16 text-center"
+                  />
+                  <button onClick={() => handleChange(k, 1)} className="btn btn-secondary px-2">+</button>
+                </div>
+              );
+            })}
+            <div className="col-span-full mt-2">Points Left: {pointsLeft}</div>
+          </div>
+        )}
+
+        {/* Derived */}
+        <div className="pt-4 border-t border-wood">
+          <h3 className="font-semibold">Derived Attributes</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+            <div>Action Points: {actionPoints}</div>
+            <div>Damage Mod: {damageMod}</div>
+            <div>XP Mod: {experienceMod >= 0 ? `+${experienceMod}` : experienceMod}</div>
+            <div>Healing Rate: {healingRate}</div>
+            <div>Movement: {movement}</div>
+            <div>HP/Loc: {hpPerLoc}</div>
+            <div>Initiative: {initiative}</div>
+            <div>Magic Points: {magicPoints}</div>
+            <div>Luck Points: {luckPoints}</div>
+          </div>
+        </div>
+      </div>
     </StepWrapper>
   );
 }
