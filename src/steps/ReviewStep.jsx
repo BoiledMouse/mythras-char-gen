@@ -20,10 +20,11 @@ export function ReviewStep() {
   const extraNames = learnedNames.filter(n => !standardNames.includes(n));
   const displayedSkills = [...standardNames, ...extraNames];
 
-  // Equipment list from context
-  const equipmentList = Array.isArray(character.equipment)
-    ? character.equipment
-    : (character.equipment ? Object.values(character.equipment) : []);
+  // Equipment list from context (quantity > 0)
+  const equipmentAlloc = character.equipmentAlloc || {};
+  const equipmentList = Object.entries(equipmentAlloc)
+    .filter(([name, qty]) => qty > 0)
+    .map(([name, qty]) => `${name} x${qty}`);
 
   return (
     <div className="review-step p-6 bg-gray-100">
