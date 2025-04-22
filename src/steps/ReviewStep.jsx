@@ -3,6 +3,7 @@ import { useCharacter } from '../context/characterContext';
 import skillsData from '../data/skills.json';
 import equipmentData from '../data/equipment.json';
 import StepWrapper from '../components/StepWrapper';
+import html2pdf from 'html2pdf.js';
 
 export function ReviewStep() {
   const { character, updateCharacter } = useCharacter();
@@ -66,6 +67,19 @@ const magicDisplayed = allMagicNames.filter(n => learnedNames.includes(n));
     }
     return val;
   };
+
+  // PDF export
+  const exportPDF = () => {
+  const element = document.querySelector('.panel-parchment');
+  const opt = {
+    margin:       0.5,
+    filename:     `${character.characterName || 'character'}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2 },
+    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+  };
+  html2pdf().set(opt).from(element).save();
+};
 
   // Markdown export
   const generateMarkdown = () => {
@@ -132,9 +146,11 @@ const magicDisplayed = allMagicNames.filter(n => learnedNames.includes(n));
 
   return (
     <StepWrapper title="Review">
-      <div className="flex justify-end mb-4">
-        <button onClick={exportMarkdown} className="btn btn-secondary">Export Markdown</button>
+      <div className="flex justify-end gap-4 mb-4">
+  <button onClick={exportMarkdown} className="btn btn-secondary">Export Markdown</button>
+  <button onClick={exportPDF} className="btn btn-secondary">Export PDF</button>
       </div>
+      
       <div className="panel-parchment max-w-7xl mx-auto p-6">
         {/* Page 1: Header & Concept */}
         <section className="grid grid-cols-4 gap-4 mb-6">
