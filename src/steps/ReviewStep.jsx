@@ -34,8 +34,8 @@ export function ReviewStep() {
           <div className="col-span-3 grid grid-cols-4 gap-4 mb-4">
             {[
               { key: 'playerName', label: 'Player' },
-              { key: 'name', label: 'Character' },
-              { key: 'gender', label: 'Gender' },
+              { key: 'characterName', label: 'Character' },
+              { key: 'sex', label: 'Sex' },
               { key: 'age', label: 'Age' }
             ].map(field => (
               <input
@@ -63,7 +63,7 @@ export function ReviewStep() {
               <input
                 key={field.key}
                 name={field.key}
-                value={character[field.key] || ''}
+                value={character[field.key] ?? character.concept?.[field.key] ?? ''}
                 onChange={handleChange}
                 placeholder={field.label}
                 className="border p-2 rounded w-full"
