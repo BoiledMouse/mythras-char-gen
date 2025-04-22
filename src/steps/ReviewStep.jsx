@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCharacter } from '../context/characterContext';
 import skillsData from '../data/skills.json';
+import equipmentData from '../data/equipment.json';
 
 export function ReviewStep() {
   const { character, updateCharacter } = useCharacter();
@@ -26,6 +27,12 @@ export function ReviewStep() {
   const magicDisplayed = magicNames.filter(n => learnedNames.includes(n));
 
   // Equipment
+  const startingSilver = Number(character.startingSilver) || 0;
+  const totalSpent = Object.entries(equipmentAlloc).reduce((sum, [name, qty]) => {
+    const item = equipmentData.find(e => e.name === name);
+    return sum + (item?.cost || 0) * qty;
+  }, 0);
+  const silverRemaining = startingSilver - totalSpent;
   const equipmentAlloc = character.equipmentAlloc || {};
   const equipmentList = Object.entries(equipmentAlloc)
     .filter(([_, qty]) => qty > 0)
@@ -176,7 +183,15 @@ export function ReviewStep() {
               className="w-full border p-2 rounded"
             />
           </div>
-          {/* Equipment */}
+          {/* Silver Remaining */}
+          <div className="col-span-1 mt-4">
+            <h3 className="font-semibold mb-2">Silver Remaining</h3>
+            <div className="bg-yellow-100 border border-yellow-300 rounded w-32 p-2">
+              {silverRemaining} SP
+            </div>
+          </div>
+
+        {/* Equipment */}
           <div className="col-span-1 mt-6">
             <h3 className="font-semibold mb-2">Equipment</h3>
             <ul className="list-disc list-inside">
