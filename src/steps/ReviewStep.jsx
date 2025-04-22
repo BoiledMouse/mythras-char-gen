@@ -29,15 +29,34 @@ export function ReviewStep() {
   const combatDisplayed = combatNames.filter(name => learnedNames.includes(name));
   const professionalDisplayed = professionalNames.filter(name => learnedNames.includes(name));
   const magicDisplayed = magicNames.filter(name => learnedNames.includes(name));
-  const extraDisplayed = learnedNames.filter(
-    name => !standardNames.includes(name) && !professionalNames.includes(name) && !magicNames.includes(name) && !combatNames.includes(name) && !resistanceList.includes(name)
-  );
 
   // Equipment
   const equipmentAlloc = character.equipmentAlloc || {};
   const equipmentList = Object.entries(equipmentAlloc)
     .filter(([_, qty]) => qty > 0)
     .map(([name, qty]) => `${name} x${qty}`);
+
+  // Hit Points per Location calculation based on CON+SIZ table
+  const hpSum = (Number(character.CON) || 0) + (Number(character.SIZ) || 0);
+  const thresholds = [5,10,15,20,25,30,35,40];
+  const hpTable = {
+    'Leg':      [1,2,3,4,5,6,7,8],
+    'Abdomen':  [2,3,4,5,6,7,8,9],
+    'Chest':    [3,4,5,6,7,8,9,10],
+    'Each Arm': [1,1,2,3,4,5,6,7],
+    'Head':     [1,2,3,4,5,6,7,8]
+  };
+  function getHp(loc) {
+    const table = hpTable[loc];
+    let idx = thresholds.findIndex(t => hpSum <= t);
+    if (idx === -1) idx = thresholds.length - 1;
+    let base = table[idx];
+    if (hpSum > thresholds[thresholds.length-1]) {
+      const extra = Math.floor((hpSum - thresholds[thresholds.length-1] - 1) / 5) + 1;
+      base += extra;
+    }
+    return base;
+  }
 
   return (
     <div className="review-step p-6 bg-gray-100">
@@ -54,18 +73,19 @@ export function ReviewStep() {
               { key: 'sex', label: 'Sex' },
               { key: 'age', label: 'Age' }
             ].map(field => (
-              <input
-                key={field.key}
-                name={field.key}
-                value={character[field.key] ?? ''}
-                onChange={handleChange}
-                placeholder={field.label}
-                className="border p-2 rounded w-full"
-              />
+              <div key={field.key}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+                <input
+                  name={field.key}
+                  value={character[field.key] ?? ''}
+                  onChange={handleChange}
+                  className="border p-2 rounded w-full"
+                />
+              </div>
             ))}
           </div>
 
-          {/* Concept fields */}
+          {/* Concept fields: Species, Frame, Height, Weight, Career, Culture, Social Class */}
           <div className="col-span-3 grid grid-cols-4 gap-4 mb-6">
             {[
               { key: 'species', label: 'Species' },
@@ -76,14 +96,15 @@ export function ReviewStep() {
               { key: 'culture', label: 'Culture' },
               { key: 'socialClass', label: 'Social Class' }
             ].map(field => (
-              <input
-                key={field.key}
-                name={field.key}
-                value={character[field.key] ?? ''}
-                onChange={handleChange}
-                placeholder={field.label}
-                className="border p-2 rounded w-full"
-              />
+              <div key={field.key}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+                <input
+                  name={field.key}
+                  value={character[field.key] ?? ''}
+                  onChange={handleChange}
+                  className="border p-2 rounded w-full"
+                />
+              </div>
             ))}
           </div>
 
@@ -126,7 +147,27 @@ export function ReviewStep() {
                 </div>
               ))}
             </div>
+          </div>
 
+          {/* Hit Points per Location */}
+          <div className="col-span-3 mb-6">
+            <h3 className="font-semibold mb-2">HP per Location</h3>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { locKey: 'Head', label: 'Head' },
+                { locKey: 'Chest', label: 'Chest' },
+                { locKey: 'Abdomen', label: 'Abdomen' },
+                { locKey: 'Each Arm', label: 'Left Arm' },
+                { locKey: 'Each Arm', label: 'Right Arm' },
+                { locKey: 'Leg', label: 'Left Leg' },
+                { locKey: 'Leg', label: 'Right Leg' }
+              ].map(({ locKey, label }) => (
+                <div key={label} className="flex justify-between items-center p-2 border rounded">
+                  <span>{label}</span>
+                  <span>{getHp(locKey)}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Background & Contacts */}
@@ -149,6 +190,20 @@ export function ReviewStep() {
               rows={4}
               className="w-full border p-2 rounded"
             />
+          </div>
+
+          {/* Equipment */}
+          <div className="col-span-1 mt-6">
+            <h3 className="font-semibold mb-2">Equipment</h3>
+            <ul className="list-disc list-inside">
+              {equipmentList.length ? (
+                equipmentList.map((item, i) => (
+                  <li key={i} className="mb-1">{item}</li>
+                ))
+              ) : (
+                <li className="text-gray-500">No equipment selected</li>
+              )}
+            </ul>
           </div>
         </section>
 
@@ -178,75 +233,3 @@ export function ReviewStep() {
                 </div>
               ))}
             </div>
-
-            {/* Combat Skills */}
-            <h3 className="font-semibold mb-2">Combat Skills</h3>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {combatDisplayed.length > 0 ? (
-                combatDisplayed.map(name => (
-                  <div key={name} className="flex justify-between items-center p-2 border rounded">
-                    <span>{name}</span>
-                    <span>{character.skills?.[name] ?? 0}%</span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500">No combat skills learned</p>
-              )}
-            </div>
-
-            {/* Professional Skills */}
-            <h3 className="font-semibold mb-2">Professional Skills</h3>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {professionalDisplayed.length > 0 ? (
-                professionalDisplayed.map(name => (
-                  <div key={name} className="flex justify-between items-center p-2 border rounded">
-                    <span>{name}</span>
-                    <span>{character.skills?.[name] ?? 0}%</span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500">No professional skills learned</p>
-              )}
-            </div>
-
-            {/* Magic Skills */}
-            <h3 className="font-semibold mb-2">Magic Skills</h3>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {magicDisplayed.length > 0 ? (
-                magicDisplayed.map(name => (
-                  <div key={name} className="flex justify-between items-center p-2 border rounded">
-                    <span>{name}</span>
-                    <span>{character.skills?.[name] ?? 0}%</span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500">No magic skills learned</p>
-              )}
-            </div>
-
-            {/* Other / Custom Skills */}
-            
-                </div>
-              </>
-            )}
-
-          </div>
-
-          {/* Equipment */}
-          <div className="col-span-1 mt-6">
-            <h3 className="font-semibold mb-2">Equipment</h3>
-            <ul className="list-disc list-inside">
-              {equipmentList.length ? (
-                equipmentList.map((item,i) => (
-                  <li key={i} className="mb-1">{item}</li>
-                ))
-              ) : (
-                <li className="text-gray-500">No equipment selected</li>
-              )}
-            </ul>
-          </div>
-        </section>
-      </div>
-    </div>
-  );
-}
