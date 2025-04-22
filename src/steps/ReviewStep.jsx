@@ -64,7 +64,7 @@ export function ReviewStep() {
 
   return (
     <StepWrapper title="Review">
-      <div className="sheet-container max-w-7xl mx-auto bg-white shadow rounded-lg overflow-hidden">
+      <div className="panel-parchment max-w-7xl mx-auto p-6">
 
         {/* Page 1 */}
         <section className="page p-6 grid grid-cols-3 gap-6">
