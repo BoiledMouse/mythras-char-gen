@@ -7,100 +7,7 @@ import StepWrapper from '../components/StepWrapper';
 export function ReviewStep() {
   const { character, updateCharacter } = useCharacter();
 
-  // Helper: generate markdown export
-  const generateMarkdown = () => {
-    const lines = [];
-    // Header
-    lines.push(`# ${character.characterName || 'Character'}`);
-    lines.push('');
-    lines.push(`**Player**: ${character.playerName || ''}`);
-    lines.push(`**Sex**: ${character.sex || ''}`);
-    lines.push(`**Age**: ${character.age || ''}`);
-    lines.push('');
-    // Concept
-    ['species','frame','height','weight','career','culture','socialClass'].forEach(k => {
-      const label = k.charAt(0).toUpperCase() + k.slice(1);
-      lines.push(`**${label}**: ${character[k]||''}`);
-    });
-    lines.push('');
-    // Characteristics
-    lines.push('## Characteristics');
-    ['STR','CON','SIZ','DEX','INT','POW','CHA'].forEach(stat => {
-      lines.push(`- **${stat}**: ${character[stat]||''}`);
-    });
-    lines.push('');
-    // Attributes
-    lines.push('## Attributes');
-    ['actionPoints','damageMod','xpMod','healingRate','initiativeBonus','luckPoints','movementRate'].forEach(key => {
-      const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s=>s.toUpperCase());
-      lines.push(`- **${label}**: ${character[key]||''}`);
-    });
-    lines.push('');
-    // HP per Location
-    lines.push('## Hit Points per Location');
-    ['Head','Chest','Abdomen','Each Arm','Leg'].forEach(loc => {
-      lines.push(`- **${loc}**: ${getHp(loc)}`);
-    });
-    lines.push('');
-    // Background
-    lines.push('## Background, Community & Family');
-    lines.push(character.backgroundNotes|| '');
-    lines.push('');
-    // Contacts
-    lines.push('## Contacts, Allies & Enemies');
-    lines.push(character.contacts|| '');
-    lines.push('');
-    // Silver and Equipment
-    lines.push('## Money & Equipment');
-    lines.push(`- **Silver Remaining**: ${silverRemaining} SP`);
-    if(equipmentList.length) {
-      lines.push('- **Equipment**:');
-      equipmentList.forEach(item=> lines.push(`  - ${item}`));
-    }
-    lines.push('');
-    // Skills
-    lines.push('## Skills');
-    if(standardDisplayed.length) {
-      lines.push('### Standard Skills');
-      standardDisplayed.forEach(n=> lines.push(`- ${n}: ${character.skills?.[n]||0}%`));
-      lines.push('');
-    }
-    if(resistancesDisplayed.length) {
-      lines.push('### Resistances');
-      resistancesDisplayed.forEach(n=> lines.push(`- ${n}: ${character.skills?.[n]||0}%`));
-      lines.push('');
-    }
-    if(combatDisplayed.length) {
-      lines.push('### Combat Skills');
-      combatDisplayed.forEach(n=> lines.push(`- ${n}: ${character.skills?.[n]||0}%`));
-      lines.push('');
-    }
-    if(professionalDisplayed.length) {
-      lines.push('### Professional Skills');
-      professionalDisplayed.forEach(n=> lines.push(`- ${n}: ${character.skills?.[n]||0}%`));
-      lines.push('');
-    }
-    if(magicDisplayed.length) {
-      lines.push('### Magic Skills');
-      magicDisplayed.forEach(n=> lines.push(`- ${n}: ${character.skills?.[n]||0}%`));
-      lines.push('');
-    }
-    return lines.join('
-');
-  };
-
-  const exportMarkdown = () => {
-    const blob = new Blob([generateMarkdown()], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${character.characterName||'character'}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const { character, updateCharacter } = useCharacter();
-
+  // Change handler for inputs
   const handleChange = e => {
     const { name, value } = e.target;
     updateCharacter({ [name]: value });
@@ -116,14 +23,14 @@ export function ReviewStep() {
   // Resistances
   const resistanceList = ['Brawn', 'Endurance', 'Evade', 'Willpower'];
 
-  // Filter lists
+  // Filter which skills to display
   const standardDisplayed = standardNames.filter(n => !resistanceList.includes(n));
   const resistancesDisplayed = resistanceList;
   const combatDisplayed = combatNames.filter(n => learnedNames.includes(n));
   const professionalDisplayed = professionalNames.filter(n => learnedNames.includes(n));
   const magicDisplayed = magicNames.filter(n => learnedNames.includes(n));
 
-  // Equipment and silver
+  // Equipment & silver
   const equipmentAlloc = character.equipmentAlloc || {};
   const startingSilver = Number(character.startingSilver) || 0;
   const totalSpent = Object.entries(equipmentAlloc).reduce((sum, [name, qty]) => {
@@ -135,7 +42,7 @@ export function ReviewStep() {
     .filter(([, qty]) => qty > 0)
     .map(([name, qty]) => `${name} x${qty}`);
 
-  // Hit points per location
+  // HP per location calculation
   const hpSum = (Number(character.CON) || 0) + (Number(character.SIZ) || 0);
   const thresholds = [5, 10, 15, 20, 25, 30, 35, 40];
   const hpTable = {
@@ -156,13 +63,104 @@ export function ReviewStep() {
     return val;
   };
 
+  // Markdown export helpers
+  const generateMarkdown = () => {
+    const lines = [];
+    // Header
+    lines.push(`# ${character.characterName || 'Character'}`);
+    lines.push('');
+    lines.push(`**Player**: ${character.playerName || ''}`);
+    lines.push(`**Sex**: ${character.sex || ''}`);
+    lines.push(`**Age**: ${character.age || ''}`);
+    lines.push('');
+    // Concept
+    ['species','frame','height','weight','career','culture','socialClass'].forEach(k => {
+      const label = k.charAt(0).toUpperCase() + k.slice(1);
+      lines.push(`**${label}**: ${character[k] || ''}`);
+    });
+    lines.push('');
+    // Characteristics
+    lines.push('## Characteristics');
+    ['STR','CON','SIZ','DEX','INT','POW','CHA'].forEach(stat => {
+      lines.push(`- **${stat}**: ${character[stat] || ''}`);
+    });
+    lines.push('');
+    // Attributes
+    lines.push('## Attributes');
+    ['actionPoints','damageMod','xpMod','healingRate','initiativeBonus','luckPoints','movementRate'].forEach(key => {
+      const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s=>s.toUpperCase());
+      lines.push(`- **${label}**: ${character[key] || ''}`);
+    });
+    lines.push('');
+    // HP per Location
+    lines.push('## Hit Points per Location');
+    ['Head','Chest','Abdomen','Each Arm','Leg'].forEach(loc => {
+      lines.push(`- **${loc}**: ${getHp(loc)}`);
+    });
+    lines.push('');
+    // Background & Contacts
+    lines.push('## Background, Community & Family');
+    lines.push(character.backgroundNotes || '');
+    lines.push('');
+    lines.push('## Contacts, Allies & Enemies');
+    lines.push(character.contacts || '');
+    lines.push('');
+    // Silver & Equipment
+    lines.push('## Money & Equipment');
+    lines.push(`- **Silver Remaining**: ${silverRemaining} SP`);
+    if (equipmentList.length) {
+      lines.push('- **Equipment**:');
+      equipmentList.forEach(item => lines.push(`  - ${item}`));
+    }
+    lines.push('');
+    // Skills
+    lines.push('## Skills');
+    if (standardDisplayed.length) {
+      lines.push('### Standard Skills');
+      standardDisplayed.forEach(n => lines.push(`- ${n}: ${character.skills?.[n] || 0}%`));
+      lines.push('');
+    }
+    if (resistancesDisplayed.length) {
+      lines.push('### Resistances');
+      resistancesDisplayed.forEach(n => lines.push(`- ${n}: ${character.skills?.[n] || 0}%`));
+      lines.push('');
+    }
+    if (combatDisplayed.length) {
+      lines.push('### Combat Skills');
+      combatDisplayed.forEach(n => lines.push(`- ${n}: ${character.skills?.[n] || 0}%`));
+      lines.push('');
+    }
+    if (professionalDisplayed.length) {
+      lines.push('### Professional Skills');
+      professionalDisplayed.forEach(n => lines.push(`- ${n}: ${character.skills?.[n] || 0}%`));
+      lines.push('');
+    }
+    if (magicDisplayed.length) {
+      lines.push('### Magic Skills');
+      magicDisplayed.forEach(n => lines.push(`- ${n}: ${character.skills?.[n] || 0}%`));
+      lines.push('');
+    }
+    return lines.join('\n');
+  };
+  const exportMarkdown = () => {
+    const md = generateMarkdown();
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${character.characterName || 'character'}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <StepWrapper title="Review">
+      <div className="flex justify-end mb-4">
+        <button onClick={exportMarkdown} className="btn btn-secondary">Export Markdown</button>
+      </div>
       <div className="panel-parchment max-w-7xl mx-auto p-6">
-
         {/* Page 1 */}
-        <section className="page p-6 grid grid-cols-3 gap-6">
-
+        <section className="page grid grid-cols-3 gap-6">
           {/* Header Inputs */}
           <div className="col-span-3 grid grid-cols-4 gap-4 mb-4">
             {[
@@ -177,7 +175,7 @@ export function ReviewStep() {
                   name={f.key}
                   value={character[f.key] || ''}
                   onChange={handleChange}
-                  className="border p-2 rounded w-full"
+                  className="form-control mt-1"
                 />
               </div>
             ))}
@@ -200,26 +198,22 @@ export function ReviewStep() {
                   name={f.key}
                   value={character[f.key] || ''}
                   onChange={handleChange}
-                  className="border p-2 rounded w-full"
+                  className="form-control mt-1"
                 />
               </div>
             ))}
           </div>
 
           {/* Characteristics & Attributes */}
-          <div className="col-span-3 grid grid-cols-2 gap-6">
+          <div className="col-span-3 grid grid-cols-2 gap-6 mb-6">
             <div>
               <h3 className="font-semibold mb-2">Characteristics</h3>
               {['STR','CON','SIZ','DEX','INT','POW','CHA'].map(stat => (
                 <div key={stat} className="flex items-center mb-2">
                   <span className="w-20 font-medium">{stat}</span>
-                  <input
-                    name={stat}
-                    type="number"
-                    value={character[stat] || ''}
-                    onChange={handleChange}
-                    className="border p-1 rounded w-16"
-                  />
+                  <div className="bg-yellow-100 border border-yellow-300 rounded w-32 p-2 text-center">
+                    {character[stat] || ''}
+                  </div>
                 </div>
               ))}
             </div>
@@ -236,140 +230,144 @@ export function ReviewStep() {
               ].map(a => (
                 <div key={a.key} className="flex items-center mb-2">
                   <span className="w-32 font-medium">{a.label}</span>
-                  <div className="bg-yellow-100 border border-yellow-300 rounded w-32 p-2">
+                  <div className="bg-yellow-100 border border-yellow-300 rounded w-32 p-2 text-center">
                     {character[a.key] != null ? character[a.key] : ''}
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
           {/* HP per Location */}
-          <div className="col-span-3 mb-6">
-            <h3 className="font-semibold mb-2">HP per Location</h3>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                ['Head','Head'],
-                ['Chest','Chest'],
-                ['Abdomen','Abdomen'],
-                ['Each Arm','Left Arm'],
-                ['Each Arm','Right Arm'],
-                ['Leg','Left Leg'],
-                ['Leg','Right Leg'],
-              ].map(([key,label]) => (
-                <div key={label} className="flex justify-between items-center p-2 border rounded">
-                  <span>{label}</span>
-                  <span>{getHp(key)}</span>
-                </div>
-              ))}
+          <section className="page grid grid-cols-3 gap-4 mb-6">
+            <div className="col-span-3">
+              <h3 className="font-semibold mb-2">HP per Location</h3>
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  ['Head','Head'],
+                  ['Chest','Chest'],
+                  ['Abdomen','Abdomen'],
+                  ['Each Arm','Left Arm'],
+                  ['Each Arm','Right Arm'],
+                  ['Leg','Left Leg'],
+                  ['Leg','Right Leg'],
+                ].map(([key,label]) => (
+                  <div key={label} className="flex justify-between items-center p-2 border rounded">
+                    <span>{label}</span>
+                    <span>{getHp(key)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          </section>
 
           {/* Background & Contacts */}
-          <div className="col-span-2">
-            <label className="block font-semibold mb-1">Background, Community & Family</label>
-            <textarea
-              name="backgroundNotes"
-              value={character.backgroundNotes || ''}
-              onChange={handleChange}
-              rows={4}
-              className="w-full border p-2 rounded"
-            />
-          </div>
-          <div>
-            <label className="block font-semibold mb-1">Contacts, Allies & Enemies</label>
-            <textarea
-              name="contacts"
-              value={character.contacts || ''}
-              onChange={handleChange}
-              rows={4}
-              className="w-full border p-2 rounded"
-            />
-          </div>
-
-          {/* Silver Remaining */}
-          <div className="col-span-1 mt-4">
-            <h3 className="font-semibold mb-2">Silver Remaining</h3>
-            <div className="bg-yellow-100 border border-yellow-300 rounded w-32 p-2">
-              {silverRemaining} SP
+          <section className="page grid grid-cols-3 gap-6 mb-6">
+            <div className="col-span-2">
+              <label className="block font-semibold mb-1">Background, Community & Family</label>
+              <textarea
+                name="backgroundNotes"
+                value={character.backgroundNotes || ''}
+                onChange={handleChange}
+                rows={4}
+                className="form-control mt-1"
+              />
             </div>
-          </div>
-
-          {/* Equipment */}
-          <div className="col-span-1 mt-6">
-            <h3 className="font-semibold mb-2">Equipment</h3>
-            <ul className="list-disc list-inside">
-              {equipmentList.length ? (
-                equipmentList.map((itm, i) => <li key={i}>{itm}</li>)
-              ) : (
-                <li>No equipment selected</li>
-              )}
-            </ul>
-          </div>
-        </section>
-
-        {/* Page 2: Skills */}
-        <section className="page p-6 grid grid-cols-3 gap-6">
-          <div className="col-span-2 mt-6">
-            <h3 className="font-semibold mb-2">Standard Skills</h3>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {standardDisplayed.map(n => (
-                <div key={n} className="flex justify-between items-center p-2 border rounded">
-                  <span>{n}</span>
-                  <span>{character.skills?.[n] || 0}%</span>
-                </div>
-              ))}
+            <div>
+              <label className="block font-semibold mb-1">Contacts, Allies & Enemies</label>
+              <textarea
+                name="contacts"
+                value={character.contacts || ''}
+                onChange={handleChange}
+                rows={4}
+                className="form-control mt-1"
+              />
             </div>
-            <h3 className="font-semibold mb-2">Resistances</h3>
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              {resistancesDisplayed.map(n => (
-                <div key={n} className="flex justify-between items-center p-2 border rounded">
-                  <span>{n}</span>
-                  <span>{character.skills?.[n] || 0}%</span>
-                </div>
-              ))}
+          </section>
+
+          {/* Silver & Equipment */}
+          <section className="page grid grid-cols-3 gap-6 mb-6">
+            <div className="col-span-1">
+              <h3 className="font-semibold mb-2">Silver Remaining</h3>
+              <div className="bg-yellow-100 border border-yellow-300 rounded w-32 p-2 text-center">
+                {silverRemaining} SP
+              </div>
             </div>
-            <h3 className="font-semibold mb-2">Combat Skills</h3>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {!combatDisplayed.length ? (
-                <p className="text-sm text-gray-500">None learned</p>
-              ) : (
-                combatDisplayed.map(n => (
+            <div className="col-span-1">
+              <h3 className="font-semibold mb-2">Equipment</h3>
+              <ul className="list-disc list-inside">
+                {equipmentList.length ? (
+                  equipmentList.map((itm, i) => <li key={i}>{itm}</li>)
+                ) : (
+                  <li>No equipment selected</li>
+                )}
+              </ul>
+            </div>
+          </section>
+
+          {/* Page 2: Skills */}
+          <section className="page p-6 grid grid-cols-3 gap-6">
+            <div className="col-span-2">
+              <h3 className="font-semibold mb-2">Standard Skills</h3>
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                {standardDisplayed.map(n => (
                   <div key={n} className="flex justify-between items-center p-2 border rounded">
                     <span>{n}</span>
                     <span>{character.skills?.[n] || 0}%</span>
                   </div>
-                ))
-              )}
-            </div>
-            <h3 className="font-semibold mb-2">Professional Skills</h3>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {!professionalDisplayed.length ? (
-                <p className="text-sm text-gray-500">None learned</p>
-              ) : (
-                professionalDisplayed.map(n => (
+                ))}
+              </div>
+              <h3 className="font-semibold mb-2">Resistances</h3>
+              <div className="grid grid-cols-4 gap-4 mb-6">
+                {resistancesDisplayed.map(n => (
                   <div key={n} className="flex justify-between items-center p-2 border rounded">
                     <span>{n}</span>
                     <span>{character.skills?.[n] || 0}%</span>
                   </div>
-                ))
-              )}
+                ))}
+              </div>
+              <h3 className="font-semibold mb-2">Combat Skills</h3>
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                {!combatDisplayed.length ? (
+                  <p className="text-sm text-gray-500">None learned</p>
+                ) : (
+                  combatDisplayed.map(n => (
+                    <div key={n} className="flex justify-between items-center p-2 border rounded">
+                      <span>{n}</span>
+                      <span>{character.skills?.[n] || 0}%</span>
+                    </div>
+                  ))
+                )}
+              </div>
+              <h3 className="font-semibold mb-2">Professional Skills</h3>
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                {!professionalDisplayed.length ? (
+                  <p className="text-sm text-gray-500">None learned</p>
+                ) : ( (
+                  professionalDisplayed.map(n => (
+                    <div key={n} className="flex justify-between items-center p-2 border rounded">
+                      <span>{n}</span>
+                      <span>{character.skills?.[n] || 0}%</span>
+                    </div>
+                  ))
+                ))}
+              </div>
+              <h3 className="font-semibold mb-2">Magic Skills</h3>
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                {!magicDisplayed.length ? (
+                  <p className="text-sm text-gray-500">None learned</p>
+                ) : (
+                  magicDisplayed.map(n => (
+                    <div key={n} className="flex justify-between items-center p-2 border rounded">
+                      <span>{n}</span>
+                      <span>{character.skills?.[n] || 0}%</span>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-            <h3 className="font-semibold mb-2">Magic Skills</h3>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {!magicDisplayed.length ? (
-                <p className="text-sm text-gray-500">None learned</p>
-              ) : (
-                magicDisplayed.map(n => (
-                  <div key={n} className="flex justify-between items-center p-2 border rounded">
-                    <span>{n}</span>
-                    <span>{character.skills?.[n] || 0}%</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </section>
+          </section>
+
       </div>
     </StepWrapper>
   );
