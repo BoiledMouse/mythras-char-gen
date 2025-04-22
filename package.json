@@ -8,11 +8,12 @@
     "build": "react-scripts build",
     "postbuild": "rm -rf docs && mkdir docs && cp -R build/* docs/",
     "predeploy": "npm run build",
-    "deploy":  "gh-pages -d build"
+    "deploy": "gh-pages -d build"
   },
   "dependencies": {
     "file-saver": "^2.0.5",
     "html2canvas": "^1.4.1",
+    "html2pdf.js": "^0.10.3",
     "jspdf": "^2.5.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
