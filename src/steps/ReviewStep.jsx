@@ -2,14 +2,10 @@ import React from 'react';
 import { useCharacter } from '../context/characterContext';
 import skillsData from '../data/skills.json';
 
-/**
- * ReviewStep: renders the Mythras character sheet,
- * populating fields from context and falling back to inputs for missing values.
- */
 export function ReviewStep() {
   const { character, updateCharacter } = useCharacter();
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value } = e.target;
     updateCharacter({ [name]: value });
   };
@@ -21,14 +17,13 @@ export function ReviewStep() {
   const combatNames = [...(skillsData.combatStyles || []).map(s => s.name), 'Unarmed'];
   const learnedNames = character.skills ? Object.keys(character.skills) : [];
 
-  // Define resistances list
   const resistanceList = ['Brawn', 'Endurance', 'Evade', 'Willpower'];
 
-  // Filter Standard Skills to exclude Resistances
-  const standardDisplayed = standardNames.filter(name => !resistanceList.includes(name));
-  const combatDisplayed = combatNames.filter(name => learnedNames.includes(name));
-  const professionalDisplayed = professionalNames.filter(name => learnedNames.includes(name));
-  const magicDisplayed = magicNames.filter(name => learnedNames.includes(name));
+  // Filter lists
+  const standardDisplayed = standardNames.filter(n => !resistanceList.includes(n));
+  const combatDisplayed = combatNames.filter(n => learnedNames.includes(n));
+  const professionalDisplayed = professionalNames.filter(n => learnedNames.includes(n));
+  const magicDisplayed = magicNames.filter(n => learnedNames.includes(n));
 
   // Equipment
   const equipmentAlloc = character.equipmentAlloc || {};
@@ -36,7 +31,7 @@ export function ReviewStep() {
     .filter(([_, qty]) => qty > 0)
     .map(([name, qty]) => `${name} x${qty}`);
 
-  // Hit Points per Location calculation based on CON+SIZ table
+  // Hit points calculation
   const hpSum = (Number(character.CON) || 0) + (Number(character.SIZ) || 0);
   const thresholds = [5,10,15,20,25,30,35,40];
   const hpTable = {
@@ -46,46 +41,42 @@ export function ReviewStep() {
     'Each Arm': [1,1,2,3,4,5,6,7],
     'Head':     [1,2,3,4,5,6,7,8]
   };
-  function getHp(loc) {
-    const table = hpTable[loc];
+  const getHp = loc => {
     let idx = thresholds.findIndex(t => hpSum <= t);
     if (idx === -1) idx = thresholds.length - 1;
-    let base = table[idx];
+    let base = hpTable[loc][idx];
     if (hpSum > thresholds[thresholds.length-1]) {
       const extra = Math.floor((hpSum - thresholds[thresholds.length-1] - 1) / 5) + 1;
       base += extra;
     }
     return base;
-  }
+  };
 
   return (
     <div className="review-step p-6 bg-gray-100">
       <div className="sheet-container max-w-7xl mx-auto bg-white shadow rounded-lg overflow-hidden">
-
         {/* Page 1 */}
         <section className="page p-6 grid grid-cols-3 gap-6">
-
-          {/* Header: Player, Character, Sex, Age */}
+          {/* Header */}
           <div className="col-span-3 grid grid-cols-4 gap-4 mb-4">
             {[
               { key: 'playerName', label: 'Player' },
               { key: 'characterName', label: 'Character' },
               { key: 'sex', label: 'Sex' },
               { key: 'age', label: 'Age' }
-            ].map(field => (
-              <div key={field.key}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+            ].map(f => (
+              <div key={f.key}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
                 <input
-                  name={field.key}
-                  value={character[field.key] ?? ''}
+                  name={f.key}
+                  value={character[f.key] || ''}
                   onChange={handleChange}
                   className="border p-2 rounded w-full"
                 />
               </div>
             ))}
           </div>
-
-          {/* Concept fields */}
+          {/* Concept */}
           <div className="col-span-3 grid grid-cols-4 gap-4 mb-6">
             {[
               { key: 'species', label: 'Species' },
@@ -95,22 +86,20 @@ export function ReviewStep() {
               { key: 'career', label: 'Career' },
               { key: 'culture', label: 'Culture' },
               { key: 'socialClass', label: 'Social Class' }
-            ].map(field => (
-              <div key={field.key}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+            ].map(f => (
+              <div key={f.key}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
                 <input
-                  name={field.key}
-                  value={character[field.key] ?? ''}
+                  name={f.key}
+                  value={character[f.key] || ''}
                   onChange={handleChange}
                   className="border p-2 rounded w-full"
                 />
               </div>
             ))}
           </div>
-
-          {/* Characteristics & Attributes */}
+          {/* Chars & Attr */}
           <div className="col-span-3 grid grid-cols-2 gap-6">
-            {/* Characteristics */}
             <div>
               <h3 className="font-semibold mb-2">Characteristics</h3>
               {['STR','CON','SIZ','DEX','INT','POW','CHA'].map(stat => (
@@ -119,15 +108,13 @@ export function ReviewStep() {
                   <input
                     name={stat}
                     type="number"
-                    value={character[stat] ?? ''}
+                    value={character[stat] || ''}
                     onChange={handleChange}
                     className="border p-1 rounded w-16"
                   />
                 </div>
               ))}
             </div>
-
-            {/* Attributes */}
             <div>
               <h3 className="font-semibold mb-2">Attributes</h3>
               {[
@@ -138,30 +125,29 @@ export function ReviewStep() {
                 { key: 'initiativeBonus', label: 'Initiative Bonus' },
                 { key: 'luckPoints', label: 'Luck Points' },
                 { key: 'movementRate', label: 'Movement Rate' }
-              ].map(attr => (
-                <div key={attr.key} className="flex items-center mb-2">
-                  <span className="w-32 font-medium">{attr.label}</span>
+              ].map(a => (
+                <div key={a.key} className="flex items-center mb-2">
+                  <span className="w-32 font-medium">{a.label}</span>
                   <div className="bg-yellow-100 border border-yellow-300 rounded w-32 p-2">
-                    {character[attr.key] != null ? character[attr.key] : ''}
+                    {character[a.key] != null ? character[a.key] : ''}
                   </div>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Hit Points per Location */}
+          {/* HP Locations */}
           <div className="col-span-3 mb-6">
-            <h3 className="font-semibold mb-2">HP per Location</h3>
+            <h3 className="font-semibold mb-2">HP per Location</nenerate>
             <div className="grid grid-cols-3 gap-4">
               {[
-                { locKey: 'Head', label: 'Head' },
-                { locKey: 'Chest', label: 'Chest' },
-                { locKey: 'Abdomen', label: 'Abdomen' },
-                { locKey: 'Each Arm', label: 'Left Arm' },
-                { locKey: 'Each Arm', label: 'Right Arm' },
-                { locKey: 'Leg', label: 'Left Leg' },
-                { locKey: 'Leg', label: 'Right Leg' }
-              ].map(({ locKey, label }) => (
+                ['Head','Head'],
+                ['Chest','Chest'],
+                ['Abdomen','Abdomen'],
+                ['Each Arm','Left Arm'],
+                ['Each Arm','Right Arm'],
+                ['Leg','Left Leg'],
+                ['Leg','Right Leg'],
+              ].map(([locKey,label]) => (
                 <div key={label} className="flex justify-between items-center p-2 border rounded">
                   <span>{label}</span>
                   <span>{getHp(locKey)}</span>
@@ -169,13 +155,12 @@ export function ReviewStep() {
               ))}
             </div>
           </div>
-
           {/* Background & Contacts */}
           <div className="col-span-2">
             <label className="block font-semibold mb-1">Background, Community & Family</label>
             <textarea
               name="backgroundNotes"
-              value={character.backgroundNotes || ''}
+              value={character.backgroundNotes||''}
               onChange={handleChange}
               rows={4}
               className="w-full border p-2 rounded"
@@ -185,51 +170,46 @@ export function ReviewStep() {
             <label className="block font-semibold mb-1">Contacts, Allies & Enemies</label>
             <textarea
               name="contacts"
-              value={character.contacts || ''}
+              value={character.contacts||''}
               onChange={handleChange}
               rows={4}
               className="w-full border p-2 rounded"
             />
           </div>
-
           {/* Equipment */}
           <div className="col-span-1 mt-6">
             <h3 className="font-semibold mb-2">Equipment</h3>
             <ul className="list-disc list-inside">
-              {equipmentList.length ? (
-                equipmentList.map((item, i) => (
-                  <li key={i} className="mb-1">{item}</li>
-                ))
-              ) : (
-                <li className="text-gray-500">No equipment selected</li>
-              )}
+              {equipmentList.length ? equipmentList.map((itm,i)=><li key={i}>{itm}</li>) : <li>No equipment selected</li>}
             </ul>
           </div>
         </section>
-
-        {/* Page 2: Skills & Equipment */}
+        {/* Page 2: Skills */}
         <section className="page p-6 grid grid-cols-3 gap-6">
-          {/* Skills */}
           <div className="col-span-2 mt-6">
-
-            {/* Standard Skills */}
             <h3 className="font-semibold mb-2">Standard Skills</h3>
             <div className="grid grid-cols-3 gap-4 mb-6">
-              {standardDisplayed.map(name => (
-                <div key={name} className="flex justify-between items-center p-2 border rounded">
-                  <span>{name}</span>
-                  <span>{character.skills?.[name] ?? 0}%</span>
-                </div>
-              ))}
+              {standardDisplayed.map(n=><div key={n} className="flex justify-between items-center p-2 border rounded"><span>{n}</span><span>{character.skills?.[n]||0}%</span></div>)}
             </div>
-
-            {/* Resistances */}
             <h3 className="font-semibold mb-2">Resistances</h3>
             <div className="grid grid-cols-4 gap-4 mb-6">
-              {resistanceList.map(name => (
-                <div key={name} className="flex justify-between items-center p-2 border rounded">
-                  <span>{name}</span>
-                  <span>{character.skills?.[name] ?? 0}%</span>
-                </div>
-              ))}
+              {resistanceList.map(n=><div key={n} className="flex justify-between items-center p-2 border rounded"><span>{n}</span><span>{character.skills?.[n]||0}%</span></div>)}
             </div>
+            <h3 className="font-semibold mb-2">Combat Skills</h3>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              {!combatDisplayed.length? <p className="text-sm text-gray-500">None learned</p> : combatDisplayed.map(n=><div key={n} className="flex justify-between items-center p-2 border rounded"><span>{n}</span><span>{character.skills?.[n]||0}%</span></div>)}
+            </div>
+            <h3 className="font-semibold mb-2">Professional Skills</h3>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              {!professionalDisplayed.length? <p className="text-sm text-gray-500">None learned</p> : professionalDisplayed.map(n=><div key={n} className="flex justify-between items-center p-2 border rounded"><span>{n}</span><span>{character.skills?.[n]||0}%</span></div>)}
+            </div>
+            <h3 className="font-semibold mb-2">Magic Skills</h3>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              {!magicDisplayed.length? <p className="text-sm text-gray-500">None learned</p> : magicDisplayed.map(n=><div key={n} className="flex justify-between items-center p-2 border rounded"><span>{n}</span><span>{character.skills?.[n]||0}%</span></div>)}
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
