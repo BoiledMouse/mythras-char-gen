@@ -163,31 +163,9 @@ export function ReviewStep() {
         </section>
 
         {/* Page 1: Characteristics & Attributes */}
-        <section className="grid grid-cols-2 gap-6 mb-6">
-          <div>
-            <h3 className="font-semibold mb-2">Characteristics</h3>
-            {['STR','CON','SIZ','DEX','INT','POW','CHA'].map(s=>(
-              <div key={s} className="flex items-center mb-2">
-                <span className="w-20 font-medium">{s}</span>
-                <div className="bg-yellow-100 border border-yellow-300 rounded w-32 p-2 text-center">
-                  {character[s]||''}
-                </div>
-              </div>
-            ))}
+        <section className="grid grid-cols-2 gap-6 mb-6">$1
           </div>
-          <div>
-            <h3 className="font-semibold mb-2">Attributes</h3>
-            {[
-              'actionPoints','damageMod','xpMod','healingRate','initiativeBonus','luckPoints','movementRate'
-            ].map(key=>(
-              <div key={key} className="flex items-center mb-2">
-                <span className="w-32 font-medium">{key.replace(/([A-Z])/g,' $1').replace(/^./,c=>c.toUpperCase())}</span>
-                <div className="bg-yellow-100 border border-yellow-300 rounded w-32 p-2 text-center">
-                  {character[key]!=null?character[key]:''}
-                </div>
-              </div>
-            ))}
-          </section>
+        </section>
 
         {/* HP per Location */}
         <section className="mb-6">
