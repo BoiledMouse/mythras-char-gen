@@ -15,7 +15,13 @@ export function ReviewStep() {
   // Skill categories
   const standardNames = skillsData.standard.map(s => s.name);
   const professionalNames = skillsData.professional.map(s => s.name);
-  const magicNames = (skillsData.magic || []).map(s => s.name);
+  const allMagicNames = [
+    ...(skillsData.folkMagic || []).map(s => s.name),
+    ...(skillsData.animism || []).map(s => s.name),
+    ...(skillsData.mysticism || []).map(s => s.name),
+    ...(skillsData.sorcery || []).map(s => s.name),
+    ...(skillsData.theism || []).map(s => s.name),
+  ];
   const combatNames = [...(skillsData.combatStyles || []).map(s => s.name), 'Unarmed'];
   const learnedNames = character.skills ? Object.keys(character.skills) : [];
 
@@ -23,7 +29,7 @@ export function ReviewStep() {
   const resistanceList = ['Brawn', 'Endurance', 'Evade', 'Willpower'];
 
   // Display filters
-  const standardDisplayed = standardNames.filter(n => !resistanceList.includes(n));
+  const standardDisplayed = standardNames.filter(n => !resistanceList.includes(n) && !combatNames.includes(n));
   const resistancesDisplayed = resistanceList;
   const combatDisplayed = combatNames.filter(n => learnedNames.includes(n));
   const professionalDisplayed = professionalNames.filter(n => learnedNames.includes(n));
