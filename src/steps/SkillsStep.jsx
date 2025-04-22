@@ -7,16 +7,13 @@ import skillsData from '../data/skills.json';
 import StepWrapper from '../components/StepWrapper';
 
 export default function SkillsStep({ formData }) {
-  // 1) get attributes from context
   const { character, updateCharacter } = useCharacter();
   const { STR=0, DEX=0, INT=0, CON=0, POW=0, CHA=0, SIZ=0 } = character;
 
-  // 2) get age, culture, career from formData
   const { age=0, culture: cultKey='', career: careerKey='' } = formData;
   const cultureDef = cultures[cultKey] || {};
   const careerDef  = careers[careerKey] || {};
 
-  // 3) age‐based bonus bucket
   const ageBuckets = [
     { max: 16, bonus: 100, maxInc: 10 },
     { max: 27, bonus: 150, maxInc: 15 },
@@ -27,7 +24,6 @@ export default function SkillsStep({ formData }) {
   const { bonus: initialBonusPool, maxInc } =
     ageBuckets.find(b => age <= b.max);
 
-  // 4) computeBase helper
   const attrs = { STR, DEX, INT, CON, POW, CHA, SIZ };
   const computeBase = expr => {
     const parts = expr.split(/\s*([+x])\s*/).filter(Boolean);
@@ -40,57 +36,49 @@ export default function SkillsStep({ formData }) {
     return val;
   };
 
-  // 5) build base tables
+  // Moved up here so it's defined before baseProfessional
+  const combatStyles = cultureDef.combatStyles || [];
+
   const baseStandard = {};
   skillsData.standard.forEach(({ name, base }) => {
     let b = computeBase(base);
     if (name==='Customs' || name==='Native Tongue') b += 40;
     baseStandard[name] = b;
   });
-const baseProfessional = {};
-skillsData.professional.forEach(({ name, base }) => {
-  baseProfessional[name] = computeBase(base);
-});
 
-// Add combat styles with base = STR + DEX
-combatStyles.forEach(style => {
-  baseProfessional[style] = STR + DEX;
-});
+  const baseProfessional = {};
+  skillsData.professional.forEach(({ name, base }) => {
+    baseProfessional[name] = computeBase(base);
+  });
 
-  // 6) which skills apply?
+  // Add base value for combat styles
+  combatStyles.forEach(style => {
+    baseProfessional[style] = STR + DEX;
+  });
+
   const cultStd  = cultureDef.standardSkills    || [];
   const cultProf = cultureDef.professionalSkills || [];
   const carStd   = careerDef.standardSkills     || [];
   const carProf  = careerDef.professionalSkills || [];
-  const combatStyles = cultureDef.combatStyles || [];
 
-  // 7) fixed pools
   const CULT_POOL   = 100;
   const CAREER_POOL = 100;
 
-  // 8) wizard phases and allocations
   const [phase,      setPhase]        = useState(1);
-
-  // cultural
   const [cStdAlloc,   setCStdAlloc]   = useState({});
   const [cProfSel,    setCProfSel]    = useState([]);
   const [cProfAlloc,  setCProfAlloc]  = useState({});
   const [cCombSel,    setCCombSel]    = useState('');
   const [cCombAlloc,  setCCombAlloc]  = useState(0);
-
-  // career
   const [rStdAlloc,   setRStdAlloc]   = useState({});
   const [rProfSel,    setRProfSel]    = useState([]);
   const [rProfAlloc,  setRProfAlloc]  = useState({});
-
-  // bonus
   const [bonusSel,    setBonusSel]    = useState([]);
   const [bonusAlloc,  setBonusAlloc]  = useState({});
   const [bonusLeft,   setBonusLeft]   = useState(initialBonusPool);
 
   const sum = o => Object.values(o).reduce((a,v)=>(a + (v||0)),0);
 
-  // 9) persist when finish
   useEffect(() => {
     if (phase > 3) {
       const final = { ...baseStandard, ...baseProfessional };
@@ -104,7 +92,6 @@ combatStyles.forEach(style => {
     }
   }, [phase]);
 
-  // generic slider handler
   const handleSlider = (setter, allocObj, key, poolLeft, setPool, limit) => e => {
     let v = parseInt(e.target.value,10) || 0;
     v = Math.max(0, Math.min(limit, v));
@@ -115,7 +102,6 @@ combatStyles.forEach(style => {
     }
   };
 
-  // combat style slider (special)
   const handleCombat = e => {
     let v = parseInt(e.target.value,10)||0;
     v = Math.max(0, Math.min(maxInc, v));
@@ -128,7 +114,6 @@ combatStyles.forEach(style => {
     }
   };
 
-  // bonus slider
   const handleBonus = skill => e => {
     let v = parseInt(e.target.value,10)||0;
     if (v>0 && v<5) v = 0;
@@ -139,6 +124,7 @@ combatStyles.forEach(style => {
       setBonusLeft(pl => pl - delta);
     }
   };
+
 
   return (
     <StepWrapper title="Skills">
