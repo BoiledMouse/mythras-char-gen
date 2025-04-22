@@ -47,10 +47,15 @@ export default function SkillsStep({ formData }) {
     if (name==='Customs' || name==='Native Tongue') b += 40;
     baseStandard[name] = b;
   });
-  const baseProfessional = {};
-  skillsData.professional.forEach(({ name, base }) => {
-    baseProfessional[name] = computeBase(base);
-  });
+const baseProfessional = {};
+skillsData.professional.forEach(({ name, base }) => {
+  baseProfessional[name] = computeBase(base);
+});
+
+// Add combat styles with base = STR + DEX
+combatStyles.forEach(style => {
+  baseProfessional[style] = STR + DEX;
+});
 
   // 6) which skills apply?
   const cultStd  = cultureDef.standardSkills    || [];
