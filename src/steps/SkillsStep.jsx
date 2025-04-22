@@ -36,7 +36,6 @@ export default function SkillsStep({ formData }) {
     return val;
   };
 
-  // Moved up here so it's defined before baseProfessional
   const combatStyles = cultureDef.combatStyles || [];
 
   const baseStandard = {};
@@ -51,7 +50,6 @@ export default function SkillsStep({ formData }) {
     baseProfessional[name] = computeBase(base);
   });
 
-  // Add base value for combat styles
   combatStyles.forEach(style => {
     baseProfessional[style] = STR + DEX;
   });
@@ -88,7 +86,15 @@ export default function SkillsStep({ formData }) {
       carStd.forEach(s => final[s] += rStdAlloc[s]||0);
       rProfSel.forEach(s => final[s] += rProfAlloc[s]||0);
       bonusSel.forEach(s => final[s] += bonusAlloc[s]||0);
-      updateCharacter({ skills: final });
+
+      updateCharacter({
+        skills: final,
+        selectedSkills: {
+          standard: [...cultStd, ...carStd],
+          professional: [...cProfSel, ...rProfSel],
+          combat: [...(cCombSel ? [cCombSel] : []), 'Unarmed']
+        }
+      });
     }
   }, [phase]);
 
@@ -124,7 +130,6 @@ export default function SkillsStep({ formData }) {
       setBonusLeft(pl => pl - delta);
     }
   };
-
 
   return (
     <StepWrapper title="Skills">
@@ -379,3 +384,5 @@ export default function SkillsStep({ formData }) {
     </StepWrapper>
   );
 }
+
+
