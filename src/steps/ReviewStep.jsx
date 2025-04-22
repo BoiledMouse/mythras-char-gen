@@ -2,7 +2,6 @@ import React from 'react';
 import { useCharacter } from '../context/characterContext';
 import skillsData from '../data/skills.json';
 import equipmentData from '../data/equipment.json';
-
 import StepWrapper from '../components/StepWrapper';
 
 export function ReviewStep() {
@@ -42,7 +41,7 @@ export function ReviewStep() {
     .filter(([, qty]) => qty > 0)
     .map(([name, qty]) => `${name} x${qty}`);
 
-  // HP per location
+  // Hit points per location
   const hpSum = (Number(character.CON) || 0) + (Number(character.SIZ) || 0);
   const thresholds = [5, 10, 15, 20, 25, 30, 35, 40];
   const hpTable = {
@@ -56,8 +55,8 @@ export function ReviewStep() {
     let idx = thresholds.findIndex(t => hpSum <= t);
     if (idx === -1) idx = thresholds.length - 1;
     let val = hpTable[key][idx];
-    if (hpSum > thresholds[thresholds.length-1]) {
-      const extra = Math.floor((hpSum - thresholds[thresholds.length-1] - 1)/5) + 1;
+    if (hpSum > thresholds[thresholds.length - 1]) {
+      const extra = Math.floor((hpSum - thresholds[thresholds.length - 1] - 1) / 5) + 1;
       val += extra;
     }
     return val;
@@ -69,6 +68,7 @@ export function ReviewStep() {
 
         {/* Page 1 */}
         <section className="page p-6 grid grid-cols-3 gap-6">
+
           {/* Header Inputs */}
           <div className="col-span-3 grid grid-cols-4 gap-4 mb-4">
             {[
@@ -271,13 +271,12 @@ export function ReviewStep() {
                     <span>{n}</span>
                     <span>{character.skills?.[n] || 0}%</span>
                   </div>
-                )))
-              }
+                ))
+              )}
             </div>
           </div>
         </section>
       </div>
-    </div>
-  </StepWrapper>
+    </StepWrapper>
   );
 }
