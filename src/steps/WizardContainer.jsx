@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import './WizardContainer.css';
 
 import ConceptStep from './ConceptStep';
-import { AttributesStep } from './AttributesStep';
+import AttributesStep from './AttributesStep';
 import SkillsStep from './SkillsStep';
 import EquipmentStep from './EquipmentStep';
 import { ReviewStep } from './ReviewStep';
