@@ -34,8 +34,9 @@ export function ReviewStep() {
   const combatDisplayed = combatNames.filter(n => learnedNames.includes(n));
   const professionalDisplayed = professionalNames.filter(n => {
   const score = character.skills?.[n] ?? 0;
-  const base = skillsData.professional.find(s => s.name === n)?.base || 0;
-  return score > base;
+  const skillDef = skillsData.professional.find(s => s.name === n);
+  if (!skillDef || typeof skillDef.base !== 'number') return false;
+  return score > skillDef.base;
 });
   const magicDisplayed = allMagicNames.filter(n => learnedNames.includes(n));
 
