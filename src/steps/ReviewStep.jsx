@@ -61,7 +61,7 @@ export function ReviewStep() {
   const resistancesDisplayed = resistanceList.filter(n =>
     learnedNames.includes(n)
   );
-  const combatDisplayed = selected.combat || [];
+  const combatDisplayed = [...new Set([...(selected.combat || []), 'Unarmed'])];
   const professionalDisplayed = selected.professional || [];
   const magicDisplayed = allMagicNames.filter(n =>
     learnedNames.includes(n)
