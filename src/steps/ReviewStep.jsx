@@ -29,9 +29,11 @@ const resistanceList = ['Brawn', 'Endurance', 'Evade', 'Willpower'];
 const selected = character.selectedSkills || {};
 const combatDisplayed = selected.combat || [];
 const professionalDisplayed = selected.professional || [];
-const standardDisplayed = selected.standard?.filter(
-  n => !resistanceList.includes(n) && n !== 'Unarmed'
-) || [];
+
+// show every standard skill (minus true "resistances" and Unarmed)
+const standardDisplayed = skillsData.standard.map(s=>s.name)
+  .filter(n => !resistanceList.includes(n) && n!=='Unarmed');
+
 const resistancesDisplayed = resistanceList.filter(n => learnedNames.includes(n));
 const magicDisplayed = allMagicNames.filter(n => learnedNames.includes(n));
 
@@ -255,7 +257,7 @@ const magicDisplayed = allMagicNames.filter(n => learnedNames.includes(n));
           <div className="col-span-2">
             <h3 className="font-semibold mb-2">Standard Skills</h3>
             <div className="grid grid-cols-3 gap-4 mb-6">
-              {standardDisplayed.map(n=><div key={n} className="flex justify-between items-center p-2 border rounded"><span>{n}</span><span>{character.skills?.[n]||0}%</span></div>)}
+             <div className="grid grid-cols-3 gap-4 mb-6">{standardDisplayed.map(n=><div key={n} className="flex justify-between items-center p-2 border rounded"><span>{n}</span><span>{character.skills?.[n]||0}%</span></div>)}</div>
             </div>
             <h3 className="font-semibold mb-2">Resistances</h3>
             <div className="grid grid-cols-4 gap-4 mb-6">
