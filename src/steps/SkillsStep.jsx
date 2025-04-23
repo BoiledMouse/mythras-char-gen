@@ -168,7 +168,7 @@ export default function SkillsStep({ formData }) {
               </div>
             );
           })}
-          <h3 className="font-heading text-lg mt-4 mb-2">Combat Style</n          ?>
+          <h3 className="font-heading text-lg mt-4 mb-2">Combat Style</h3>
           {cultureDef.combatStyles?.map(cs => (
             <label key={cs} className="inline-flex items-center mr-4 mb-2">
               <input
