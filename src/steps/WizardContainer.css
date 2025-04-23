@@ -1,39 +1,61 @@
+/* ========================= src/steps/WizardContainer.css ========================= */
+
 .wizard-container {
   max-width: 900px;
   margin: 0 auto;
   position: relative;
 }
 
-/* 1) Make tabs a row, and pull them down 1px so their bottom border
-      overlaps the panel’s border seamlessly */
 .wizard-tabs {
   display: flex;
+  overflow-x: auto;
+  flex-wrap: nowrap;
   margin-bottom: -2px;
-  padding-left: 1.5rem; /* shift right to align with panel padding */
+  padding-left: 1.5rem;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* 2) Each tab */
+.wizard-tabs::-webkit-scrollbar {
+  display: none;
+}
+
 .wizard-tab {
+  flex-shrink: 0;
   padding: 0.5rem 1rem;
   margin-right: 0.25rem;
-  border: 2px solid #2e1f0f;
-  border-bottom: none;           /* hide bottom edge so panel border continues */
+  border: 2px solid var(--color-wood);
+  border-bottom: none;
   border-radius: 0.25rem 0.25rem 0 0;
-  background: #dec454;
-  font-style: italic;
+  background: var(--color-parchment);
+  color: var(--color-wood);
+  font-family: var(--font-heading);
   cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
 }
 
-/* 3) Active tab gets a little extra weight */
+.wizard-tab:hover {
+  background-color: var(--color-gold);
+  color: var(--color-wood);
+  box-shadow: 0 0 5px rgba(212,175,55,0.5);
+}
+
 .wizard-tab.active {
-  background: #d8b33f;
+  background: var(--color-gold);
+  color: var(--color-wood);
   font-weight: bold;
 }
 
-/* 4) The panel under the tabs */
 .wizard-panel {
-  border: 2px solid #2e1f0f;
+  border: 2px solid var(--color-wood);
   border-radius: 0.5rem;
-  padding: 1.5rem;  /* content padding */
-  background: #f3df9d;
+  padding: 1.5rem;
+  background: var(--color-parchment);
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .wizard-tab {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
 }
