@@ -9,11 +9,9 @@ import StepWrapper from '../components/StepWrapper';
 export default function SkillsStep({ formData }) {
   const { character, updateCharacter } = useCharacter();
   const { STR=0, DEX=0, INT=0, CON=0, POW=0, CHA=0, SIZ=0 } = character;
-
   const { age=0, culture: cultKey='', career: careerKey='' } = formData;
   const cultureDef = cultures[cultKey] || {};
-  const careerDef  = careers[careerKey] || {};
-
+  const careerDef = careers[careerKey] || {};
   const ageBuckets = [
     { max: 16, bonus: 100, maxInc: 10 },
     { max: 27, bonus: 150, maxInc: 15 },
@@ -21,35 +19,53 @@ export default function SkillsStep({ formData }) {
     { max: 64, bonus: 250, maxInc: 25 },
     { max: Infinity, bonus: 300, maxInc: 30 },
   ];
-  const { bonus: initialBonusPool, maxInc } =
-    ageBuckets.find(b => age <= b.max);
-
+  const { bonus: initialBonusPool, maxInc } = ageBuckets.find(b => age <= b.max);
   const attrs = { STR, DEX, INT, CON, POW, CHA, SIZ };
+
   const computeBase = expr => {
     const parts = expr.split(/\s*([+x])\s*/).filter(Boolean);
     let val = parseInt(attrs[parts[0]]||0,10);
     for (let i = 1; i < parts.length; i += 2) {
       const op = parts[i], tok = parts[i+1];
-      const v  = /^\d+$/.test(tok) ? +tok : attrs[tok]||0;
-      val = op==='x' ? val*v : val+v;
+      const v = /^\d+$/.test(tok) ? +tok : attrs[tok]||0;
+      val = op === 'x' ? val * v : val + v;
     }
     return val;
   };
 
   const combatStyles = cultureDef.combatStyles || [];
 
+  // Standard skills base
   const baseStandard = {};
   skillsData.standard.forEach(({ name, base }) => {
     let b = computeBase(base);
-    if (name==='Customs' || name==='Native Tongue') b += 40;
+    if (name === 'Customs' || name === 'Native Tongue') b += 40;
     baseStandard[name] = b;
   });
 
-  const baseProfessional = {};
+  // Professional skills: calculate generic bases
+  const baseProfessionalGeneric = {};
   skillsData.professional.forEach(({ name, base }) => {
-    baseProfessional[name] = computeBase(base);
+    baseProfessionalGeneric[name] = computeBase(base);
   });
 
+  // Build final professional bases, handling parentheses
+  const baseProfessional = {};
+  skillsData.professional.forEach(({ name }) => {
+    if (name.includes('(')) {
+      const root = name.split('(')[0].trim();
+      baseProfessional[name] = baseProfessionalGeneric[root] ?? baseProfessionalGeneric[name];
+    } else {
+      baseProfessional[name] = baseProfessionalGeneric[name];
+    }
+  });
+
+  // Extra +40% for main Language skill only
+  if (baseProfessional['Language'] !== undefined) {
+    baseProfessional['Language'] += 40;
+  }
+
+  // Combat styles override
   combatStyles.forEach(style => {
     baseProfessional[style] = STR + DEX;
   });
