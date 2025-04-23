@@ -224,7 +224,7 @@ export default function SkillsStep({ formData }) {
       {phase===3&&(
         <StepWrapper title="Bonus Skills">
           <p>Bonus left: {bonusLeft}</p>
-          {Array.from(new Set([...(cultureDef.standardSkills||[]),...(cultureDef.professionalSkills||[]),...(cultureDef.combatStyles&&cCombSel?[cCombSel]:[]),...(careerDef.standardSkills||[]),...(careerDef.professionalSkills||[])]))[].map(s=>{
+          {Array.from(new Set([$1])).map(s=>{
             const base=(baseStandard[s]||0)+(cStdAlloc[s]||0)+(baseProfessional[s]||0)+(cProfAlloc[s]||0)+(s===cCombSel?cCombAlloc:0)+(rStdAlloc[s]||0)+(rProfAlloc[s]||0), alloc=bonusAlloc[s]||0;
             return(
               <div key={s} className="flex items-center mb-2">
