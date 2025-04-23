@@ -4,7 +4,36 @@ import { useCharacter } from '../context/characterContext';
 import skillsData from '../data/skills.json';
 import equipmentData from '../data/equipment.json';
 import StepWrapper from '../components/StepWrapper';
-import { Document, Page, Text, View, StyleSheet, pdf, PDFDownloadLink } from '@react-pdf/renderer';
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  PDFDownloadLink
+} from '@react-pdf/renderer';
+
+// --- HP calculation tables & helper ---
+const thresholds = [5, 10, 15, 20, 25, 30, 35, 40];
+const hpTable = {
+  Head: [1, 2, 3, 4, 5, 6, 7, 8],
+  Chest: [3, 4, 5, 6, 7, 8, 9, 10],
+  Abdomen: [2, 3, 4, 5, 6, 7, 8, 9],
+  'Each Arm': [1, 1, 2, 3, 4, 5, 6, 7],
+  Leg: [1, 2, 3, 4, 5, 6, 7, 8],
+};
+const calcHp = (CON, SIZ, key) => {
+  const sum = (Number(CON) || 0) + (Number(SIZ) || 0);
+  let idx = thresholds.findIndex(t => sum <= t);
+  if (idx === -1) idx = thresholds.length - 1;
+  let val = hpTable[key][idx];
+  if (sum > thresholds[thresholds.length - 1]) {
+    const extra =
+      Math.floor((sum - thresholds[thresholds.length - 1] - 1) / 5) + 1;
+    val += extra;
+  }
+  return val;
+};
 
 export function ReviewStep() {
   const { character, updateCharacter } = useCharacter();
@@ -14,7 +43,7 @@ export function ReviewStep() {
     updateCharacter({ [name]: value });
   };
 
-  // Skill categories
+  // --- Skill categories ---
   const resistanceList = ['Brawn', 'Endurance', 'Evade', 'Willpower'];
   const allMagicNames = [
     ...(skillsData.folkMagic || []).map(s => s.name),
@@ -38,7 +67,7 @@ export function ReviewStep() {
     learnedNames.includes(n)
   );
 
-  // Equipment & silver
+  // --- Equipment & silver ---
   const equipmentAlloc = character.equipmentAlloc || {};
   const startingSilver = Number(character.startingSilver) || 0;
   const totalSpent = Object.entries(equipmentAlloc).reduce(
@@ -53,42 +82,7 @@ export function ReviewStep() {
     .filter(([, qty]) => qty > 0)
     .map(([name, qty]) => `${name} x${qty}`);
 
-  // HP per location
-  const hpSum = (Number(character.CON) || 0) + (Number(character.SIZ) || 0);
-  const thresholds = [5, 10, 15, 20, 25, 30, 35, 40];
-  const hpTable = {
-    Head: [1, 2, 3, 4, 5, 6, 7, 8],
-    Chest: [3, 4, 5, 6, 7, 8, 9, 10],
-    Abdomen: [2, 3, 4, 5, 6, 7, 8, 9],
-    'Each Arm': [1, 1, 2, 3, 4, 5, 6, 7],
-    Leg: [1, 2, 3, 4, 5, 6, 7, 8],
-  };
-  const getHp = key => {
-    let idx = thresholds.findIndex(t => hpSum <= t);
-    if (idx === -1) idx = thresholds.length - 1;
-    let val = hpTable[key][idx];
-    if (hpSum > thresholds[thresholds.length - 1]) {
-      const extra =
-        Math.floor((hpSum - thresholds[thresholds.length - 1] - 1) / 5) + 1;
-      val += extra;
-    }
-    return val;
-  };
-
-  // PDF export via @react-pdf/renderer
-  const exportPDF = async () => {
-    // pass your document element straight into `pdf()`
-    const instance = pdf(<CharacterSheetDocument character={character} />);
-    const blob = await instance.toBlob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${character.characterName || 'character'}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // Markdown export (unchanged)
+  // --- Markdown export ---
   const generateMarkdown = () => {
     const lines = [];
     lines.push(`# ${character.characterName || 'Character'}`);
@@ -96,10 +90,12 @@ export function ReviewStep() {
     lines.push(`**Sex**: ${character.sex || ''}`);
     lines.push(`**Age**: ${character.age || ''}`);
     lines.push('');
-    ['Species','Frame','Height','Weight','Career','Culture','Social Class'].forEach(label => {
-      const key = label.charAt(0).toLowerCase() + label.slice(1).replace(/ /g,'');
-      lines.push(`**${label}**: ${character[key] || ''}`);
-    });
+    ['Species','Frame','Height','Weight','Career','Culture','Social Class']
+      .forEach(label => {
+        const key = label.charAt(0).toLowerCase() +
+                    label.slice(1).replace(/ /g, '');
+        lines.push(`**${label}**: ${character[key] || ''}`);
+      });
     lines.push('');
     lines.push('## Characteristics');
     ['STR','CON','SIZ','DEX','INT','POW','CHA'].forEach(stat =>
@@ -107,14 +103,21 @@ export function ReviewStep() {
     );
     lines.push('');
     lines.push('## Attributes');
-    ['actionPoints','damageMod','xpMod','healingRate','initiativeBonus','luckPoints','movementRate'].forEach(label => {
-      const pretty = label.replace(/([A-Z])/g,' $1').replace(/^./,c=>c.toUpperCase());
-      lines.push(`- **${pretty}**: ${character[label] || ''}`);
-    });
+    ['actionPoints','damageMod','xpMod','healingRate','initiativeBonus','luckPoints','movementRate']
+      .forEach(label => {
+        const pretty = label
+          .replace(/([A-Z])/g,' $1')
+          .replace(/^./,c=>c.toUpperCase());
+        lines.push(`- **${pretty}**: ${character[label] || ''}`);
+      });
     lines.push('');
     lines.push('## Hit Points per Location');
-    [['Head','Head'],['Chest','Chest'],['Abdomen','Abdomen'],['Each Arm','Left Arm'],['Each Arm','Right Arm'],['Leg','Left Leg'],['Leg','Right Leg']].forEach(([k,loc]) => {
-      lines.push(`- **${loc}**: ${getHp(k)}`);
+    [
+      ['Head','Head'],['Chest','Chest'],['Abdomen','Abdomen'],
+      ['Each Arm','Left Arm'],['Each Arm','Right Arm'],
+      ['Leg','Left Leg'],['Leg','Right Leg']
+    ].forEach(([k,loc]) => {
+      lines.push(`- **${loc}**: ${calcHp(character.CON, character.SIZ, k)}`);
     });
     lines.push('');
     lines.push('## Background, Community & Family');
@@ -133,31 +136,42 @@ export function ReviewStep() {
     lines.push('## Skills');
     if (standardDisplayed.length) {
       lines.push('### Standard Skills');
-      standardDisplayed.forEach(n => lines.push(`- ${n}: ${character.skills?.[n] || 0}%`));
+      standardDisplayed.forEach(n =>
+        lines.push(`- ${n}: ${character.skills?.[n] || 0}%`)
+      );
       lines.push('');
     }
     if (resistancesDisplayed.length) {
       lines.push('### Resistances');
-      resistancesDisplayed.forEach(n => lines.push(`- ${n}: ${character.skills?.[n] || 0}%`));
+      resistancesDisplayed.forEach(n =>
+        lines.push(`- ${n}: ${character.skills?.[n] || 0}%`)
+      );
       lines.push('');
     }
     if (combatDisplayed.length) {
       lines.push('### Combat Skills');
-      combatDisplayed.forEach(n => lines.push(`- ${n}: ${character.skills?.[n] || 0}%`));
+      combatDisplayed.forEach(n =>
+        lines.push(`- ${n}: ${character.skills?.[n] || 0}%`)
+      );
       lines.push('');
     }
     if (professionalDisplayed.length) {
       lines.push('### Professional Skills');
-      professionalDisplayed.forEach(n => lines.push(`- ${n}: ${character.skills?.[n] || 0}%`));
+      professionalDisplayed.forEach(n =>
+        lines.push(`- ${n}: ${character.skills?.[n] || 0}%`)
+      );
       lines.push('');
     }
     if (magicDisplayed.length) {
       lines.push('### Magic Skills');
-      magicDisplayed.forEach(n => lines.push(`- ${n}: ${character.skills?.[n] || 0}%`));
+      magicDisplayed.forEach(n =>
+        lines.push(`- ${n}: ${character.skills?.[n] || 0}%`)
+      );
       lines.push('');
     }
     return lines.join('\n');
   };
+
   const exportMarkdown = () => {
     const md = generateMarkdown();
     const blob = new Blob([md], { type: 'text/markdown' });
@@ -169,24 +183,19 @@ export function ReviewStep() {
     URL.revokeObjectURL(url);
   };
 
-    return (
+  return (
     <StepWrapper title="Review">
       <div className="flex justify-end gap-4 mb-4">
         <button onClick={exportMarkdown} className="btn btn-secondary">
           Export Markdown
         </button>
-
         <PDFDownloadLink
           document={<CharacterSheetDocument character={character} />}
           fileName={`${character.characterName || 'character'}.pdf`}
           className="btn btn-secondary"
         >
           {({ loading, error }) =>
-            loading
-              ? 'Generating PDF…'
-              : error
-              ? 'Error'
-              : 'Export PDF'
+            loading ? 'Generating PDF…' : error ? 'Error' : 'Export PDF'
           }
         </PDFDownloadLink>
       </div>
@@ -264,9 +273,7 @@ export function ReviewStep() {
             ].map(key => (
               <div key={key} className="flex items-center mb-2">
                 <span className="w-32 font-medium">
-                  {key
-                    .replace(/([A-Z])/g, ' $1')
-                    .replace(/^./, c => c.toUpperCase())}
+                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase())}
                 </span>
                 <div className="bg-yellow-100 border border-yellow-300 rounded w-32 p-2 text-center">
                   {character[key] != null ? character[key] : ''}
@@ -294,13 +301,13 @@ export function ReviewStep() {
                 className="flex justify-between items-center p-2 border rounded"
               >
                 <span>{label}</span>
-                <span>{getHp(k)}</span>
+                <span>{calcHp(character.CON, character.SIZ, k)}</span>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Background */}
+        {/* Background & Contacts */}
         <section className="grid grid-cols-3 gap-6 mb-6">
           <div className="col-span-2">
             <label className="block font-semibold mb-1">
@@ -348,7 +355,7 @@ export function ReviewStep() {
           </div>
         </section>
 
-        {/* Page 2: Skills — full-width, auto-fit grid */}
+        {/* Page 2: Skills */}
         <section className="p-6 mb-6">
           <div className="space-y-8">
             {/* Standard Skills */}
@@ -356,7 +363,9 @@ export function ReviewStep() {
               <h3 className="font-semibold mb-2">Standard Skills</h3>
               <div
                 className="grid gap-4"
-                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
+                style={{
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))'
+                }}
               >
                 {standardDisplayed.map(n => (
                   <div
@@ -373,34 +382,38 @@ export function ReviewStep() {
             </div>
 
             {/* Resistances */}
-{resistancesDisplayed.length > 0 && (
-  <div>
-    <h3 className="font-semibold mb-2">Resistances</h3>
-    <div
-      className="grid gap-4"
-      style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
-    >
-      {resistancesDisplayed.map(n => (
-        <div
-          key={n}
-          className="flex items-center p-2 border rounded min-w-0"
-        >
-          <span className="flex-1 font-medium break-words">{n}</span>
-          <span className="flex-none ml-2">
-            {character.skills?.[n] || 0}%
-          </span>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
+            {resistancesDisplayed.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-2">Resistances</h3>
+                <div
+                  className="grid gap-4"
+                  style={{
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))'
+                  }}
+                >
+                  {resistancesDisplayed.map(n => (
+                    <div
+                      key={n}
+                      className="flex items-center p-2 border rounded min-w-0"
+                    >
+                      <span className="flex-1 font-medium break-words">{n}</span>
+                      <span className="flex-none ml-2">
+                        {character.skills?.[n] || 0}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Combat Skills */}
             <div>
               <h3 className="font-semibold mb-2">Combat Skills</h3>
               <div
                 className="grid gap-4"
-                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
+                style={{
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))'
+                }}
               >
                 {combatDisplayed.length > 0 ? (
                   combatDisplayed.map(n => (
@@ -425,7 +438,9 @@ export function ReviewStep() {
               <h3 className="font-semibold mb-2">Professional Skills</h3>
               <div
                 className="grid gap-4"
-                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
+                style={{
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))'
+                }}
               >
                 {professionalDisplayed.length > 0 ? (
                   professionalDisplayed.map(n => (
@@ -451,7 +466,9 @@ export function ReviewStep() {
                 <h3 className="font-semibold mb-2">Magic Skills</h3>
                 <div
                   className="grid gap-4"
-                  style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
+                  style={{
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))'
+                  }}
                 >
                   {magicDisplayed.map(n => (
                     <div
@@ -474,29 +491,61 @@ export function ReviewStep() {
   );
 }
 
-// Styles for @react-pdf document
+// --- Styles for PDF ---
 const styles = StyleSheet.create({
   page: { padding: 24, fontSize: 10, fontFamily: 'Helvetica' },
-  header: { fontSize: 16, marginBottom: 8, textAlign: 'center', textTransform: 'uppercase' },
+  header: {
+    fontSize: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+    textTransform: 'uppercase'
+  },
   section: { marginBottom: 12 },
   row: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 4 },
   label: { width: '25%', fontWeight: 'bold' },
   value: { width: '25%' },
   halfSection: { width: '50%' },
   skillsGrid: { flexDirection: 'row', flexWrap: 'wrap' },
-  skillItem: { width: '33%', flexDirection: 'row', marginBottom: 2 },
+  skillItem: { width: '33%', flexDirection: 'row', marginBottom: 2 }
 });
 
-// PDF Document Component
+// --- PDF Document Component ---
 const CharacterSheetDocument = ({ character }) => {
-  // recompute data as above...
-  // (you can copy the same logic from ReviewStep for resistances, skills, equipment, HP)
+  // recompute PDF-specific data:
+  const resistanceList = ['Brawn', 'Endurance', 'Evade', 'Willpower'];
+  const allMagicNames = [
+    ...(skillsData.folkMagic || []).map(s => s.name),
+    ...(skillsData.animism || []).map(s => s.name),
+    ...(skillsData.mysticism || []).map(s => s.name),
+    ...(skillsData.sorcery || []).map(s => s.name),
+    ...(skillsData.theism || []).map(s => s.name),
+  ];
+  const learned = character.skills ? Object.keys(character.skills) : [];
+  const standard = skillsData.standard
+    .map(s => s.name)
+    .filter(n => !resistanceList.includes(n) && n !== 'Unarmed');
+  const resistances = resistanceList.filter(n => learned.includes(n));
+  const combat = character.selectedSkills?.combat || [];
+  const prof = character.selectedSkills?.professional || [];
+  const magic = allMagicNames.filter(n => learned.includes(n));
+
+  const alloc = character.equipmentAlloc || {};
+  const startSP = Number(character.startingSilver) || 0;
+  const spent = Object.entries(alloc).reduce((sum, [n, q]) => {
+    const item = equipmentData.find(e => e.name === n);
+    return sum + (item?.cost || 0) * q;
+  }, 0);
+  const silverLeft = startSP - spent;
+  const equipList = Object.entries(alloc)
+    .filter(([, q]) => q > 0)
+    .map(([n, q]) => `${n} x${q}`);
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
-        <Text style={styles.header}>{character.characterName || 'Character Sheet'}</Text>
+        <Text style={styles.header}>
+          {character.characterName || 'Character Sheet'}
+        </Text>
 
         {/* Concept & Info */}
         <View style={styles.section}>
@@ -541,7 +590,7 @@ const CharacterSheetDocument = ({ character }) => {
               { label: 'Heal', key: 'healingRate' },
               { label: 'Init', key: 'initiativeBonus' },
               { label: 'Luck', key: 'luckPoints' },
-              { label: 'Move', key: 'movementRate' },
+              { label: 'Move', key: 'movementRate' }
             ].map(({ label, key }) => (
               <Text key={key} style={[styles.halfSection, { marginRight: 8 }]}>
                 {label}: {character[key]}
@@ -555,16 +604,12 @@ const CharacterSheetDocument = ({ character }) => {
           <Text style={styles.label}>HP per Location:</Text>
           <View style={styles.row}>
             {[
-              ['Head','Head'],
-              ['Chest','Chest'],
-              ['Abdomen','Abdomen'],
-              ['Each Arm','Left Arm'],
-              ['Each Arm','Right Arm'],
-              ['Leg','Left Leg'],
-              ['Leg','Right Leg'],
+              ['Head','Head'],['Chest','Chest'],['Abdomen','Abdomen'],
+              ['Each Arm','Left Arm'],['Each Arm','Right Arm'],
+              ['Leg','Left Leg'],['Leg','Right Leg']
             ].map(([k,label]) => (
               <Text key={label} style={[styles.halfSection, { marginRight: 8 }]}>
-                {label}: {getHp(k)}
+                {label}: {calcHp(character.CON, character.SIZ, k)}
               </Text>
             ))}
           </View>
@@ -573,11 +618,13 @@ const CharacterSheetDocument = ({ character }) => {
         {/* Equipment */}
         <View style={styles.section}>
           <Text style={styles.label}>Silver Remaining:</Text>
-          <Text style={styles.value}>{silverRemaining} SP</Text>
-          {equipmentList.length > 0 && (
+          <Text style={styles.value}>{silverLeft} SP</Text>
+          {equipList.length > 0 && (
             <>
-              <Text style={[styles.label, { marginTop: 4 }]}>Equipment:</Text>
-              {equipmentList.map((item,i) => (
+              <Text style={[styles.label, { marginTop: 4 }]}>
+                Equipment:
+              </Text>
+              {equipList.map((item,i) => (
                 <Text key={i} style={styles.value}>• {item}</Text>
               ))}
             </>
@@ -588,31 +635,31 @@ const CharacterSheetDocument = ({ character }) => {
         <View style={styles.section}>
           <Text style={styles.label}>Skills:</Text>
           <View style={styles.skillsGrid}>
-            {standardDisplayed.map(n => (
+            {standard.map(n => (
               <View key={n} style={styles.skillItem}>
                 <Text style={{ width: '70%' }}>{n}</Text>
                 <Text style={{ width: '30%' }}>{character.skills?.[n]}%</Text>
               </View>
             ))}
-            {resistancesDisplayed.map(n => (
+            {resistances.map(n => (
               <View key={n} style={styles.skillItem}>
                 <Text style={{ width: '70%' }}>{n}</Text>
                 <Text style={{ width: '30%' }}>{character.skills?.[n]}%</Text>
               </View>
             ))}
-            {combatDisplayed.map(n => (
+            {combat.map(n => (
               <View key={n} style={styles.skillItem}>
                 <Text style={{ width: '70%' }}>{n}</Text>
                 <Text style={{ width: '30%' }}>{character.skills?.[n]}%</Text>
               </View>
             ))}
-            {professionalDisplayed.map(n => (
+            {prof.map(n => (
               <View key={n} style={styles.skillItem}>
                 <Text style={{ width: '70%' }}>{n}</Text>
                 <Text style={{ width: '30%' }}>{character.skills?.[n]}%</Text>
               </View>
             ))}
-            {magicDisplayed.map(n => (
+            {magic.map(n => (
               <View key={n} style={styles.skillItem}>
                 <Text style={{ width: '70%' }}>{n}</Text>
                 <Text style={{ width: '30%' }}>{character.skills?.[n]}%</Text>
