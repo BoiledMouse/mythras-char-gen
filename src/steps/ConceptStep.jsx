@@ -1,6 +1,7 @@
 import React from 'react';
 import { rollDice } from '../utils/dice';
 import careers from '../data/careers.json';
+import StepWrapper from '../components/StepWrapper';
 import { useCharacter } from '../context/characterContext';
 
 // 1) Define cultures and their silver multipliers here
