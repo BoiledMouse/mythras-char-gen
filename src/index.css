@@ -35,12 +35,22 @@ body {
   background-size: auto;
 }
 
-/* 4) Headings in burnished gold */
+/* 4) Headings in burnished gold, with extra clarity */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  color: var(--color-gold);
-  text-shadow: 1px 1px rgba(0,0,0,0.3);
-  margin-top: 0;
+  /* A sturdy serif with subtle decorative flair */
+  font-family: 'Cinzel', Georgia, serif;
+  /* Warm metallic tone with just enough contrast */
+  color: #c39b55;           /* a slightly deeper gold */
+  /* Soft, evenly diffused glow instead of hard shadow */
+  text-shadow:
+    0 0 2px rgba(255, 235, 205, 0.8), /* inner glow */
+    1px 1px 1px rgba(0, 0, 0, 0.2);    /* soft drop shadow */
+  /* Give each heading plenty of breathing room */
+  margin: 0.5em 0;
+  /* Make letters just a hair more spaced for readability */
+  letter-spacing: 0.02em;
+  /* Lock in a solid weight so it’s never too thin */
+  font-weight: 600;
 }
 
 @layer components {
