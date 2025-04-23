@@ -14,6 +14,7 @@
     { "name": "Influence", "base": "CHA x2" },
     { "name": "Insight", "base": "INT+POW" },
     { "name": "Locale", "base": "DEX+POW" },
+    { "name": "Native Tongue", "base": "INT+CHA" },
     { "name": "Perception", "base": "CHA+POW" },
     { "name": "Ride", "base": "DEX+POW" },
     { "name": "Sing", "base": "CHA+POW" },
