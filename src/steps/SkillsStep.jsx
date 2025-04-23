@@ -8,10 +8,12 @@ import StepWrapper from '../components/StepWrapper';
 
 export default function SkillsStep({ formData }) {
   const { character, updateCharacter } = useCharacter();
-  const { STR=0, DEX=0, INT=0, CON=0, POW=0, CHA=0, SIZ=0 } = character;
-  const { age=0, culture: cultKey='', career: careerKey='' } = formData;
+  const { STR = 0, DEX = 0, INT = 0, CON = 0, POW = 0, CHA = 0, SIZ = 0 } = character;
+  const { age = 0, culture: cultKey = '', career: careerKey = '' } = formData;
   const cultureDef = cultures[cultKey] || {};
   const careerDef = careers[careerKey] || {};
+
+  // Age-based pools
   const ageBuckets = [
     { max: 16, bonus: 100, maxInc: 10 },
     { max: 27, bonus: 150, maxInc: 15 },
@@ -20,385 +22,339 @@ export default function SkillsStep({ formData }) {
     { max: Infinity, bonus: 300, maxInc: 30 },
   ];
   const { bonus: initialBonusPool, maxInc } = ageBuckets.find(b => age <= b.max);
-  const attrs = { STR, DEX, INT, CON, POW, CHA, SIZ };
 
+  const CULT_POOL = 100;
+  const CAREER_POOL = 100;
+
+  const attrs = { STR, DEX, INT, CON, POW, CHA, SIZ };
   const computeBase = expr => {
     const parts = expr.split(/\s*([+x])\s*/).filter(Boolean);
-    let val = parseInt(attrs[parts[0]]||0,10);
+    let val = parseInt(attrs[parts[0]] || 0, 10);
     for (let i = 1; i < parts.length; i += 2) {
-      const op = parts[i], tok = parts[i+1];
-      const v = /^\d+$/.test(tok) ? +tok : attrs[tok]||0;
+      const op = parts[i], tok = parts[i + 1];
+      const v = /^\d+$/.test(tok) ? +tok : attrs[tok] || 0;
       val = op === 'x' ? val * v : val + v;
     }
     return val;
   };
 
-  const combatStyles = cultureDef.combatStyles || [];
-
-  // Standard skills base
+  // Base values
   const baseStandard = {};
   skillsData.standard.forEach(({ name, base }) => {
     let b = computeBase(base);
     if (name === 'Customs' || name === 'Native Tongue') b += 40;
     baseStandard[name] = b;
   });
-
-  // Professional skills: calculate generic bases
-  const baseProfessionalGeneric = {};
+  const baseProfGeneric = {};
   skillsData.professional.forEach(({ name, base }) => {
-    baseProfessionalGeneric[name] = computeBase(base);
+    baseProfGeneric[name] = computeBase(base);
   });
-
-  // Build final professional bases, handling parentheses
+  // Professional list
+  const profSet = new Set([
+    ...skillsData.professional.map(s => s.name),
+    ...(cultureDef.professionalSkills || []),
+    ...(careerDef.professionalSkills || []),
+  ]);
+  const profNames = Array.from(profSet);
   const baseProfessional = {};
-  skillsData.professional.forEach(({ name }) => {
-    if (name.includes('(')) {
-      const root = name.split('(')[0].trim();
-      baseProfessional[name] = baseProfessionalGeneric[root] ?? baseProfessionalGeneric[name];
-    } else {
-      baseProfessional[name] = baseProfessionalGeneric[name];
-    }
+  profNames.forEach(name => {
+    const root = name.includes('(') ? name.split('(')[0].trim() : name;
+    const val = baseProfGeneric[root] || 0;
+    baseProfessional[name] = root === 'Language' && !name.includes('(') ? val + 40 : val;
+  });
+  // Combat styles base
+  (cultureDef.combatStyles || []).forEach(cs => {
+    baseProfessional[cs] = STR + DEX;
   });
 
-  // Extra +40% for main Language skill only
-  if (baseProfessional['Language'] !== undefined) {
-    baseProfessional['Language'] += 40;
-  }
+  // State per phase
+  const [phase, setPhase] = useState(1);
+  const [cStdAlloc, setCStdAlloc] = useState({});
+  const [cProfSel, setCProfSel] = useState([]);
+  const [cProfAlloc, setCProfAlloc] = useState({});
+  const [cCombSel, setCCombSel] = useState('');
+  const [cCombAlloc, setCCombAlloc] = useState(0);
 
-  // Combat styles override
-  combatStyles.forEach(style => {
-    baseProfessional[style] = STR + DEX;
-  });
+  const [rStdAlloc, setRStdAlloc] = useState({});
+  const [rProfSel, setRProfSel] = useState([]);
+  const [rProfAlloc, setRProfAlloc] = useState({});
 
-  const cultStd  = cultureDef.standardSkills    || [];
-  const cultProf = cultureDef.professionalSkills || [];
-  const carStd   = careerDef.standardSkills     || [];
-  const carProf  = careerDef.professionalSkills || [];
+  const [bonusAlloc, setBonusAlloc] = useState({});
+  const [bonusLeft, setBonusLeft] = useState(initialBonusPool);
 
-  const CULT_POOL   = 100;
-  const CAREER_POOL = 100;
+  const sum = obj => Object.values(obj).reduce((s, v) => s + (v || 0), 0);
 
-  const [phase,      setPhase]        = useState(1);
-  const [cStdAlloc,   setCStdAlloc]   = useState({});
-  const [cProfSel,    setCProfSel]    = useState([]);
-  const [cProfAlloc,  setCProfAlloc]  = useState({});
-  const [cCombSel,    setCCombSel]    = useState('');
-  const [cCombAlloc,  setCCombAlloc]  = useState(0);
-  const [rStdAlloc,   setRStdAlloc]   = useState({});
-  const [rProfSel,    setRProfSel]    = useState([]);
-  const [rProfAlloc,  setRProfAlloc]  = useState({});
-  const [bonusSel,    setBonusSel]    = useState([]);
-  const [bonusAlloc,  setBonusAlloc]  = useState({});
-  const [bonusLeft,   setBonusLeft]   = useState(initialBonusPool);
-
-  const sum = o => Object.values(o).reduce((a,v)=>(a + (v||0)),0);
-
+  // On completion, update character
   useEffect(() => {
-    if (phase > 3) {
+    if (phase === 4) {
       const final = { ...baseStandard, ...baseProfessional };
-      cultStd.forEach(s => final[s] += cStdAlloc[s]||0);
-      cProfSel.forEach(s => final[s] += cProfAlloc[s]||0);
+      // apply cultural
+      cultureDef.standardSkills?.forEach(s => final[s] += cStdAlloc[s] || 0);
+      cProfSel.forEach(s => final[s] += cProfAlloc[s] || 0);
       if (cCombSel) final[cCombSel] += cCombAlloc;
-      carStd.forEach(s => final[s] += rStdAlloc[s]||0);
-      rProfSel.forEach(s => final[s] += rProfAlloc[s]||0);
-      bonusSel.forEach(s => final[s] += bonusAlloc[s]||0);
-
+      // apply career
+      careerDef.standardSkills?.forEach(s => final[s] += rStdAlloc[s] || 0);
+      rProfSel.forEach(s => final[s] += rProfAlloc[s] || 0);
+      // apply bonus
+      Object.entries(bonusAlloc).forEach(([s, v]) => final[s] += v);
       updateCharacter({
         skills: final,
         selectedSkills: {
-          standard: [...cultStd, ...carStd],
-          professional: [...cProfSel, ...rProfSel],
-          combat: [...(cCombSel ? [cCombSel] : []), 'Unarmed']
+          standard: [
+            ...(cultureDef.standardSkills || []),
+            ...(careerDef.standardSkills || [])
+          ],
+          professional: [
+            ...cProfSel,
+            ...rProfSel,
+            ...(cCombSel ? [cCombSel] : [])
+          ],
+          combat: cCombSel ? [cCombSel] : []
         }
       });
     }
   }, [phase]);
 
-  const handleSlider = (setter, allocObj, key, poolLeft, setPool, limit) => e => {
-    let v = parseInt(e.target.value,10) || 0;
+  // Handlers
+  const handleRange = (alloc, setAlloc, skill, limit, poolLeft) => e => {
+    let v = parseInt(e.target.value, 10) || 0;
     v = Math.max(0, Math.min(limit, v));
-    const prev = allocObj[key]||0, delta = v - prev;
-    if (delta <= poolLeft) {
-      setter({ ...allocObj, [key]: v });
-      setPool(pl => pl - delta);
-    }
+    const prev = alloc[skill] || 0;
+    const delta = v - prev;
+    if (delta <= poolLeft) setAlloc({ ...alloc, [skill]: v });
   };
 
-  const handleCombat = e => {
-    let v = parseInt(e.target.value,10)||0;
-    v = Math.max(0, Math.min(maxInc, v));
-    const poolLeft = CULT_POOL
-      - sum(cStdAlloc)
-      - sum(cProfAlloc)
-      - cCombAlloc;
-    if (v - cCombAlloc <= poolLeft) {
-      setCCombAlloc(v);
-    }
-  };
-
-  const handleBonus = skill => e => {
-    let v = parseInt(e.target.value,10)||0;
-    if (v>0 && v<5) v = 0;
-    v = Math.max(0, Math.min(maxInc, v));
-    const prev = bonusAlloc[skill]||0, delta = v - prev;
-    if (delta <= bonusLeft) {
-      setBonusAlloc(a => ({ ...a, [skill]: v }));
-      setBonusLeft(pl => pl - delta);
-    }
-  };
-
+  // Rendering phases
   return (
-    <StepWrapper title="Skills">
-      <p>
-        Age: <strong>{age}</strong> •
-        Cultural pool: <strong>100</strong> •
-        Career pool:  <strong>100</strong> •
-        Bonus pool:   <strong>{initialBonusPool}</strong> •
-        Max per skill: <strong>+{maxInc}%</strong>
-      </p>
-
-      {/*─── PHASE 1: CULTURAL ───*/}
-      {phase===1 && <>
-        <h3>Cultural Skills</h3>
-        <p>Points left: <strong>
-          {CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc}
-        </strong></p>
-
-        <h4>Standard</h4>
-        {cultStd.map(s=>(
-          <div key={s} className="flex items-center mb-2">
-            <span className="w-40">{s} (Base {baseStandard[s]}%)</span>
-            <input
-              type="range" min={0} max={maxInc} step={1}
-              value={cStdAlloc[s]||0}
-              onChange={handleSlider(
-                setCStdAlloc,
-                cStdAlloc,
-                s,
-                CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc,
-                v=>v,
-                maxInc
-              )}
-              className="flex-1 mx-2"
-            />
-            <span className="w-12 text-right">+{cStdAlloc[s]||0}</span>
+    <>
+      {phase === 1 && (
+        <StepWrapper title="Cultural Skills">
+          <div className="mb-4">
+            Points left: {CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc}
           </div>
-        ))}
-
-        <h4>Professional (max 3)</h4>
-        {cultProf.map(s=>(
-          <label key={s} className="inline-flex items-center mr-4">
-            <input
-              type="checkbox"
-              checked={cProfSel.includes(s)}
-              onChange={()=>{
-                setCProfSel(sel=>
-                  sel.includes(s)
-                    ? sel.filter(x=>x!==s)
-                    : sel.length<3 ? [...sel,s] : sel
-                );
-              }}
-              className="mr-1"
-            />
-            {s}
-          </label>
-        ))}
-        {cProfSel.map(s=>(
-          <div key={s} className="flex items-center mb-2">
-            <span className="w-40">{s} (Base {baseProfessional[s]}%)</span>
-            <input
-              type="range" min={0} max={maxInc} step={1}
-              value={cProfAlloc[s]||0}
-              onChange={handleSlider(
-                setCProfAlloc,
-                cProfAlloc,
-                s,
-                CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc,
-                v=>v,
-                maxInc
-              )}
-              className="flex-1 mx-2"
-            />
-            <span className="w-12 text-right">+{cProfAlloc[s]||0}</span>
-          </div>
-        ))}
-
-        <h4>Combat Style</h4>
-        {combatStyles.map(cs=>(
-          <label key={cs} className="inline-flex items-center mr-4">
-            <input
-              type="radio"
-              name="combat"
-              checked={cCombSel===cs}
-              onChange={()=>setCCombSel(cs)}
-              className="mr-1"
-            />
-            {cs}
-          </label>
-        ))}
-        {cCombSel && (
-          <div className="flex items-center mb-4">
-            <span className="w-40">
-              {cCombSel} (Base {baseProfessional[cCombSel]}%)
-            </span>
-            <input
-              type="range" min={0} max={maxInc} step={1}
-              value={cCombAlloc}
-              onChange={handleCombat}
-              className="flex-1 mx-2"
-            />
-            <span className="w-12 text-right">+{cCombAlloc}</span>
-          </div>
-        )}
-
-        <button onClick={()=>setPhase(2)} className="btn btn-primary">
-          Next: Career
-        </button>
-      </>}
-
-      {/*─── PHASE 2: CAREER ───*/}
-      {phase===2 && <>
-        <h3>Career Skills</h3>
-        <p>Points left: <strong>
-          {CAREER_POOL - sum(rStdAlloc) - sum(rProfAlloc)}
-        </strong></p>
-
-        <h4>Standard</h4>
-        {carStd.map(s=>(
-          <div key={s} className="flex items-center mb-2">
-            <span className="w-40">{s} (Base {baseStandard[s]}%)</span>
-            <input
-              type="range" min={0} max={maxInc} step={1}
-              value={rStdAlloc[s]||0}
-              onChange={handleSlider(
-                setRStdAlloc,
-                rStdAlloc,
-                s,
-                CAREER_POOL - sum(rStdAlloc) - sum(rProfAlloc),
-                v=>v,
-                maxInc
-              )}
-              className="flex-1 mx-2"
-            />
-            <span className="w-12 text-right">+{rStdAlloc[s]||0}</span>
-          </div>
-        ))}
-
-        <h4>Professional (max 3)</h4>
-        {carProf.map(s=>(
-          <label key={s} className="inline-flex items-center mr-4">
-            <input
-              type="checkbox"
-              checked={rProfSel.includes(s)}
-              onChange={()=>{
-                setRProfSel(sel=>
-                  sel.includes(s)
-                    ? sel.filter(x=>x!==s)
-                    : sel.length<3 ? [...sel,s] : sel
-                );
-              }}
-              className="mr-1"
-            />
-            {s}
-          </label>
-        ))}
-        {rProfSel.map(s=>(
-          <div key={s} className="flex items-center mb-2">
-            <span className="w-40">{s} (Base {baseProfessional[s]}%)</span>
-            <input
-              type="range" min={0} max={maxInc} step={1}
-              value={rProfAlloc[s]||0}
-              onChange={handleSlider(
-                setRProfAlloc,
-                rProfAlloc,
-                s,
-                CAREER_POOL - sum(rStdAlloc) - sum(rProfAlloc),
-                v=>v,
-                maxInc
-              )}
-              className="flex-1 mx-2"
-            />
-            <span className="w-12 text-right">+{rProfAlloc[s]||0}</span>
-          </div>
-        ))}
-
-        <div className="flex justify-between mt-4">
-          <button onClick={()=>setPhase(1)} className="btn btn-secondary">Back</button>
-          <button onClick={()=>{
-            // prepopulate bonusSel with all available skills
-            const available = Array.from(new Set([
-              ...cultStd,
-              ...cProfSel,
-              ...(cCombSel?[cCombSel]:[]),
-              ...carStd,
-              ...rProfSel
-            ]));
-            setBonusSel(available);
-            setBonusAlloc(Object.fromEntries(available.map(s=>[s,0])));
-            setBonusLeft(initialBonusPool);
-            setPhase(3);
-          }} className="btn btn-primary">
-            Next: Bonus
-          </button>
-        </div>
-      </>}
-
-      {/*─── PHASE 3: BONUS ───*/}
-      {phase===3 && <>
-        <h3>Bonus Skills</h3>
-        <p>Points left: <strong>{bonusLeft}</strong></p>
-
-        <h4>Allocate to any available skill</h4>
-        {bonusSel.map(s=>(
-          <div key={s} className="flex items-center mb-2">
-            <span className="w-40">
-              {s} (Base {baseStandard[s] ?? baseProfessional[s]}%)
-            </span>
-            <input
-              type="range" min={0} max={maxInc} step={1}
-              value={bonusAlloc[s]||0}
-              onChange={handleBonus(s)}
-              className="flex-1 mx-2"
-            />
-            <span className="w-12 text-right">+{bonusAlloc[s]||0}</span>
-          </div>
-        ))}
-
-        <h4>Add a Hobby Skill</h4>
-        <select
-          className="form-control mb-4"
-          onChange={e=>{
-            const s = e.target.value;
-            if (s && !bonusSel.includes(s)) {
-              setBonusSel(sel=>[...sel,s]);
-              setBonusAlloc(a=>({...a,[s]:0}));
-            }
-          }}
-        >
-          <option value="">-- pick a hobby --</option>
-          {Object.keys({...baseStandard,...baseProfessional})
-            .filter(s=>!bonusSel.includes(s))
-            .map(s=>(
-            <option key={s} value={s}>{s}</option>
+          {/* Standard */}
+          <h3 className="font-heading text-lg mb-2">Standard</h3>
+          {cultureDef.standardSkills?.map(s => {
+            const base = baseStandard[s] || 0;
+            const alloc = cStdAlloc[s] || 0;
+            const total = base + alloc;
+            return (
+              <div key={s} className="flex items-center mb-2">
+                <div className="w-32">{s}</div>
+                <div className="w-32 text-right mr-2">{base}% + {alloc}% = {total}%</div>
+                <input
+                  type="range"
+                  min={0}
+                  max={maxInc}
+                  value={alloc}
+                  onChange={handleRange(cStdAlloc, setCStdAlloc, s, maxInc, CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc)}
+                  className="flex-1"
+                />
+              </div>
+            );
+          })}
+          {/* Professional */}
+          <h3 className="font-heading text-lg mt-4 mb-2">Professional (max 3)</h3>
+          {cultureDef.professionalSkills?.map(s => (
+            <label key={s} className="inline-flex items-center mr-4 mb-2">
+              <input
+                type="checkbox"
+                className="mr-1"
+                checked={cProfSel.includes(s)}
+                onChange={() => setCProfSel(sel =>
+                  sel.includes(s) ? sel.filter(x => x !== s) : sel.length < 3 ? [...sel, s] : sel
+                )}
+              />
+              {s}
+            </label>
           ))}
-        </select>
-
-        <div className="flex justify-between mt-4">
-          <button onClick={()=>setPhase(2)} className="btn btn-secondary">Back</button>
-          <button onClick={()=>setPhase(4)}
-                  disabled={bonusLeft>0}
-                  className="btn btn-success">
-            Finish
-          </button>
-        </div>
-      </>}
-
-      {/*─── DONE ───*/}
-      {phase>3 && (
-        <div className="text-center"><h3>All done!</h3></div>
+          {cProfSel.map(s => {
+            const base = baseProfessional[s] || 0;
+            const alloc = cProfAlloc[s] || 0;
+            const total = base + alloc;
+            return (
+              <div key={s} className="flex items-center mb-2">
+                <div className="w-32">{s}</div>
+                <div className="w-32 text-right mr-2">{base}% + {alloc}% = {total}%</div>
+                <input
+                  type="range"
+                  min={0}
+                  max={maxInc}
+                  value={alloc}
+                  onChange={handleRange(cProfAlloc, setCProfAlloc, s, maxInc, CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc)}
+                  className="flex-1"
+                />
+              </div>
+            );
+          })}
+          {/* Combat */}
+          <h3 className="font-heading text-lg mt-4 mb-2">Combat Style</n          ></h3>
+          {cultureDef.combatStyles?.map(cs => (
+            <label key={cs} className="inline-flex items-center mr-4 mb-2">
+              <input
+                type="radio"
+                name="combat"
+                className="mr-1"
+                checked={cCombSel === cs}
+                onChange={() => setCCombSel(cs)}
+              />
+              {cs}
+            </label>
+          ))}
+          {cCombSel && (
+            <div className="flex items-center mb-2">
+              <div className="w-32">{cCombSel}</div>
+              <div className="w-32 text-right mr-2">{baseProfessional[cCombSel]}% + {cCombAlloc}% = {baseProfessional[cCombSel] + cCombAlloc}%</div>
+              <input
+                type="range"
+                min={0}
+                max={maxInc}
+                value={cCombAlloc}
+                onChange={e => {
+                  const v = Math.min(maxInc, Math.max(0, parseInt(e.target.value, 10) || 0));
+                  const pool = CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc;
+                  if (v - cCombAlloc <= pool) setCCombAlloc(v);
+                }}
+                className="flex-1"
+              />
+            </div>
+          )}
+          <div className="flex justify-end mt-4">
+            <button className="btn btn-primary" onClick={() => setPhase(2)}>
+              Next: Career
+            </button>
+          </div>
+        </StepWrapper>
       )}
-    </StepWrapper>
+
+      {phase === 2 && (
+        <StepWrapper title="Career Skills">
+          <div className="mb-4">
+            Points left: {CAREER_POOL - sum(rStdAlloc) - sum(rProfAlloc)}
+          </div>
+          {/* Standard */}
+          <h3 className="font-heading text-lg mb-2">Standard</h3>
+          {careerDef.standardSkills?.map(s => {
+            const base = (baseStandard[s] || 0) + (cStdAlloc[s] || 0);
+            const alloc = rStdAlloc[s] || 0;
+            const total = base + alloc;
+            return (
+              <div key={s} className="flex items-center mb-2">
+                <div className="w-32">{s}</div>
+                <div className="w-32 text-right mr-2">{base}% + {alloc}% = {total}%</n                ></div>
+                <input
+                  type="range"
+                  min={0}
+                  max={maxInc}
+                  value={alloc}
+                  onChange={handleRange(rStdAlloc, setRStdAlloc, s, maxInc, CAREER_POOL - sum(rStdAlloc) - sum(rProfAlloc))}
+                  className="flex-1"
+                />
+              </div>
+            );
+          })}
+          {/* Professional */}
+          <h3 className="font-heading text-lg mt-4 mb-2">Professional (max 3)</h3>
+          {careerDef.professionalSkills?.map(s => (
+            <label key={s} className="inline-flex items-center mr-4 mb-2">
+              <input
+                type="checkbox"
+                className="mr-1"
+                checked={rProfSel.includes(s)}
+                onChange={() => setRProfSel(sel =>
+                  sel.includes(s) ? sel.filter(x => x !== s) : sel.length < 3 ? [...sel, s] : sel
+                )}
+              />
+              {s}
+            </label>
+          ))}
+          {rProfSel.map(s => {
+            const base = (baseProfessional[s] || 0) + (cProfAlloc[s] || 0);
+            const alloc = rProfAlloc[s] || 0;
+            const total = base + alloc;
+            return (
+              <div key={s} className="flex items-center mb-2">
+                <div className="w-32">{s}</div>
+                <div className="w-32 text-right mr-2">{base}% + {alloc}% = {total}%</n                ></div>
+                <input
+                  type="range"
+                  min={0}
+                  max={maxInc}
+                  value={alloc}
+                  onChange={handleRange(rProfAlloc, setRProfAlloc, s, maxInc, CAREER_POOL - sum(rStdAlloc) - sum(rProfAlloc))}
+                  className="flex-1"
+                />
+              </div>
+            );
+          })}
+          <div className="flex justify-between mt-4">
+            <button className="btn btn-secondary" onClick={() => setPhase(1)}>
+              Back: Cultural
+            </button>
+            <button className="btn btn-primary" onClick={() => setPhase(3)}>
+              Next: Bonus
+            </button>
+          </div>
+        </StepWrapper>
+      )}
+
+      {phase === 3 && (
+        <StepWrapper title="Bonus Skills">
+          <div className="mb-4">Bonus points left: {bonusLeft}</div>
+          {/* Determine eligible skills */}
+          {Array.from(new Set([
+            ...cultureDef.standardSkills || [],
+            ...cultureDef.professionalSkills || [],
+            ...(cultureDef.combatStyles?.[0] ? [cCombSel] : []),
+            ...careerDef.standardSkills || [],
+            ...careerDef.professionalSkills || [],
+          ])).map(s => {
+            const base = (
+              (baseStandard[s] || 0)
+              + (cStdAlloc[s] || 0)
+              + (baseProfessional[s] || 0)
+              + (cProfAlloc[s] || 0)
+              + (cCombSel === s ? cCombAlloc : 0)
+              + (rStdAlloc[s] || 0)
+              + (rProfAlloc[s] || 0)
+            );
+            const alloc = bonusAlloc[s] || 0;
+            const total = base + alloc;
+            return (
+              <div key={s} className="flex items-center mb-2">
+                <div className="w-32">{s}</div>
+                <div className="w-32 text-right mr-2">{base}% + {alloc}% = {total}%</n                ></div>
+                <input
+                  type="range"
+                  min={0}
+                  max={maxInc}
+                  value={alloc}
+                  onChange={handleRange(bonusAlloc, val => setBonusAlloc(val), s, maxInc, bonusLeft)}
+                  className="flex-1"
+                />
+              </div>
+            );
+          })}
+          <div className="flex justify-between mt-4">
+            <button className="btn btn-secondary" onClick={() => setPhase(2)}>
+              Back: Career
+            </button>
+            <button className="btn btn-primary" onClick={() => setPhase(4)}>
+              Finish
+            </button>
+          </div>
+        </StepWrapper>
+      )}
+
+      {phase === 4 && (
+        <StepWrapper title="Skills Summary">
+          <ul className="list-disc list-inside">
+            {Object.entries(character.skills || {}).map(([name, val]) => (
+              <li key={name}>{name}: {val}%</li>
+            ))}
+          </ul>
+        </StepWrapper>
+      )}
+    </>
   );
 }
-
-
