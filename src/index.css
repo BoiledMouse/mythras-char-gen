@@ -1,142 +1,188 @@
-/* src/index.css */
+/* ========================= src/index.css ========================= */
 
-/* Import custom fonts */
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond&family=Pirata+One&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Merriweather:wght@400;700&display=swap');
-
-/* Tailwind directives */
+/* 1) Tailwind layers */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Base layer ───────────────────────────────────────────────────────────── */
-@layer base {
-  body {
-    font-family: 'EB Garamond', serif;
-    color: #1f2937; /* gray-900 */
-    background: linear-gradient(135deg, #f9f4ef 0%, #e8dfd6 100%);
-  }
+/* 2) CSS variables for Tavern theme */
+:root {
+  --color-wood: #3B2B1F;
+  --color-parchment: #F5DEB3;
+  --color-parchment-shadow: #CEB89F;
+  --color-gold: #D4AF37;
+  --color-gold-dark: #B7950B;
+  --color-text: #3C2F2E;
+  --font-body: 'Merriweather', serif;
+  --font-heading: 'Pirata One', cursive;
+}
 
-  /* Headings */
-  h3 {
-    font-family: 'Cinzel', serif !important;
-    color: #4a3622 !important;
-    font-size: 1.75rem;
-    line-height: 1.3;
-    margin-bottom: 0.75rem;
-  }
+/* 3) Global reset + background */
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-wood);
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(0,0,0,0.1),
+      rgba(0,0,0,0.7) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  background-size: auto;
+}
 
-  /* Global form element resets */
-  input,
-  textarea,
+/* 4) Headings in burnished gold */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--color-gold);
+  text-shadow: 1px 1px rgba(0,0,0,0.3);
+  margin-top: 0;
+}
+
+@layer components {
+  /* 5) Form controls */
+  .form-control,
   select,
-  button {
-    font-family: 'Merriweather', serif;
-    color: #3a2e2e;
-    background: transparent !important;
-    border: none;
-    box-shadow: none;
+  input[type="text"],
+  input[type="number"] {
+    width: 100%;
+    padding: 0.5rem;
+    margin-top: 0.25rem;
+    font-family: var(--font-body);
+    background-color: var(--color-parchment);
+    border: 1px solid var(--color-wood) !important;
+    border-radius: 4px;
+    color: var(--color-text);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+  .form-control:focus,
+  select:focus {
+    outline: none;
+    border-color: var(--color-gold) !important;
+    box-shadow: 0 0 5px rgba(212,175,55,0.5);
+  }
+
+  /* 6) Buttons with ember glow */
+  .btn {
+    display: inline-block;
+    font-family: var(--font-heading);
+    padding: 0.5rem 1rem;
+    margin-top: 0.5rem;
+    border: 2px solid var(--color-wood);
+    border-radius: 4px;
+    cursor: pointer;
+    text-shadow: 0 1px rgba(0,0,0,0.2);
+    transition: background-color 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary {
+    background-color: var(--color-gold);
+    color: var(--color-wood);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .btn-secondary {
+    background-color: var(--color-parchment);
+    color: var(--color-text);
+  }
+  .btn:hover {
+    box-shadow: 0 0 8px rgba(212,175,55,0.5);
+    opacity: 0.9;
+  }
+
+  /* 7) Override ReviewStep title styling */
+  .wizard-panel h2 {
+    font-family: var(--font-body);
+    color: var(--color-text);
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+  }
+
+  /* 8) Table styling (EquipmentStep) */
+  .table-auto th {
+    background-color: var(--color-parchment);
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-wood);
+    padding: 0.5rem;
+  }
+  .table-auto td {
+    border-bottom: 1px solid var(--color-wood);
+    padding: 0.5rem;
+  }
+
+  /* 9) Range slider styling (SkillsStep) */
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 0.5rem;
+    background: var(--color-parchment-shadow);
+    border-radius: 4px;
+    outline: none;
+    margin: 0.5rem 0;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 0.5rem;
+    background: var(--color-parchment);
+    border: 1px solid var(--color-wood);
+    border-radius: 4px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
     appearance: none;
+    width: 1rem;
+    height: 1rem;
+    background: var(--color-gold);
+    border: 2px solid var(--color-wood);
+    border-radius: 50%;
+    cursor: pointer;
+    margin-top: -0.25rem;
+  }
+  input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 0.5rem;
+    background: var(--color-parchment);
+    border: 1px solid var(--color-wood);
+    border-radius: 4px;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 1rem;
+    height: 1rem;
+    background: var(--color-gold);
+    border: 2px solid var(--color-wood);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  /* 10) Dropdown styling (Selects) */
+  select {
     -webkit-appearance: none;
     -moz-appearance: none;
+    appearance: none;
+    background-color: var(--color-parchment);
+    border: 1px solid var(--color-wood) !important;
+    color: var(--color-text);
+    padding: 0.5rem 2.5rem 0.5rem 0.5rem;
+    border-radius: 4px;
+    background-image: url("data:image/svg+xml,%3Csvg fill='%233B2B1F' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 1rem;
+  }
+
+  /* 11) Number spinner color (EquipmentStep) */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    color: var(--color-wood);
   }
 }
 
-/* ─── Components layer ─────────────────────────────────────────────────────── */
-@layer components {
-  /* Panels */
-  .bg-parchment {
-    background: repeating-linear-gradient(
-      45deg,
-      #faf4e8,
-      #faf4e8 10px,
-      #f2eede 10px,
-      #f2eede 20px
-    );
-  }
-
-  /* Wizard container padding */
-  #wizard-root {
-    @apply px-4 sm:px-6 md:px-8 lg:px-10;
-  }
-
-  /* Labels */
-  label {
-    display: block;
-    margin-bottom: 0.25rem;
-    color: #4a3622;
-    font-size: 1rem;
-  }
-
-  /* Text inputs */
-  input[type="text"],
-  input[type="number"],
-  input[type="email"],
-  input[type="password"],
-  .form-input {
-    @apply block w-full rounded mb-4;
-    border: 1px solid #8c7b75 !important;
-    background-color: #ffffff !important;
-    padding: 0.5rem 0.75rem;
-    font-size: 1rem;
-    box-sizing: border-box;
-  }
-
-  /* Select menus */
-  select,
-  .form-select {
-    @apply block w-full rounded mb-4;
-    border: 1px solid #8c7b75 !important;
-    background-color: #f4ece4 !important;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    color: #4a3622;
-    box-sizing: border-box;
-  }
-
-  /* Radio and checkboxes */
-  input[type="radio"],
-  input[type="checkbox"] {
-    accent-color: #8c7b75;
-    width: 1.25em;
-    height: 1.25em;
-    margin-right: 0.5rem;
-    vertical-align: middle;
-  }
-
-  /* Buttons */
-  button,
-  input[type="button"],
-  input[type="submit"] {
-    @apply inline-block rounded mt-4;
-    background-color: #8c7b75 !important;
-    color: #f4ece4 !important;
-    padding: 0.75rem 1.5rem;
-    font-family: 'Cinzel', serif !important;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
-  }
-  button:hover,
-  input[type="button"]:hover,
-  input[type="submit"]:hover {
-    background-color: #6f5d4b !important;
-  }
-
-  /* Review step skills layout */
-  .review-step .skills-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 0.75rem;
-    margin-top: 1rem;
-  }
-  .review-step .skills-container .skill-item {
-    background: #f9f4ef;
-    padding: 0.5rem;
-    border: 1px solid #8c7b75;
-    border-radius: 4px;
-    font-size: 0.95rem;
-    line-height: 1.2;
-    word-wrap: break-word;
+/* 12) Extra padding at tablet+ for panel-parchment (if used) */
+@media (min-width: 768px) {
+  .panel-parchment {
+    padding: 2rem;
   }
 }
