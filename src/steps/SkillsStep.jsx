@@ -42,9 +42,38 @@ export default function SkillsStep({ formData }) {
   const baseStandard = {};
   skillsData.standard.forEach(({ name, base }) => {
     let b = computeBase(base);
-    if (name === 'Customs' || name === 'Language') b += 40;
+    // Customs and Native Tongue get +40% base
+    if (name === 'Customs' || name === 'Native Tongue') b += 40;
     baseStandard[name] = b;
   });
+  const baseProfGeneric = {};
+  skillsData.professional.forEach(({ name, base }) => {
+    baseProfGeneric[name] = computeBase(base);
+  });
+  const profSet = new Set([
+    ...skillsData.professional.map(s => s.name),
+    ...(cultureDef.professionalSkills || []),
+    ...(careerDef.professionalSkills || [])
+  ]);
+  const baseProfessional = {};
+  Array.from(profSet).forEach(name => {
+    const root = name.includes('(') ? name.split('(')[0].trim() : name;
+    const val = baseProfGeneric[root] || 0;
+    baseProfessional[name] = (root === 'Language' && !name.includes('(')) ? val + 40 : val;
+  });
+  (cultureDef.combatStyles || []).forEach(style => {
+    baseProfessional[style] = STR + DEX;
+  });
+
+  // Bonus skills list
+  const bonusSkills = Array.from(new Set([
+    ...(cultureDef.standardSkills || []),
+    ...(cultureDef.professionalSkills || []),
+    ...(cCombSel ? [cCombSel] : []),
+    ...(careerDef.standardSkills || []),
+    ...(careerDef.professionalSkills || [])
+  ]));
+
   const baseProfGeneric = {};
   skillsData.professional.forEach(({ name, base }) => {
     baseProfGeneric[name] = computeBase(base);
@@ -124,7 +153,7 @@ export default function SkillsStep({ formData }) {
       {phase === 1 && (
         <StepWrapper title="Cultural Skills">
           <p>Points left: {CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc}</p>
-          <h3 className="font-heading text-lg mb-2">Standard Skills -debug1</h3>
+          <h3 className="font-heading text-lg mb-2">Standard Skills</h3>
           {cultureDef.standardSkills?.map(s => {
             const base = baseStandard[s], alloc = cStdAlloc[s] || 0;
             return (
