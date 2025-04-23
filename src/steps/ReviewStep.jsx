@@ -4,7 +4,7 @@ import { useCharacter } from '../context/characterContext';
 import skillsData from '../data/skills.json';
 import equipmentData from '../data/equipment.json';
 import StepWrapper from '../components/StepWrapper';
-import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, pdf, PDFDownloadLink } from '@react-pdf/renderer';
 
 export function ReviewStep() {
   const { character, updateCharacter } = useCharacter();
@@ -169,15 +169,26 @@ export function ReviewStep() {
     URL.revokeObjectURL(url);
   };
 
-  return (
+    return (
     <StepWrapper title="Review">
       <div className="flex justify-end gap-4 mb-4">
         <button onClick={exportMarkdown} className="btn btn-secondary">
           Export Markdown
         </button>
-        <button onClick={exportPDF} className="btn btn-secondary">
-          Export PDF
-        </button>
+
+        <PDFDownloadLink
+          document={<CharacterSheetDocument character={character} />}
+          fileName={`${character.characterName || 'character'}.pdf`}
+          className="btn btn-secondary"
+        >
+          {({ loading, error }) =>
+            loading
+              ? 'Generating PDF…'
+              : error
+              ? 'Error'
+              : 'Export PDF'
+          }
+        </PDFDownloadLink>
       </div>
 
       <div className="panel-parchment max-w-7xl mx-auto p-6">
