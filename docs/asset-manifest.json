@@ -1,17 +1,13 @@
 {
   "files": {
-    "main.css": "/mythras-char-gen/static/css/main.47168f46.css",
-    "main.js": "/mythras-char-gen/static/js/main.7dc29d4f.js",
-    "static/js/337.78a68aa9.chunk.js": "/mythras-char-gen/static/js/337.78a68aa9.chunk.js",
-    "static/js/732.5f1a2ae8.chunk.js": "/mythras-char-gen/static/js/732.5f1a2ae8.chunk.js",
+    "main.css": "/mythras-char-gen/static/css/main.37077dfc.css",
+    "main.js": "/mythras-char-gen/static/js/main.d85c14a3.js",
     "index.html": "/mythras-char-gen/index.html",
-    "main.47168f46.css.map": "/mythras-char-gen/static/css/main.47168f46.css.map",
-    "main.7dc29d4f.js.map": "/mythras-char-gen/static/js/main.7dc29d4f.js.map",
-    "337.78a68aa9.chunk.js.map": "/mythras-char-gen/static/js/337.78a68aa9.chunk.js.map",
-    "732.5f1a2ae8.chunk.js.map": "/mythras-char-gen/static/js/732.5f1a2ae8.chunk.js.map"
+    "main.37077dfc.css.map": "/mythras-char-gen/static/css/main.37077dfc.css.map",
+    "main.d85c14a3.js.map": "/mythras-char-gen/static/js/main.d85c14a3.js.map"
   },
   "entrypoints": [
-    "static/css/main.47168f46.css",
-    "static/js/main.7dc29d4f.js"
+    "static/css/main.37077dfc.css",
+    "static/js/main.d85c14a3.js"
   ]
 }
