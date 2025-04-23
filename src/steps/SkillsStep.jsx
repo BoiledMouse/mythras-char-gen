@@ -242,9 +242,9 @@ export default function SkillsStep({ formData }) {
     {/* Phase 4 */}
     {phase===4&&<StepWrapper title="Skills Summary">
       <h3 className="font-semibold mb-2">Standard Skills</h3>
-      <ul className="list-disc list-inside mb-4">
-        {(character.selectedSkills?.standard||[]).filter(n=>!resistanceList.includes(n)).map(n=><li key={n}>{n}: {character.skills[n]}%</li>)}
-      </ul>
+       <ul className="list-disc list-inside mb-4">
+         {skillsData.standard.map(({name})=>name).filter(n=>!resistanceList.includes(n)).map(n=><li key={n}>{n}: {character.skills[n]}%</li>)}
+       </ul>
       <h3 className="font-semibold mb-2">Resistances</h3>
       <ul className="list-disc list-inside mb-4">
         {resistanceList.filter(n=>character.skills[n]!=null).map(n=><li key={n}>{n}: {character.skills[n]}%</li>)}
