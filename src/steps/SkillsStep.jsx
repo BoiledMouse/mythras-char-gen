@@ -25,20 +25,20 @@ export default function SkillsStep({ formData }) {
   const CULT_POOL = 100;
   const CAREER_POOL = 100;
 
-  // Compute base from formulas like "STR+DEX" or "INT x2"
+  // Compute base from formulas
   const attrs = { STR, DEX, INT, CON, POW, CHA, SIZ };
   const computeBase = expr => {
     const parts = expr.split(/\s*([+x])\s*/).filter(Boolean);
-    let val = parseInt(attrs[parts[0]] || 0, 10);
+    let value = parseInt(attrs[parts[0]] || 0, 10);
     for (let i = 1; i < parts.length; i += 2) {
       const op = parts[i], tok = parts[i + 1];
       const v = /^\d+$/.test(tok) ? +tok : attrs[tok] || 0;
-      val = op === 'x' ? val * v : val + v;
+      value = op === 'x' ? value * v : value + v;
     }
-    return val;
+    return value;
   };
 
-  // Base values for standard skills
+  // Base values: standard
   const baseStandard = {};
   skillsData.standard.forEach(({ name, base }) => {
     let b = computeBase(base);
@@ -46,36 +46,33 @@ export default function SkillsStep({ formData }) {
     baseStandard[name] = b;
   });
 
-  // Base values for professional skills
+  // Base values: professional generic
   const baseProfGeneric = {};
   skillsData.professional.forEach(({ name, base }) => {
     baseProfGeneric[name] = computeBase(base);
   });
+
+  // Collect all professional names
   const profSet = new Set([
     ...skillsData.professional.map(s => s.name),
     ...(cultureDef.professionalSkills || []),
     ...(careerDef.professionalSkills || [])
   ]);
+
+  // Base values: professional
   const baseProfessional = {};
   Array.from(profSet).forEach(name => {
     const root = name.includes('(') ? name.split('(')[0].trim() : name;
     const val = baseProfGeneric[root] || 0;
     baseProfessional[name] = (root === 'Language' && !name.includes('(')) ? val + 40 : val;
   });
+
+  // Combat style base override
   (cultureDef.combatStyles || []).forEach(style => {
     baseProfessional[style] = STR + DEX;
   });
 
-  // Determine bonus skills list
-  const bonusSkills = Array.from(new Set([
-    ...(cultureDef.standardSkills || []),
-    ...(cultureDef.professionalSkills || []),
-    ...(cultureDef.combatStyles && cCombSel ? [cCombSel] : []),
-    ...(careerDef.standardSkills || []),
-    ...(careerDef.professionalSkills || [])
-  ]));
-
-  // State for each phase
+  // State per phase
   const [phase, setPhase] = useState(1);
   const [cStdAlloc, setCStdAlloc] = useState({});
   const [cProfSel, setCProfSel] = useState([]);
@@ -89,7 +86,16 @@ export default function SkillsStep({ formData }) {
   const [bonusLeft, setBonusLeft] = useState(initialBonusPool);
   const sum = obj => Object.values(obj).reduce((a, v) => a + (v || 0), 0);
 
-  // When finishing, update the character context
+  // Determine bonus skill list (after cCombSel is declared)
+  const bonusSkills = Array.from(new Set([
+    ...(cultureDef.standardSkills || []),
+    ...(cultureDef.professionalSkills || []),
+    ...(cultureDef.combatStyles && cCombSel ? [cCombSel] : []),
+    ...(careerDef.standardSkills || []),
+    ...(careerDef.professionalSkills || [])
+  ]));
+
+  // Update context at end
   useEffect(() => {
     if (phase === 4) {
       const final = { ...baseStandard, ...baseProfessional };
@@ -110,7 +116,7 @@ export default function SkillsStep({ formData }) {
     }
   }, [phase]);
 
-  // Generic slider handler
+  // Slider handler
   const handleRange = (alloc, setAlloc, skill, limit, pool) => e => {
     let v = parseInt(e.target.value, 10) || 0;
     v = Math.max(0, Math.min(limit, v));
@@ -130,7 +136,7 @@ export default function SkillsStep({ formData }) {
   ];
 
   return (
-    <>
+<>
       {/* Phase 1: Cultural */}
       {phase === 1 && (
         <StepWrapper title="Cultural Skills">
