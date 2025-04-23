@@ -362,27 +362,27 @@ export function ReviewStep() {
             </div>
 
             {/* Resistances */}
-            {resistancesDisplayed.length > 0 && (
-              <div>
-                <h3 className="font-semibold mb-2">Resistances</h3>
-                <div
-                  className="grid gap-4"
-                  style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
-                >
-                  {resistancesDisplayed.map(n => (
-                    <div
-                      key={n}
-                      className="flex items-center p-2 border rounded min-w-0"
-                    >
-                      <span className="flex-1 font-medium break-words">{n}</span>
-                      <span className="flex-none ml-2">
-                        {character.skills?.[n] || 0}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+{resistancesDisplayed.length > 0 && (
+  <div>
+    <h3 className="font-semibold mb-2">Resistances</h3>
+    <div
+      className="grid gap-4"
+      style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
+    >
+      {resistancesDisplayed.map(n => (
+        <div
+          key={n}
+          className="flex items-center p-2 border rounded min-w-0"
+        >
+          <span className="flex-1 font-medium break-words">{n}</span>
+          <span className="flex-none ml-2">
+            {character.skills?.[n] || 0}%
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
             {/* Combat Skills */}
             <div>
