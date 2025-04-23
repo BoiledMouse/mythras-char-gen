@@ -122,9 +122,9 @@ export default function SkillsStep({ formData }) {
     <>
       {/* Phase 1 */}
       {phase === 1 && (
-        <StepWrapper title="Cultural Skills - debug1">
+        <StepWrapper title="Cultural Skills">
           <p>Points left: {CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc}</p>
-          <h3 className="font-heading text-lg mb-2">Standard Skills</h3>
+          <h3 className="font-heading text-lg mb-2">Standard Skills -debug1</h3>
           {cultureDef.standardSkills?.map(s => {
             const base = baseStandard[s], alloc = cStdAlloc[s] || 0;
             return (
