@@ -97,6 +97,7 @@ export default function ConceptStep({ formData = {}, onChange }) {
   };
 
   return (
+    <StepWrapper title="Concept">
     <div className="panel-parchment p-6 max-w-4xl mx-auto w-full space-y-6">
       <h2 className="font-semibold">Character Concept</h2>
 
@@ -237,5 +238,6 @@ export default function ConceptStep({ formData = {}, onChange }) {
         )}
       </div>
     </div>
+   </StepWrapper>
   );
 }
