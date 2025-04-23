@@ -77,10 +77,9 @@ export function ReviewStep() {
 
   // PDF export via @react-pdf/renderer
   const exportPDF = async () => {
-    const doc = <CharacterSheetDocument character={character} />;
-    const asPdf = pdf([]);
-    asPdf.updateContainer(doc);
-    const blob = await asPdf.toBlob();
+    // pass your document element straight into `pdf()`
+    const instance = pdf(<CharacterSheetDocument character={character} />);
+    const blob = await instance.toBlob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
