@@ -435,15 +435,15 @@ export default function SkillsStep({ formData }) {
           </ul>
           <h3 className="font-semibold mb-2">Magic Skills</h3>
           <ul className="list-disc list-inside">
-            {[
-              ...skillsData.folkMagic.map(s => s.name),
-              ...skillsData.animism.map(s => s.name),
-              ...skillsData.mysticism.map(s => s.name),
-              ...skillsData.sorcery.map(s => s.name),
-              ...skillsData.theism.map(s => s.name)
+          {[
+          …(skillsData.folkMagic  || []).map(s => s.name),
+          …(skillsData.animism   || []).map(s => s.name),
+        …(skillsData.mysticism || []).map(s => s.name),
+        …(skillsData.sorcery   || []).map(s => s.name),
+        …(skillsData.theism    || []).map(s => s.name)
             ]
-              .filter(n => character.skills[n] != null)
-              .map(n => <li key={n}>{n}: {character.skills[n]}%</li>)}
+  .filter(n => character.skills[n] != null)
+  .map(n => <li key={n}>{n}: {character.skills[n]}%</li>)}
           </ul>
         </StepWrapper>
       )}
