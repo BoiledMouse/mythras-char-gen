@@ -1,0 +1,7 @@
+[
+  { "name": "Ballista",               "category": "Siege",         "cost": 5000 },
+  { "name": "Catapult",               "category": "Siege",         "cost": 3000 },
+
+  { "name": "Cart (two‑wheeled)",     "category": "Vehicles",      "cost": 150 },
+  { "name": "Wagon (four‑wheeled)",   "category": "Vehicles",      "cost": 300 }
+]
