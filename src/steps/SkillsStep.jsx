@@ -14,13 +14,13 @@ export default function SkillsStep({ formData }) {
   const cultureDef = cultures[cultKey] || {};
   const careerDef = careers[careerKey] || {};
 
-  // Universal min/max for sliders in cultural & career phases
+  // Universal min/max for sliders
   const SKILL_MIN = 5;
   const SKILL_MAX = 15;
   const CULT_POOL = 100;
   const CAREER_POOL = 100;
 
-  // Age buckets for bonus and maxInc (unchanged)
+  // Age buckets for bonus and maxInc
   const ageBuckets = [
     { max: 16, bonus: 100, maxInc: 10 },
     { max: 27, bonus: 150, maxInc: 15 },
@@ -30,7 +30,7 @@ export default function SkillsStep({ formData }) {
   ];
   const { bonus: initialBonusPool = 0, maxInc = 0 } = ageBuckets.find(b => age <= b.max) || {};
 
-  // Attribute formulas parser (unchanged)
+  // Attribute formulas parser
   const attrs = { STR, DEX, INT, CON, POW, CHA, SIZ };
   const computeBase = expr => {
     const parts = expr.split(/\s*([+x])\s*/).filter(Boolean);
@@ -44,7 +44,7 @@ export default function SkillsStep({ formData }) {
     return val;
   };
 
-  // Base skill calculations (unchanged)
+  // Base standards
   const rawStandard = skillsData.standard.map(s => s.name);
   const baseStandard = {};
   skillsData.standard.forEach(({ name, base }) => {
@@ -61,6 +61,7 @@ export default function SkillsStep({ formData }) {
     baseStandard[name] = baseStandard[root] || 0;
   });
 
+  // Base professional
   const baseProfGeneric = {};
   skillsData.professional.forEach(({ name, base }) => {
     baseProfGeneric[name] = computeBase(base);
@@ -88,40 +89,52 @@ export default function SkillsStep({ formData }) {
   const [cProfAlloc, setCProfAlloc] = useState({});
   const [cCombSel, setCCombSel] = useState('');
   const [cCombAlloc, setCCombAlloc] = useState(SKILL_MIN);
-
   const [rStdAlloc, setRStdAlloc] = useState({});
   const [rProfSel, setRProfSel] = useState([]);
   const [rProfAlloc, setRProfAlloc] = useState({});
-
   const [bonusAlloc, setBonusAlloc] = useState({});
   const [hobby, setHobby] = useState('');
 
   const sum = obj => Object.values(obj).reduce((a, v) => a + (v || 0), 0);
   const bonusLeft = initialBonusPool - sum(bonusAlloc);
 
-  // Calculate total allocations for Phase 1 & 2
+  // Total cultural and career allocations
   const totalCulturalAlloc =
     (cultureDef.standardSkills || []).reduce(
-      (acc, s) => acc + (cStdAlloc[s] ?? SKILL_MIN),
-      0
+      (acc, s) => acc + (cStdAlloc[s] ?? SKILL_MIN), 0
     ) +
     cProfSel.reduce(
-      (acc, s) => acc + (cProfAlloc[s] ?? SKILL_MIN),
-      0
+      (acc, s) => acc + (cProfAlloc[s] ?? SKILL_MIN), 0
     ) +
     (cCombSel ? cCombAlloc : 0);
 
   const totalCareerAlloc =
     (careerDef.standardSkills || []).reduce(
-      (acc, s) => acc + (rStdAlloc[s] ?? SKILL_MIN),
-      0
+      (acc, s) => acc + (rStdAlloc[s] ?? SKILL_MIN), 0
     ) +
     rProfSel.reduce(
-      (acc, s) => acc + (rProfAlloc[s] ?? SKILL_MIN),
-      0
+      (acc, s) => acc + (rProfAlloc[s] ?? SKILL_MIN), 0
     );
 
-  // Update character on summary (unchanged)
+  // Bonus skills list
+  const bonusSkills = new Set([
+    ...(cultureDef.standardSkills || []),
+    ...(cultureDef.professionalSkills || []),
+    ...(cultureDef.combatStyles && cCombSel ? [cCombSel] : []),
+    ...(careerDef.standardSkills || []),
+    ...(careerDef.professionalSkills || []),
+    ...(hobby ? [hobby] : [])
+  ]);
+
+  // Generic slider handler
+  const handleRange = (alloc, setAlloc, skill, limit, pool) => e => {
+    let v = parseInt(e.target.value, 10) || SKILL_MIN;
+    v = Math.max(SKILL_MIN, Math.min(limit, v));
+    const prev = alloc[skill] ?? SKILL_MIN;
+    if (v - prev <= pool) setAlloc({ ...alloc, [skill]: v });
+  };
+
+  // Update character on summary
   useEffect(() => {
     if (phase === 4) {
       const final = { ...baseStandard, ...baseProfessional };
@@ -145,21 +158,13 @@ export default function SkillsStep({ formData }) {
     }
   }, [phase]);
 
-  // Generic slider handler
-  const handleRange = (alloc, setAlloc, skill, limit, pool) => e => {
-    let v = parseInt(e.target.value, 10) || SKILL_MIN;
-    v = Math.max(SKILL_MIN, Math.min(limit, v));
-    const prev = alloc[skill] ?? SKILL_MIN;
-    if (v - prev <= pool) setAlloc({ ...alloc, [skill]: v });
-  };
-
   return (
     <>
       {/* Phase 1: Cultural Skills */}
       {phase === 1 && (
         <StepWrapper title="Cultural Skills">
           <p>Points left: {CULT_POOL - totalCulturalAlloc}</p>
-          {/* Standard Skills unchanged */}
+          <h3 className="font-heading text-lg mb-2">Standard Skills</h3>
           {cultureDef.standardSkills?.map(s => {
             const base = baseStandard[s];
             const alloc = cStdAlloc[s] ?? SKILL_MIN;
@@ -185,7 +190,6 @@ export default function SkillsStep({ formData }) {
               </div>
             );
           })}
-          {/* Professional unchanged */}
           <h3 className="font-heading text-lg mt-4 mb-2">Professional (max 3)</h3>
           {cultureDef.professionalSkills?.map(s => (
             <label key={s} className="inline-flex items-center mr-4 mb-2">
@@ -268,9 +272,7 @@ export default function SkillsStep({ formData }) {
             </div>
           )}
           <div className="flex justify-end mt-4">
-            <button className="btn btn-primary" onClick={() => setPhase(2)}>
-              Next: Career
-            </button>
+            <button className="btn btn-primary" onClick={() => setPhase(2)}>Next: Career</button>
           </div>
         </StepWrapper>
       )}
@@ -279,7 +281,7 @@ export default function SkillsStep({ formData }) {
       {phase === 2 && (
         <StepWrapper title="Career Skills">
           <p>Points left: {CAREER_POOL - totalCareerAlloc}</p>
-          {/* Standard Skills unchanged */}
+          <h3 className="font-heading text-lg mb-2">Standard Skills</h3>
           {careerDef.standardSkills?.map(s => {
             const base = (baseStandard[s] || 0) + (cStdAlloc[s] ?? SKILL_MIN);
             const alloc = rStdAlloc[s] ?? SKILL_MIN;
@@ -305,7 +307,6 @@ export default function SkillsStep({ formData }) {
               </div>
             );
           })}
-          {/* Professional unchanged */}
           <h3 className="font-heading text-lg mt-4 mb-2">Professional (max 3)</h3>
           {careerDef.professionalSkills?.map(s => (
             <label key={s} className="inline-flex items-center mr-4 mb-2">
@@ -351,13 +352,9 @@ export default function SkillsStep({ formData }) {
               </div>
             );
           })}
-          <div className="flex justify-between mt-4">
-            <button className="btn btn-secondary" onClick={() => setPhase(1)}>
-              Back
-            </button>
-            <button className="btn btn-primary" onClick={() => setPhase(3)}>
-              Next: Bonus
-            </button>
+          <div className="flex justify-between	mt-4">
+            <button className="btn btn-secondary" onClick={() => setPhase(1)}>Back</button>
+            <button className="btn btn-primary" onClick={() => setPhase(3)}>Next: Bonus</button>
           </div>
         </StepWrapper>
       )}
@@ -384,12 +381,12 @@ export default function SkillsStep({ formData }) {
             const pool = initialBonusPool - sum(bonusAlloc) + alloc;
             const base =
               (baseStandard[s] || 0) +
-              (cStdAlloc[s] || 0) +
+              (cStdAlloc[s] ?? SKILL_MIN) +
               (baseProfessional[s] || 0) +
-              (cProfAlloc[s] || 0) +
+              (cProfAlloc[s] ?? SKILL_MIN) +
               (s === cCombSel ? cCombAlloc : 0) +
-              (rStdAlloc[s] || 0) +
-              (rProfAlloc[s] || 0);
+              (rStdAlloc[s] ?? SKILL_MIN) +
+              (rProfAlloc[s] ?? SKILL_MIN);
             return (
               <div key={s} className="flex items-center mb-2">
                 <span className="w-24 font-medium">{s}</span>
@@ -406,7 +403,7 @@ export default function SkillsStep({ formData }) {
               </div>
             );
           })}
-          <div className="flex justify-between mt-4">
+          <div className="flex justify-between	mt-4">
             <button className="btn btn-secondary" onClick={() => setPhase(2)}>Back</button>
             <button className="btn btn-primary" onClick={() => setPhase(4)}>Finish</button>
           </div>
@@ -418,40 +415,35 @@ export default function SkillsStep({ formData }) {
         <StepWrapper title="Skills Summary">
           <h3 className="font-semibold mb-2">Standard Skills</h3>
           <ul className="list-disc list-inside mb-4">
-            {skillsData.standard
-              .map(({ name }) => name)
-              .filter(n => !resistanceList.includes(n))
-              .map(n => (
-                <li key={n}>{n}: {character.skills[n]}%</li>
-              ))}
+            {skillsData.standard.map(({ name }) => name).filter(n => !['Brawn','Endurance','Evade','Willpower'].includes(n)).map(n => (
+              <li key={n}>{n}: {character.skills[n]}%</li>
+            ))}
           </ul>
           <h3 className="font-semibold mb-2">Resistances</h3>
           <ul className="list-disc list-inside mb-4">
-            {resistanceList
+            {['Brawn','Endurance','Evade','Willpower']
               .filter(n => character.skills[n] != null)
-              .map(n => (
-                <li key={n}>{n}: {character.skills[n]}%</li>
-              ))}
+              .map(n => <li key={n}>{n}: {character.skills[n]}%</li>)}
           </ul>
           <h3 className="font-semibold mb-2">Combat Skills</h3>
           <ul className="list-disc list-inside mb-4">
-            {character.selectedSkills?.combat?.map(n => (
-              <li key={n}>{n}: {character.skills[n]}%</li>
-            ))}
+            {character.selectedSkills?.combat?.map(n => <li key={n}>{n}: {character.skills[n]}%</li>)}
           </ul>
           <h3 className="font-semibold mb-2">Professional Skills</h3>
           <ul className="list-disc list-inside mb-4">
-            {character.selectedSkills?.professional?.map(n => (
-              <li key={n}>{n}: {character.skills[n]}%</li>
-            ))}
+            {character.selectedSkills?.professional?.map(n => <li key={n}>{n}: {character.skills[n]}%</li>)}
           </ul>
           <h3 className="font-semibold mb-2">Magic Skills</h3>
           <ul className="list-disc list-inside">
-            {allMagic
+            {[
+              ...skillsData.folkMagic.map(s => s.name),
+              ...skillsData.animism.map(s => s.name),
+              ...skillsData.mysticism.map(s => s.name),
+              ...skillsData.sorcery.map(s => s.name),
+              ...skillsData.theism.map(s => s.name)
+            ]
               .filter(n => character.skills[n] != null)
-              .map(n => (
-                <li key={n}>{n}: {character.skills[n]}%</li>
-              ))}
+              .map(n => <li key={n}>{n}: {character.skills[n]}%</li>)}
           </ul>
         </StepWrapper>
       )}
