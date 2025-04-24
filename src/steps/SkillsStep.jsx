@@ -433,7 +433,7 @@ export default function SkillsStep({ formData }) {
           <ul className="list-disc list-inside mb-4">
             {character.selectedSkills?.professional?.map(n => <li key={n}>{n}: {character.skills[n]}%</li>)}
           </ul>
-          <h3 className="font-semibold mb-2">Magic Skills</h3>
+          <h3 className="font-semibold mb-2"></h3>
           <ul className="list-disc list-inside">
           {[
           ...(skillsData.folkMagic  || []).map(s => s.name),
