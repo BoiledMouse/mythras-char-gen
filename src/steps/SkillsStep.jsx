@@ -14,8 +14,7 @@ export default function SkillsStep({ formData }) {
   const cultureDef = cultures[cultKey] || {};
   const careerDef = careers[careerKey] || {};
 
-  // Universal min/max for sliders in cultural & career phases
-  const SKILL_MIN = 5;
+  // Universal max for sliders in cultural & career phases
   const SKILL_MAX = 15;
   const CULT_POOL = 100;
   const CAREER_POOL = 100;
@@ -88,7 +87,7 @@ export default function SkillsStep({ formData }) {
   const [cProfSel, setCProfSel] = useState([]);
   const [cProfAlloc, setCProfAlloc] = useState({});
   const [cCombSel, setCCombSel] = useState('');
-  const [cCombAlloc, setCCombAlloc] = useState(SKILL_MIN);
+  const [cCombAlloc, setCCombAlloc] = useState(0);
 
   const [rStdAlloc, setRStdAlloc] = useState({});
   const [rProfSel, setRProfSel] = useState([]);
@@ -103,26 +102,118 @@ export default function SkillsStep({ formData }) {
   // Update character on summary
   useEffect(() => {
     if (phase === 4) {
-      // ... unchanged
+      const final = { ...baseStandard, ...baseProfessional };
+      cultureDef.standardSkills?.forEach(s => (final[s] += cStdAlloc[s] || 0));
+      cProfSel.forEach(s => (final[s] += cProfAlloc[s] || 0));
+      if (cCombSel) final[cCombSel] += cCombAlloc;
+      careerDef.standardSkills?.forEach(s => (final[s] += rStdAlloc[s] || 0));
+      rProfSel.forEach(s => (final[s] += rProfAlloc[s] || 0));
+      Object.entries(bonusAlloc).forEach(([s, v]) => (final[s] += v));
+      updateCharacter({
+        skills: final,
+        selectedSkills: {
+          standard: [
+            ...(cultureDef.standardSkills || []),
+            ...(careerDef.standardSkills || [])
+          ],
+          professional: [...cProfSel, ...rProfSel, ...(cCombSel ? [cCombSel] : [])],
+          combat: cCombSel ? [cCombSel] : []
+        }
+      });
     }
   }, [phase]);
 
   // Generic slider handler
   const handleRange = (alloc, setAlloc, skill, limit, pool) => e => {
     let v = parseInt(e.target.value, 10) || 0;
-    v = Math.max(SKILL_MIN, Math.min(limit, v));
-    const prev = alloc[skill] || SKILL_MIN;
+    v = Math.max(0, Math.min(limit, v));
+    const prev = alloc[skill] || 0;
     if (v - prev <= pool) setAlloc({ ...alloc, [skill]: v });
   };
+
+  // Helpers for summary
+  const resistanceList = ['Brawn', 'Endurance', 'Evade', 'Willpower'];
+  const allMagic = [
+    ...(skillsData.folkMagic || []).map(s => s.name),
+    ...(skillsData.animism || []).map(s => s.name),
+    ...(skillsData.mysticism || []).map(s => s.name),
+    ...(skillsData.sorcery || []).map(s => s.name),
+    ...(skillsData.theism || []).map(s => s.name),
+  ];
+  const bonusSkills = new Set([
+    ...(cultureDef.standardSkills || []),
+    ...(cultureDef.professionalSkills || []),
+    ...(cultureDef.combatStyles && cCombSel ? [cCombSel] : []),
+    ...(careerDef.standardSkills || []),
+    ...(careerDef.professionalSkills || []),
+    ...(hobby ? [hobby] : [])
+  ]);
 
   return (
     <>
       {/* Phase 1: Cultural Skills */}
       {phase === 1 && (
         <StepWrapper title="Cultural Skills">
-          <p>Points left: {CULT_POOL - (sum(cStdAlloc) + sum(cProfAlloc) + cCombAlloc - SKILL_MIN)}</p>
-          {/* Standard Skills unchanged */}
-          {/* Professional unchanged */}
+          <p>Points left: {CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc}</p>
+          <h3 className="font-heading text-lg mb-2">Standard Skills</h3>
+          {cultureDef.standardSkills?.map(s => {
+            const base = baseStandard[s];
+            const alloc = cStdAlloc[s] ?? 5;
+            return (
+              <div key={s} className="flex items-center mb-2">
+                <span className="w-24 font-medium">{s}</span>
+                <span className="w-16">{base}%</span>
+                <input
+                  type="range"
+                  className="flex-1 mx-2"
+                  min={0}
+                  max={SKILL_MAX}
+                  value={alloc}
+                  onChange={handleRange(cStdAlloc, setCStdAlloc, s, SKILL_MAX, CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc)}
+                />
+                <span className="w-24 text-right">+{alloc}% = {base + alloc}%</span>
+              </div>
+            );
+          })}
+          <h3 className="font-heading text-lg mt-4 mb-2">Professional (max 3)</h3>
+          {cultureDef.professionalSkills?.map(s => (
+            <label key={s} className="inline-flex items-center mr-4 mb-2">
+              <input
+                type="checkbox"
+                className="mr-1"
+                checked={cProfSel.includes(s)}
+                onChange={() =>
+                  setCProfSel(sel =>
+                    sel.includes(s)
+                      ? sel.filter(x => x !== s)
+                      : sel.length < 3
+                      ? [...sel, s]
+                      : sel
+                  )
+                }
+              />
+              {s}
+            </label>
+          ))}
+          {cProfSel.map(s => {
+            const base = baseProfessional[s];
+            const alloc = cProfAlloc[s] ?? 5;
+            return (
+              <div key={s} className="flex items-center mb-2">
+                <span className="w-24 font-medium">{s}</span>
+                <span className="w-16">{base}%</span>
+                <input
+                  type="range"
+                  className="flex-1 mx-2"
+                  min={0}
+                  max={SKILL_MAX}
+                  value={alloc}
+                  onChange={handleRange(cProfAlloc, setCProfAlloc, s, SKILL_MAX, CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc)}
+                />
+                <span className="w-24 text-right">+{alloc}% = {base + alloc}%</span>
+              </div>
+            );
+          })}
           <h3 className="font-heading text-lg mt-4 mb-2">Combat Style</h3>
           {cultureDef.combatStyles?.map(cs => (
             <label key={cs} className="inline-flex items-center mr-4 mb-2">
@@ -143,12 +234,12 @@ export default function SkillsStep({ formData }) {
               <input
                 type="range"
                 className="flex-1 mx-2"
-                min={SKILL_MIN}
+                min={0}
                 max={SKILL_MAX}
                 value={cCombAlloc}
                 onChange={e => {
-                  const v = Math.min(SKILL_MAX, Math.max(SKILL_MIN, +e.target.value));
-                  const pool = CULT_POOL - (sum(cStdAlloc) + sum(cProfAlloc) + (cCombAlloc - SKILL_MIN));
+                  const v = Math.min(SKILL_MAX, Math.max(0, +e.target.value));
+                  const pool = CULT_POOL - sum(cStdAlloc) - sum(cProfAlloc) - cCombAlloc;
                   if (v - cCombAlloc <= pool) setCCombAlloc(v);
                 }}
               />
