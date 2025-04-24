@@ -4,6 +4,7 @@ import { useCharacter } from '../context/characterContext';
 import skillsData from '../data/skills.json';
 import equipmentData from '../data/equipment.json';
 import StepWrapper from '../components/StepWrapper';
+import careers from '../data/careers.json';
 import {
   Document,
   Page,
@@ -37,6 +38,7 @@ const calcHp = (CON, SIZ, key) => {
 
 export function ReviewStep() {
   const { character, updateCharacter } = useCharacter();
+  const careerDef = careers[character.career] || {};
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -239,7 +241,11 @@ export function ReviewStep() {
               </label>
               <input
                 name={f.key}
-                value={character[f.key] || ''}
+                value={
+              f.key === 'career'
+                ? careerDef.displayName || ''
+                : character[f.key] || ''
+            }
                 onChange={handleChange}
                 className="form-control mt-1"
               />
