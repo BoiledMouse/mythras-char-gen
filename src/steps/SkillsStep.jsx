@@ -136,7 +136,7 @@ export default function SkillsStep({ formData }) {
        v = Math.max(min, Math.min(limit, v));
        const prev = alloc[skill] ?? min;
        // never allow more than the positive remainder
-       const free = Math.max(0, pool);
+       const free = Math.max(0, pool - prev);
        if (v - prev <= free) setAlloc({ ...alloc, [skill]: v });
      };
 
@@ -280,7 +280,7 @@ export default function SkillsStep({ formData }) {
          const v = Math.min(SKILL_MAX, Math.max(SKILL_MIN, +e.target.value));
          const free = Math.max(
           0,
-        CULT_POOL - totalCulturalAlloc + cCombAlloc
+        CULT_POOL - totalCulturalAlloc
         );
         // only allow increases if there's still a positive remainder
         if (v - cCombAlloc <= free) {
