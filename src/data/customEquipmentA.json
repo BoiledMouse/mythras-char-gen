@@ -1,4 +1,6 @@
+[
   { "name": "Horse",                  "category": "Livestock",     "cost": 500 },
   { "name": "Oxen (pair)",            "category": "Livestock",     "cost": 600 },
   { "name": "Goat",                   "category": "Livestock",     "cost": 20 },
   { "name": "Sheep",                  "category": "Livestock",     "cost": 15 },
+]
