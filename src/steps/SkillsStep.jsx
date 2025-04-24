@@ -171,6 +171,7 @@ export default function SkillsStep({ formData }) {
       {/* Phase 1: Cultural Skills */}
       {phase === 1 && (
         <StepWrapper title="Cultural Skills">
+          <p>First select any additional skills, and then add points to them.</p>
           <p>Points left: {Math.max(0, CULT_POOL - totalCulturalAlloc)}</p>
 
           <h3 className="font-heading text-lg mb-2">Standard Skills</h3>
@@ -305,6 +306,7 @@ export default function SkillsStep({ formData }) {
       {/* Phase 2: Career Skills */}
       {phase === 2 && (
         <StepWrapper title="Career Skills">
+          <p>First select any additional skills, and then add points to them.</p>
           <p>Points left: {Math.max(0, CAREER_POOL - totalCareerAlloc)}</p>
 
           <h3 className="font-heading text-lg mb-2">Standard Skills</h3>
