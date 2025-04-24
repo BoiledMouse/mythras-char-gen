@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useCharacter } from '../context/characterContext';
-import equipmentList from '../data/equipment.json';
 import StepWrapper from '../components/StepWrapper';
+
+// Import equipment JSON files
+import defaultEquip from '../data/equipment.json';
+import customEquipA from '../data/customEquipmentA.json';
+import customEquipB from '../data/customEquipmentB.json';
+
+// Define equipment options
+const equipmentOptions = [
+  { label: 'Default Equipment', value: 'default', data: defaultEquip },
+  { label: 'Custom Equipment List A', value: 'customA', data: customEquipA },
+  { label: 'Custom Equipment List B', value: 'customB', data: customEquipB },
+];
 
 export default function EquipmentStep({ formData = {}, onChange }) {
   const { character, updateCharacter } = useCharacter();
@@ -10,23 +21,37 @@ export default function EquipmentStep({ formData = {}, onChange }) {
     equipmentAlloc = character.equipmentAlloc || {},
   } = formData;
 
-  // Local state mirrors formData
+  // Local state
   const [silver, setSilver] = useState(startingSilver);
   const [quantities, setQuantities] = useState(equipmentAlloc);
+  const [selectedListKey, setSelectedListKey] = useState(equipmentOptions[0].value);
+  const [equipmentList, setEquipmentList] = useState(equipmentOptions[0].data);
 
-  // Sync silver changes to formData and context
+  // Sync selected equipment list data
+  useEffect(() => {
+    const chosen = equipmentOptions.find(opt => opt.value === selectedListKey);
+    if (chosen) {
+      setEquipmentList(chosen.data);
+      // reset quantities when list changes
+      setQuantities({});
+      onChange('equipmentAlloc', {});
+      updateCharacter({ equipmentAlloc: {} });
+    }
+  }, [selectedListKey]);
+
+  // Sync silver to formData and context
   useEffect(() => {
     onChange('startingSilver', silver);
     updateCharacter({ startingSilver: silver });
   }, [silver]);
 
-  // Sync equipment quantities to formData and context
+  // Sync quantities to formData and context
   useEffect(() => {
     onChange('equipmentAlloc', quantities);
     updateCharacter({ equipmentAlloc: quantities });
   }, [quantities]);
 
-  // If concept re-roll changes startingSilver, reset local
+  // Reset silver if character's startingSilver changes externally
   useEffect(() => {
     setSilver(character.startingSilver || 0);
   }, [character.startingSilver]);
@@ -34,10 +59,7 @@ export default function EquipmentStep({ formData = {}, onChange }) {
   const handleQtyChange = (name, val) => {
     let v = parseInt(val, 10);
     if (isNaN(v) || v < 0) v = 0;
-    setQuantities(prev => {
-      const next = { ...prev, [name]: v };
-      return next;
-    });
+    setQuantities(prev => ({ ...prev, [name]: v }));
   };
 
   // Compute totals
@@ -63,6 +85,22 @@ export default function EquipmentStep({ formData = {}, onChange }) {
             onChange={e => setSilver(+e.target.value || 0)}
             className="mt-1 w-32 border-gray-300 rounded"
           />
+        </div>
+
+        {/* Equipment list selector */}
+        <div>
+          <h3 className="font-semibold mb-2">Select Equipment List</h3>
+          <select
+            value={selectedListKey}
+            onChange={e => setSelectedListKey(e.target.value)}
+            className="mt-1 w-48 border-gray-300 rounded"
+          >
+            {equipmentOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Equipment purchase table */}
