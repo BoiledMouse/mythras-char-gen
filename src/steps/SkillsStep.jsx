@@ -128,15 +128,17 @@ export default function SkillsStep({ formData }) {
   ]);
 
   // Generic slider handler now takes an optional min (default = 5)
-  const handleRange =
-    (alloc, setAlloc, skill, limit, pool, min = SKILL_MIN) =>
-    e => {
-      let v = parseInt(e.target.value, 10);
-      if (isNaN(v)) v = min;
-      v = Math.max(min, Math.min(limit, v));
-      const prev = alloc[skill] ?? min;
-      if (v - prev <= pool) setAlloc({ ...alloc, [skill]: v });
-    };
+   const handleRange =
+     (alloc, setAlloc, skill, limit, pool, min = SKILL_MIN) =>
+     e => {
+       let v = parseInt(e.target.value, 10);
+       if (isNaN(v)) v = min;
+       v = Math.max(min, Math.min(limit, v));
+       const prev = alloc[skill] ?? min;
+       // never allow more than the positive remainder
+       const free = Math.max(0, pool);
+       if (v - prev <= free) setAlloc({ ...alloc, [skill]: v });
+     };
 
   // Update character on summary
   useEffect(() => {
@@ -274,12 +276,17 @@ export default function SkillsStep({ formData }) {
                 min={SKILL_MIN}
                 max={SKILL_MAX}
                 value={cCombAlloc}
-                onChange={e => {
-                  const v = Math.min(SKILL_MAX, Math.max(SKILL_MIN, +e.target.value));
-                  if (v - cCombAlloc <= CULT_POOL - totalCulturalAlloc + cCombAlloc) {
-                    setCCombAlloc(v);
-                  }
-                }}
+         onChange={e => {
+         const v = Math.min(SKILL_MAX, Math.max(SKILL_MIN, +e.target.value));
+         const free = Math.max(
+          0,
+        CULT_POOL - totalCulturalAlloc + cCombAlloc
+        );
+        // only allow increases if there's still a positive remainder
+        if (v - cCombAlloc <= free) {
+     setCCombAlloc(v);
+         }
+           }}
               />
               <span className="w-24 text-right">
                 +{cCombAlloc}% = {baseProfessional[cCombSel] + cCombAlloc}%
