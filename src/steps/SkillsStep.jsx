@@ -424,13 +424,14 @@ export default function SkillsStep({ formData }) {
             const alloc = bonusAlloc[s] || 0;
             const pool = initialBonusPool - sum(bonusAlloc) + alloc;
             const base =
-              (baseStandard[s] || 0) +
-              (cStdAlloc[s] ?? SKILL_MIN) +
-              (baseProfessional[s] || 0) +
-              (cProfAlloc[s] ?? SKILL_MIN) +
-              (s === cCombSel ? cCombAlloc : 0) +
-              (rStdAlloc[s] ?? 0) +
-              (rProfAlloc[s] ?? 0);
+            (baseStandard[s]  || 0) +
+            (cStdAlloc[s]     ?? SKILL_MIN) +   // culture‐phase 1 always has a 5-point minimum
+            (baseProfessional[s] || 0) +
+            (cProfAlloc[s]    ?? 0) +           // only nonzero if you actually allocated in phase 1
+            (s === cCombSel   ? cCombAlloc : 0) +
+            (rStdAlloc[s]     ?? 0) +           // career‐phase 2 default is 0, not 5
+            (rProfAlloc[s]    ?? 0);            // same for career professional
+
             return (
               <div key={s} className="flex items-center mb-2">
                 <span className="w-24 font-medium">{s}</span>
