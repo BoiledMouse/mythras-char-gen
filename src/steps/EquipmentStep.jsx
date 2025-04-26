@@ -9,9 +9,9 @@ import customEquipB from '../data/customEquipmentB.json';
 
 // Define equipment options
 const equipmentOptions = [
-  { label: 'Default Equipment', value: 'default', data: defaultEquip },
-  { label: 'Custom Equipment List A', value: 'customA', data: customEquipA },
-  { label: 'Custom Equipment List B', value: 'customB', data: customEquipB },
+  { label: 'Basic Equipment', value: 'default', data: defaultEquip },
+  { label: 'Extended Equipment', value: 'customA', data: customEquipA },
+  { label: 'TBC', value: 'customB', data: customEquipB },
 ];
 
 export default function EquipmentStep({ formData = {}, onChange }) {
